@@ -2,6 +2,7 @@ package app.controllers.routes;
 
 import app.controllers.SecurityController;
 import io.javalin.apibuilder.EndpointGroup;
+import io.javalin.http.Context;
 
 import java.util.Map;
 
@@ -23,6 +24,7 @@ public class Routes
         return () ->
         {
             get("/", ctx -> ctx.status(200).json(Map.of("message", "Welcome to the Scrum API!")));
+            get("/health-check", ctx -> ctx.status(200).json("{\"msg\": \"API is up and running\"}"));
 
             path(API_VERSION, () ->
             {

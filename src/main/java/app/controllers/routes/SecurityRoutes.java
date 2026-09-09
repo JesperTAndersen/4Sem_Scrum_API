@@ -18,7 +18,7 @@ public class SecurityRoutes
     {
         return () -> path("auth", () ->
         {
-            get("/healthcheck", securityController::healthCheck);
+
         });
     }
 }
