@@ -24,10 +24,11 @@ public class Routes
         return () ->
         {
             get("/", ctx -> ctx.status(200).json(Map.of("message", "Welcome to the Scrum API!")));
-            get("/health-check", ctx -> ctx.status(200).json("{\"msg\": \"API is up and running\"}"));
 
             path(API_VERSION, () ->
             {
+                get("/health-check", ctx -> ctx.status(200).json("{\"msg\": \"API is up and running\"}"));
+
                 securityRoutes.getRoutes().addEndpoints();
             });
         };
