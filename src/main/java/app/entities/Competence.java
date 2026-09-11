@@ -14,7 +14,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @Entity
 @Table(name = "competences")
-public class Competence
+public class Competence implements IEntity
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

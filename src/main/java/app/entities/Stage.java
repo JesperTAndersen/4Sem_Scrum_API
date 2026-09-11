@@ -12,11 +12,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.FetchType;
 
 @Entity
-public class Stage
+public class Stage implements IEntity
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Override
+    public Long getId() { return id; }
     public Long id() { return id; }
     public String name;
     @ManyToOne(fetch = FetchType.LAZY)

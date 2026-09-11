@@ -1,34 +1,91 @@
 package app.config;
 
 import app.config.hibernate.HibernateConfig;
-import app.controllers.CompetenceController;
-import app.controllers.SecurityController;
-import app.controllers.routes.Routes;
-import app.dao.CompetenceDAO;
-import app.services.CompetenceServiceImpl;
+import app.controllers.implementations.CompetenceController;
+import app.controllers.implementations.HealthCheckController;
+import app.controllers.implementations.StageController;
+import app.controllers.implementations.UserController;
+import app.controllers.interfaces.IHealthCheckController;
+import app.controllers.interfaces.IUserController;
+import app.controllers.interfaces.generic.ICrudController;
+import app.persistence.implementations.CompetenceDAO;
+import app.persistence.implementations.ProjectDAO;
+import app.persistence.implementations.StageDAO;
+import app.persistence.implementations.UserDAO;
+import app.persistence.interfaces.specific.IUserDAO;
+import app.services.implementations.CompetenceService;
+import app.services.implementations.StageService;
+import app.services.implementations.UserService;
+import app.services.interfaces.ICompetenceService;
+import app.services.interfaces.IStageService;
+import app.services.interfaces.IUserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityManagerFactory;
+import lombok.Getter;
 
-public class DependencyContainer
+public final class DependencyContainer
 {
-    private final SecurityController securityController;
-    private final CompetenceController competenceController;
+    private static DependencyContainer instance;
+    private final EntityManagerFactory entityManagerFactory;
+    @Getter
+    private final ObjectMapper objectMapper;
+    private final IUserDAO userDAO;
+    private final CompetenceDAO competenceDAO;
+    private final StageDAO stageDAO;
+    private final ProjectDAO projectDAO;
 
-    public DependencyContainer()
+    @Getter
+    private final IUserService userService;
+    @Getter
+    private final ICompetenceService competenceService;
+    @Getter
+    private final IHealthCheckController healthCheckController;
+    @Getter
+    private final IUserController userController;
+    @Getter
+    private final ICrudController competenceController;
+    @Getter
+    private final IStageService stageService;
+    @Getter
+    private final ICrudController stageController;
+
+    public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {
-        this(HibernateConfig.getEntityManagerFactory());
-    }
+        this.entityManagerFactory = entityManagerFactory;
 
-    public DependencyContainer(EntityManagerFactory emfTest)
-    {
-        CompetenceDAO competenceDAO = new CompetenceDAO(emfTest);
-        CompetenceServiceImpl competenceService = new CompetenceServiceImpl(competenceDAO);
+        this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.healthCheckController = new HealthCheckController(entityManagerFactory);
 
+        this.userDAO = new UserDAO(entityManagerFactory);
+        this.userService = new UserService(userDAO);
+        this.userController = new UserController(userService);
+
+        this.competenceDAO = new CompetenceDAO(entityManagerFactory);
+        this.competenceService = new CompetenceService(competenceDAO);
         this.competenceController = new CompetenceController(competenceService);
-        this.securityController = new SecurityController();
+
+        this.stageDAO = new StageDAO(entityManagerFactory);
+        this.projectDAO = new ProjectDAO(entityManagerFactory);
+        this.stageService = new StageService(stageDAO, projectDAO);
+        this.stageController = new StageController(stageService);
+
     }
 
-    public Routes getRoutes()
+    public static DependencyContainer getInstance()
     {
-        return new Routes(securityController, competenceController);
+        if (instance == null)
+        {
+            instance = new DependencyContainer(HibernateConfig.getEntityManagerFactory());
+        }
+        return instance;
+    }
+
+    public static DependencyContainer getTestInstance(EntityManagerFactory entityManagerFactory)
+    {
+        instance = new DependencyContainer(entityManagerFactory);
+        return instance;
     }
 }
