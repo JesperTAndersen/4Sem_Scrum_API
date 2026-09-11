@@ -4,8 +4,8 @@ import app.config.hibernate.HibernateConfig;
 import app.controllers.CompetenceController;
 import app.controllers.SecurityController;
 import app.controllers.routes.Routes;
-import app.dao.CompetenceDAO;
-import app.services.CompetenceServiceImpl;
+import app.dao.implementations.CompetenceDAO;
+import app.services.implementations.CompetenceService;
 import jakarta.persistence.EntityManagerFactory;
 
 public class DependencyContainer
@@ -21,7 +21,7 @@ public class DependencyContainer
     public DependencyContainer(EntityManagerFactory emfTest)
     {
         CompetenceDAO competenceDAO = new CompetenceDAO(emfTest);
-        CompetenceServiceImpl competenceService = new CompetenceServiceImpl(competenceDAO);
+        CompetenceService competenceService = new CompetenceService(competenceDAO);
 
         this.competenceController = new CompetenceController(competenceService);
         this.securityController = new SecurityController();
