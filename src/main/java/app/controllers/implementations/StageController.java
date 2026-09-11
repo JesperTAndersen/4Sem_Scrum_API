@@ -1,11 +1,12 @@
 package app.controllers.implementations;
 
-import app.dtos.StageCreateDTO;
-import app.dtos.StageDTO;
+import app.controllers.interfaces.generic.ICrudController;
+import app.dtos.stage.StageCreateDTO;
+import app.dtos.stage.StageDTO;
 import app.services.StageService;
 import io.javalin.http.Context;
 
-public class StageController
+public class StageController implements ICrudController
 {
     private StageService stageService;
 
@@ -23,5 +24,35 @@ public class StageController
         stageDTO = stageService.createStage(stageCreateDTO);
 
         ctx.status(201).json(stageDTO);
+    }
+
+    @Override
+    public void get(Context ctx)
+    {
+
+    }
+
+    @Override
+    public void getAll(Context ctx)
+    {
+
+    }
+
+    @Override
+    public void create(Context ctx)
+    {
+
+    }
+
+    @Override
+    public void update(Context ctx)
+    {
+
+    }
+
+    @Override
+    public void delete(Context ctx)
+    {
+
     }
 }

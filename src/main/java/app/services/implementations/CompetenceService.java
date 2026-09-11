@@ -1,7 +1,7 @@
 package app.services.implementations;
 
 import app.dtos.CompetenceDTO;
-import app.dao.implementations.CompetenceDAO;
+import app.persistence.implementations.CompetenceDAO;
 import app.entities.Competence;
 import app.exceptions.ApiException;
 import app.mappers.CompetenceMapper;

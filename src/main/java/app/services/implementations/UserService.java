@@ -7,7 +7,7 @@ import app.exceptions.ConflictException;
 import app.exceptions.UnauthorizedActionException;
 import app.exceptions.ValidationException;
 import app.mappers.UserMapper;
-import app.dao.interfaces.specific.IUserDAO;
+import app.persistence.interfaces.specific.IUserDAO;
 import app.entities.User;
 import app.services.interfaces.IUserService;
 import app.utils.PasswordUtil;

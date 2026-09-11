@@ -1,10 +1,11 @@
 package app.controllers.implementations;
 
+import app.controllers.interfaces.generic.ICrudController;
 import app.dtos.CompetenceDTO;
 import app.services.interfaces.ICompetenceService;
 import io.javalin.http.Context;
 
-public class CompetenceController
+public class CompetenceController implements ICrudController
 {
     private final ICompetenceService iCompetenceService;
 

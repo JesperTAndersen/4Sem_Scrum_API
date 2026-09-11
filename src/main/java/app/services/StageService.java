@@ -1,10 +1,10 @@
 package app.services;
 
-import app.dao.StageDAO;
-import app.dao.ProjectDAO;
+import app.persistence.implementations.StageDAO;
+import app.persistence.ProjectDAO;
 import app.entities.Stage;
-import app.DTOs.StageDTO;
-import app.DTOs.StageCreateDTO;
+import app.dtos.stage.StageDTO;
+import app.dtos.stage.StageCreateDTO;
 
 public class StageService
 {
@@ -24,10 +24,10 @@ public class StageService
         Stage stage;
 
         project = projectDAO.read(dto.projectId());
-        assert(project != null);
+        assert (project != null);
         stage = new Stage(dto.name(), project);
         stageDAO.create(stage);
-        assert(stage.id() != null);
+        assert (stage.id() != null);
         return toDTO(stage);
     }
 
