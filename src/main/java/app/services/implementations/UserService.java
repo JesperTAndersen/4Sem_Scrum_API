@@ -1,4 +1,4 @@
-package app.services;
+package app.services.implementations;
 
 import app.dtos.security.AuthenticatedUser;
 import app.dtos.user.*;
@@ -7,8 +7,9 @@ import app.exceptions.ConflictException;
 import app.exceptions.UnauthorizedActionException;
 import app.exceptions.ValidationException;
 import app.mappers.UserMapper;
-import app.dao.IUserDAO;
+import app.dao.interfaces.specific.IUserDAO;
 import app.entities.User;
+import app.services.interfaces.IUserService;
 import app.utils.PasswordUtil;
 import app.utils.ValidationUtil;
 
@@ -51,7 +52,7 @@ public class UserService implements IUserService
     {
         ValidationUtil.validateId(id);
 
-        User user = userDAO.getByID(id);
+        User user = userDAO.get(id);
         return UserMapper.toDTO(user);
     }
 
@@ -70,7 +71,7 @@ public class UserService implements IUserService
         validateUpdateRequest(authUser, targetUserId, dto);
         validateOwnershipOrAdmin(authUser, targetUserId);
 
-        User user = userDAO.getByID(targetUserId);
+        User user = userDAO.get(targetUserId);
 
         user.update(
             dto.firstName(),
@@ -87,7 +88,7 @@ public class UserService implements IUserService
         ValidationUtil.validateId(targetUserId);
         ValidationUtil.validateNotNull(dto, "User Role");
 
-        User targetUser = userDAO.getByID(targetUserId);
+        User targetUser = userDAO.get(targetUserId);
         targetUser.changeRole(dto.userRole());
 
         User updated = userDAO.update(targetUser);
@@ -100,7 +101,7 @@ public class UserService implements IUserService
         validateEmailRequest(dto);
         validateOwnershipOrAdmin(authUser, targetUserId);
 
-        User user = userDAO.getByID(targetUserId);
+        User user = userDAO.get(targetUserId);
         user.changeEmail(dto.email());
 
         User updated = userDAO.update(user);
@@ -113,7 +114,7 @@ public class UserService implements IUserService
         validatePassword(dto.newPassword());
         validateOwnershipOrAdmin(authUser, targetUserId);
 
-        User user = userDAO.getByID(targetUserId);
+        User user = userDAO.get(targetUserId);
 
         if (!user.verifyPassword(dto.currentPassword()))
         {
@@ -175,7 +176,7 @@ public class UserService implements IUserService
         requireMinimumLength(dto.firstName(), "First name");
         requireMinimumLength(dto.lastName(), "Last name");
 
-        if (!authUser.userId().equals(targetUserId) && !authUser.isHeadChef())
+        if (!authUser.userId().equals(targetUserId))
         {
             throw new UnauthorizedActionException("You can only update your own profile");
         }

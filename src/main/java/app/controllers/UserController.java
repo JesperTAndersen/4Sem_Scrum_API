@@ -1,9 +1,8 @@
 package app.controllers;
 
-import app.controllers.IUserController;
 import app.dtos.security.AuthenticatedUser;
 import app.dtos.user.*;
-import app.services.IUserService;
+import app.services.interfaces.IUserService;
 import app.utils.RequestUtil;
 import app.utils.SecurityUtil;
 import io.javalin.http.Context;
