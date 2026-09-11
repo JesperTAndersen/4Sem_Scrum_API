@@ -1,10 +1,8 @@
 package app.config;
 
 import app.config.hibernate.HibernateConfig;
-import app.controllers.SecurityController;
 import app.controllers.implementations.HealthCheckController;
 import app.controllers.interfaces.IHealthCheckController;
-import app.routes.Routes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
