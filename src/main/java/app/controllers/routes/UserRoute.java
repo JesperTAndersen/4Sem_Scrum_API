@@ -20,14 +20,14 @@ public class UserRoute
         return () ->
             path("users", () ->
             {
-                get("", userController::getAll, Role.ADMIN);
-                get("me", userController::getMe, Role.PROJECT_MANAGER, Role.ADMIN, Role.ANYONE);
-                get("{id}", userController::getById, Role.PROJECT_MANAGER, Role.ADMIN);
-                put("{id}", userController::update, Role.PROJECT_MANAGER);
-                patch("{id}/role", userController::changeRole, Role.ADMIN);
-                patch("{id}/email", userController::changeEmail, Role.PROJECT_MANAGER, Role.ADMIN, Role.ANYONE);
-                patch("{id}/password", userController::changePassword, Role.PROJECT_MANAGER, Role.ADMIN, Role.ANYONE);
-                delete("{id}", userController::delete, Role.ADMIN);
+                get("", userController::getAll);
+                get("me", userController::getMe);
+                get("{id}", userController::getById);
+                put("{id}", userController::update);
+                patch("{id}/role", userController::changeRole);
+                patch("{id}/email", userController::changeEmail);
+                patch("{id}/password", userController::changePassword);
+                delete("{id}", userController::delete);
             });
     }
 }
