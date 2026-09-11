@@ -1,5 +1,6 @@
 package app.controllers.routes;
 
+import app.controllers.CompetenceController;
 import app.controllers.SecurityController;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.Context;
@@ -13,10 +14,12 @@ public class Routes
 {
     private static final String API_VERSION = "api/v1";
     private final SecurityRoutes securityRoutes;
+    private final CompetenceRoutes competenceRoutes;
 
-    public Routes(SecurityController securityController)
+    public Routes(SecurityController securityController, CompetenceController competenceController)
     {
         this.securityRoutes = new SecurityRoutes(securityController);
+        this.competenceRoutes = new CompetenceRoutes(competenceController);
     }
 
     public EndpointGroup getRoutes()
@@ -29,6 +32,7 @@ public class Routes
             {
                 get("/health-check", ctx -> ctx.status(200).json("{\"msg\": \"API is up and running\"}"));
 
+                competenceRoutes.getRoutes().addEndpoints();
                 securityRoutes.getRoutes().addEndpoints();
             });
         };
