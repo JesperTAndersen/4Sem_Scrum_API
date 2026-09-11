@@ -1,6 +1,8 @@
 package app.controllers.implementations;
 
-public class SecurityController
+import app.controllers.interfaces.generic.ISecurityController;
+
+public class SecurityController implements ISecurityController
 {
     public SecurityController()
     {

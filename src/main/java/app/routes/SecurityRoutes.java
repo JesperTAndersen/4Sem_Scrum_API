@@ -1,15 +1,15 @@
 package app.routes;
 
-import app.controllers.implementations.SecurityController;
+import app.controllers.interfaces.generic.ISecurityController;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class SecurityRoutes
 {
-    private final SecurityController securityController;
+    private final ISecurityController securityController;
 
-    public SecurityRoutes(SecurityController securityController)
+    public SecurityRoutes(ISecurityController securityController)
     {
         this.securityController = securityController;
     }
