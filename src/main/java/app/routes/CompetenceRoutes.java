@@ -1,15 +1,16 @@
 package app.controllers.routes;
 
 import app.controllers.implementations.CompetenceController;
+import app.controllers.interfaces.generic.ICrudController;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class CompetenceRoutes
 {
-    private final CompetenceController competenceController;
+    private final ICrudController competenceController;
 
-    public CompetenceRoutes(CompetenceController competenceController)
+    public CompetenceRoutes(ICrudController competenceController)
     {
         this.competenceController = competenceController;
     }
