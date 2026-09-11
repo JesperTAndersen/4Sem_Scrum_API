@@ -1,4 +1,4 @@
-package app.controllers.routes;
+package app.routes;
 
 import app.controllers.SecurityController;
 import io.javalin.apibuilder.EndpointGroup;
