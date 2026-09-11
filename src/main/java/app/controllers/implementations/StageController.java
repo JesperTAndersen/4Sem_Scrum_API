@@ -3,14 +3,14 @@ package app.controllers.implementations;
 import app.controllers.interfaces.generic.ICrudController;
 import app.dtos.stage.StageCreateDTO;
 import app.dtos.stage.StageDTO;
-import app.services.StageService;
+import app.services.interfaces.IStageService;
 import io.javalin.http.Context;
 
 public class StageController implements ICrudController
 {
-    private StageService stageService;
+    private final IStageService stageService;
 
-    public StageController(StageService stageService)
+    public StageController(IStageService stageService)
     {
         this.stageService = stageService;
     }
@@ -21,7 +21,7 @@ public class StageController implements ICrudController
         StageDTO stageDTO;
 
         stageCreateDTO = ctx.bodyAsClass(StageCreateDTO.class);
-        stageDTO = stageService.createStage(stageCreateDTO);
+        stageDTO = stageService.create(stageCreateDTO);
 
         ctx.status(201).json(stageDTO);
     }
