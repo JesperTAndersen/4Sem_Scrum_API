@@ -1,5 +1,6 @@
 package app.controllers.interfaces;
 
+import app.controllers.interfaces.generic.ICrudController;
 import io.javalin.http.Context;
 
 public interface IUserController extends ICrudController
