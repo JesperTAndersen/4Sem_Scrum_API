@@ -129,7 +129,7 @@ public class ApplicationConfig
     {
         config.requestLogger.http((ctx, ms) ->
         {
-            if (ctx.path().equals("/api/v1/health"))
+            if (ctx.path().equals(Routes.getAPI_VERSION() + "/health"))
             {
                 return;
             }
