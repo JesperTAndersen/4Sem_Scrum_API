@@ -1,6 +1,5 @@
-package app.controllers.routes;
+package app.routes;
 
-import app.controllers.implementations.CompetenceController;
 import app.controllers.interfaces.generic.ICrudController;
 import io.javalin.apibuilder.EndpointGroup;
 

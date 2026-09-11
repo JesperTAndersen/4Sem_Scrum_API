@@ -1,22 +1,21 @@
-package app.controllers.routes;
+package app.routes;
 
-import app.controllers.routes.UserRoute;
 import io.javalin.apibuilder.EndpointGroup;
 
 public class ApiRoutes
 {
-    private final UserRoute userRoute;
+    private final UserRoutes userRoutes;
 
-    public ApiRoutes( UserRoute userRoute)
+    public ApiRoutes( UserRoutes userRoute)
     {
-        this.userRoute = userRoute;
+        this.userRoutes = userRoute;
     }
 
     public EndpointGroup getRoutes()
     {
         return () ->
         {
-            userRoute.getRoutes().addEndpoints();
+            userRoutes.getRoutes().addEndpoints();
         };
     }
 }

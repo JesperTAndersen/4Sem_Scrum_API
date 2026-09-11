@@ -1,15 +1,15 @@
-package app.controllers.routes;
+package app.routes;
 
 import app.controllers.interfaces.IUserController;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
-public class UserRoute
+public class UserRoutes
 {
     private final IUserController userController;
 
-    public UserRoute(IUserController userController)
+    public UserRoutes(IUserController userController)
     {
         this.userController = userController;
     }
