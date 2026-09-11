@@ -1,8 +1,7 @@
-package app.controllers.routes;
+package app.routes;
 
-import app.controllers.SecurityController;
 import io.javalin.apibuilder.EndpointGroup;
-import io.javalin.http.Context;
+import lombok.Getter;
 
 import java.util.Map;
 
@@ -11,16 +10,14 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 
 public class Routes
 {
+    @Getter
     private static final String API_VERSION = "api/v1";
-    private final SecurityRoutes securityRoutes;
     private final HealthCheckRoute healthCheckRoute;
 
     public Routes(
-            HealthCheckRoute healthCheckRoute,
-            SecurityController securityController)
+            HealthCheckRoute healthCheckRoute)
     {
         this.healthCheckRoute = healthCheckRoute;
-        this.securityRoutes = new SecurityRoutes(securityController);
     }
 
     public EndpointGroup getRoutes()
@@ -32,13 +29,7 @@ public class Routes
             path(API_VERSION, () ->
             {
                 healthCheckRoute.getRoutes().addEndpoints();
-                securityRoutes.getRoutes().addEndpoints();
             });
         };
-    }
-
-    public static String getApiVersion()
-    {
-        return API_VERSION;
     }
 }
