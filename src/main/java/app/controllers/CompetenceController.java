@@ -1,16 +1,16 @@
 package app.controllers;
 
-import app.DTOs.CompetenceDTO;
-import app.services.interfaces.CompetenceService;
+import app.dtos.CompetenceDTO;
+import app.services.interfaces.ICompetenceService;
 import io.javalin.http.Context;
 
 public class CompetenceController
 {
-    private final CompetenceService competenceService;
+    private final ICompetenceService iCompetenceService;
 
-    public CompetenceController(CompetenceService competenceService)
+    public CompetenceController(ICompetenceService iCompetenceService)
     {
-        this.competenceService = competenceService;
+        this.iCompetenceService = iCompetenceService;
     }
 
     public void create(Context ctx)
@@ -21,18 +21,18 @@ public class CompetenceController
                 .get();
 
         CompetenceDTO dto = new CompetenceDTO(null, body.name(), body.rate());
-        ctx.status(201).json(competenceService.create(dto));
+        ctx.status(201).json(iCompetenceService.create(dto));
     }
 
     public void getAll(Context ctx)
     {
-        ctx.json(competenceService.getAll());
+        ctx.json(iCompetenceService.getAll());
     }
 
     public void get(Context ctx)
     {
         Long id = Long.parseLong(ctx.pathParam("id"));
-        ctx.json(competenceService.get(id));
+        ctx.json(iCompetenceService.get(id));
     }
 
     public void update(Context ctx)
@@ -44,13 +44,13 @@ public class CompetenceController
                 .get();
 
         CompetenceDTO dto = new CompetenceDTO(id, body.name(), body.rate());
-        ctx.json(competenceService.update(dto));
+        ctx.json(iCompetenceService.update(dto));
     }
 
     public void delete(Context ctx)
     {
         Long id = Long.parseLong(ctx.pathParam("id"));
-        competenceService.delete(id);
+        iCompetenceService.delete(id);
         ctx.status(204);
     }
 }

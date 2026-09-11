@@ -1,19 +1,19 @@
-package app.services;
+package app.services.implementations;
 
-import app.DTOs.CompetenceDTO;
-import app.dao.CompetenceDAO;
+import app.dtos.CompetenceDTO;
+import app.dao.implementations.CompetenceDAO;
 import app.entities.Competence;
 import app.exceptions.ApiException;
 import app.mappers.CompetenceMapper;
-import app.services.interfaces.CompetenceService;
+import app.services.interfaces.ICompetenceService;
 
 import java.util.List;
 
-public class CompetenceServiceImpl implements CompetenceService
+public class CompetenceService implements ICompetenceService
 {
     private final CompetenceDAO competenceDAO;
 
-    public CompetenceServiceImpl(CompetenceDAO competenceDAO)
+    public CompetenceService(CompetenceDAO competenceDAO)
     {
         this.competenceDAO = competenceDAO;
     }
@@ -51,7 +51,7 @@ public class CompetenceServiceImpl implements CompetenceService
     @Override
     public void delete(Long id)
     {
-        competenceDAO.delete(competenceDAO.get(id));
+        competenceDAO.delete(id);
     }
 
     private void validate(CompetenceDTO dto)
