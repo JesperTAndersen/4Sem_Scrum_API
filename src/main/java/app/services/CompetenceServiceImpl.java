@@ -3,6 +3,7 @@ package app.services;
 import app.DTOs.CompetenceDTO;
 import app.dao.CompetenceDAO;
 import app.entities.Competence;
+import app.exceptions.ApiException;
 import app.mappers.CompetenceMapper;
 import app.services.interfaces.CompetenceService;
 
@@ -20,6 +21,7 @@ public class CompetenceServiceImpl implements CompetenceService
     @Override
     public CompetenceDTO create(CompetenceDTO dto)
     {
+        validate(dto);
         Competence created = competenceDAO.create(CompetenceMapper.toEntity(dto));
         return CompetenceMapper.toDTO(created);
     }
@@ -41,6 +43,7 @@ public class CompetenceServiceImpl implements CompetenceService
     @Override
     public CompetenceDTO update(CompetenceDTO dto)
     {
+        validate(dto);
         Competence updated = competenceDAO.update(CompetenceMapper.toEntity(dto));
         return CompetenceMapper.toDTO(updated);
     }
@@ -49,5 +52,18 @@ public class CompetenceServiceImpl implements CompetenceService
     public void delete(Long id)
     {
         competenceDAO.delete(competenceDAO.get(id));
+    }
+
+    private void validate(CompetenceDTO dto)
+    {
+        if (dto == null || dto.name() == null || dto.name().isBlank())
+        {
+            throw new ApiException(400, "Name is required");
+        }
+
+        if (dto.rate() == null)
+        {
+            throw new ApiException(400, "Rate is required and must be a number");
+        }
     }
 }
