@@ -1,4 +1,4 @@
-package app.dao;
+package app.dao.interfaces.generic;
 
 import java.util.List;
 
