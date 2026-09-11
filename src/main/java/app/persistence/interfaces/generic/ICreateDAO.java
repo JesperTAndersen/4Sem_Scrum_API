@@ -1,4 +1,4 @@
-package app.dao.interfaces.generic;
+package app.persistence.interfaces.generic;
 
 public interface ICreateDAO<T>
 {

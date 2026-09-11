@@ -1,6 +1,6 @@
-package app.dao.interfaces.readers;
+package app.persistence.interfaces.readers;
 
-import app.dao.interfaces.generic.IReadDAO;
+import app.persistence.interfaces.generic.IReadDAO;
 import app.entities.User;
 
 import java.util.Optional;

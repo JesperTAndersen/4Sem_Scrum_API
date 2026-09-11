@@ -1,4 +1,4 @@
-package app.dtos;
+package app.dtos.stage;
 
 public record StageDTO(
         Long id,

@@ -1,7 +1,7 @@
-package app.dao.implementations;
+package app.persistence.implementations;
 
-import app.dao.interfaces.generic.ICrudDAO;
-import app.entities.Stage;
+import app.persistence.interfaces.generic.ICrudDAO;
+import app.entities.Competence;
 import app.exceptions.DatabaseException;
 import app.utils.DBValidator;
 import app.utils.TransactionUtil;
@@ -14,39 +14,39 @@ import jakarta.persistence.TypedQuery;
 
 import java.util.List;
 
-public class StageDAO implements ICrudDAO<Stage>
+public class CompetenceDAO implements ICrudDAO<Competence>
 {
     private final EntityManagerFactory emf;
 
-    public StageDAO(EntityManagerFactory emf)
+    public CompetenceDAO(EntityManagerFactory emf)
     {
         this.emf = emf;
     }
 
     @Override
-    public Stage create(Stage stage)
+    public Competence create(Competence competence)
     {
-        ValidationUtil.validateNotNull(stage, "Stage");
+        ValidationUtil.validateNotNull(competence, "Competence");
 
         try (EntityManager em = emf.createEntityManager())
         {
             try
             {
                 em.getTransaction().begin();
-                em.persist(stage);
+                em.persist(competence);
                 em.getTransaction().commit();
-                return stage;
+                return competence;
             }
             catch (PersistenceException e)
             {
                 TransactionUtil.rollback(em);
-                throw new DatabaseException("Failed to create stage", e);
+                throw new DatabaseException("Failed to create competence", e);
             }
         }
     }
 
     @Override
-    public Stage get(Long id)
+    public Competence get(Long id)
     {
         ValidationUtil.validateId(id);
 
@@ -54,7 +54,7 @@ public class StageDAO implements ICrudDAO<Stage>
         {
             try
             {
-                return DBValidator.validateExists(em.find(Stage.class, id), id, Stage.class);
+                return DBValidator.validateExists(em.find(Competence.class, id), id, Competence.class);
             }
             catch (EntityNotFoundException e)
             {
@@ -62,43 +62,43 @@ public class StageDAO implements ICrudDAO<Stage>
             }
             catch (PersistenceException e)
             {
-                throw new DatabaseException("Failed to fetch stage by id: " + id, e);
+                throw new DatabaseException("Failed to fetch competence by id: " + id, e);
             }
         }
     }
 
     @Override
-    public List<Stage> getAll()
+    public List<Competence> getAll()
     {
         try (EntityManager em = emf.createEntityManager())
         {
             try
             {
-                TypedQuery<Stage> query = em.createQuery("SELECT s FROM Stage s ORDER BY s.id", Stage.class);
+                TypedQuery<Competence> query = em.createQuery("SELECT c FROM Competence c ORDER BY c.id", Competence.class);
                 return query.getResultList();
             }
             catch (PersistenceException e)
             {
-                throw new DatabaseException("Failed to fetch all stages", e);
+                throw new DatabaseException("Failed to fetch all competences", e);
             }
         }
     }
 
     @Override
-    public Stage update(Stage stage)
+    public Competence update(Competence competence)
     {
-        ValidationUtil.validateNotNull(stage, "Stage");
-        ValidationUtil.validateId(stage.id());
+        ValidationUtil.validateNotNull(competence, "Competence");
+        ValidationUtil.validateId(competence.getId());
 
         try (EntityManager em = emf.createEntityManager())
         {
             try
             {
                 em.getTransaction().begin();
-                DBValidator.validateExists(em.find(Stage.class, stage.id()), stage.id(), Stage.class);
-                Stage merged = em.merge(stage);
+                DBValidator.validateExists(em.find(Competence.class, competence.getId()), competence.getId(), Competence.class);
+                Competence updatedCompetence = em.merge(competence);
                 em.getTransaction().commit();
-                return merged;
+                return updatedCompetence;
             }
             catch (EntityNotFoundException e)
             {
@@ -108,7 +108,7 @@ public class StageDAO implements ICrudDAO<Stage>
             catch (PersistenceException e)
             {
                 TransactionUtil.rollback(em);
-                throw new DatabaseException("Failed to update stage: " + stage.id(), e);
+                throw new DatabaseException("Failed to update competence: " + competence.getId(), e);
             }
         }
     }
@@ -123,8 +123,9 @@ public class StageDAO implements ICrudDAO<Stage>
             try
             {
                 em.getTransaction().begin();
-                Stage managed = DBValidator.validateExists(em.find(Stage.class, id), id, Stage.class);
-                em.remove(managed);
+                Competence managedCompetence = DBValidator.validateExists(
+                        em.find(Competence.class, id), id, Competence.class);
+                em.remove(managedCompetence);
                 em.getTransaction().commit();
                 return true;
             }
@@ -136,7 +137,7 @@ public class StageDAO implements ICrudDAO<Stage>
             catch (PersistenceException e)
             {
                 TransactionUtil.rollback(em);
-                throw new DatabaseException("Failed to delete stage: " + id, e);
+                throw new DatabaseException("Failed to delete competence: " + id, e);
             }
         }
     }

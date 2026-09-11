@@ -1,6 +1,6 @@
-package app.dao.implementations;
+package app.persistence.implementations;
 
-import app.dao.interfaces.specific.IUserDAO;
+import app.persistence.interfaces.specific.IUserDAO;
 import app.enums.UserRole;
 import app.exceptions.DatabaseException;
 import app.entities.User;
