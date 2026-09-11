@@ -26,10 +26,9 @@ public final class DependencyContainer
     private final EntityManagerFactory entityManagerFactory;
     @Getter
     private final ObjectMapper objectMapper;
-    @Getter
     private final IUserDAO userDAO;
-    @Getter
     private final CompetenceDAO competenceDAO;
+
     @Getter
     private final IUserService userService;
     @Getter
