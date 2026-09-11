@@ -1,4 +1,4 @@
-package app.controllers;
+package app.controllers.implementations;
 
 import app.dtos.CompetenceDTO;
 import app.services.interfaces.ICompetenceService;

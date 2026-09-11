@@ -1,6 +1,4 @@
-package app.controllers;
-
-import io.javalin.http.Context;
+package app.controllers.implementations;
 
 public class SecurityController
 {

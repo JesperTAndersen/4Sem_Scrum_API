@@ -1,7 +1,6 @@
 package app.controllers.routes;
 
-import app.controllers.IUserController;
-import app.enums.Role;
+import app.controllers.interfaces.IUserController;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
@@ -22,7 +21,7 @@ public class UserRoute
             {
                 get("", userController::getAll);
                 get("me", userController::getMe);
-                get("{id}", userController::getById);
+                get("{id}", userController::get);
                 put("{id}", userController::update);
                 patch("{id}/role", userController::changeRole);
                 patch("{id}/email", userController::changeEmail);

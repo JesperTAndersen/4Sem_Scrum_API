@@ -1,4 +1,4 @@
-package app.controllers;
+package app.controllers.interfaces;
 
 import io.javalin.http.Context;
 

@@ -1,5 +1,6 @@
-package app.controllers;
+package app.controllers.implementations;
 
+import app.controllers.interfaces.IUserController;
 import app.dtos.security.AuthenticatedUser;
 import app.dtos.user.*;
 import app.services.interfaces.IUserService;
@@ -64,7 +65,7 @@ public class UserController implements IUserController
     }
 
     @Override
-    public void getById(Context ctx)
+    public void get(Context ctx)
     {
         Long id = RequestUtil.requirePathId(ctx, "id");
 

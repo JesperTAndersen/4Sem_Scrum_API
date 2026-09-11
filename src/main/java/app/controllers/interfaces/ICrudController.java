@@ -1,10 +1,10 @@
-package app.controllers;
+package app.controllers.interfaces;
 
 import io.javalin.http.Context;
 
 public interface ICrudController
 {
-    void getById(Context ctx);
+    void get(Context ctx);
 
     void getAll(Context ctx);
 

@@ -1,7 +1,7 @@
-package app.controllers;
+package app.controllers.implementations;
 
-import app.DTOs.StageCreateDTO;
-import app.DTOs.StageDTO;
+import app.dtos.StageCreateDTO;
+import app.dtos.StageDTO;
 import app.services.StageService;
 import io.javalin.http.Context;
 

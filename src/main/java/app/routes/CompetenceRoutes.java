@@ -1,6 +1,6 @@
 package app.controllers.routes;
 
-import app.controllers.CompetenceController;
+import app.controllers.implementations.CompetenceController;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
