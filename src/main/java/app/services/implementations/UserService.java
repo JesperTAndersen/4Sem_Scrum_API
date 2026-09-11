@@ -172,7 +172,6 @@ public class UserService implements IUserService
     {
         ValidationUtil.validateNotNull(authUser, "Authenticated User");
         ValidationUtil.validateId(targetUserId);
-        ValidationUtil.validateId(dto.stationId());
         requireMinimumLength(dto.firstName(), "First name");
         requireMinimumLength(dto.lastName(), "Last name");
 
