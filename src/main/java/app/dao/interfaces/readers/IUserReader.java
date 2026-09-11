@@ -1,11 +1,11 @@
-package app.dao.readers;
+package app.dao.interfaces.readers;
 
-import app.dao.generic.IEntityReader;
+import app.dao.interfaces.generic.IReadDAO;
 import app.entities.User;
 
 import java.util.Optional;
 
-public interface IUserReader extends IEntityReader<User, Long>
+public interface IUserReader extends IReadDAO<User>
 {
     boolean existsByEmail(String email);
 

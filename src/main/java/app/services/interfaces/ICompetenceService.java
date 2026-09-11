@@ -1,10 +1,10 @@
 package app.services.interfaces;
 
-import app.DTOs.CompetenceDTO;
+import app.dtos.CompetenceDTO;
 
 import java.util.List;
 
-public interface CompetenceService
+public interface ICompetenceService
 {
     CompetenceDTO create(CompetenceDTO dto);
 

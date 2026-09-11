@@ -1,4 +1,4 @@
-package app.services;
+package app.services.interfaces;
 
 import app.dtos.security.AuthenticatedUser;
 import app.dtos.user.*;
