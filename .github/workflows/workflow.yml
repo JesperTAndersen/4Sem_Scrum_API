@@ -20,11 +20,14 @@ jobs:
           java-version: '25'
           distribution: 'temurin'
 
-      - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots package
+      - name: Run tests
+        run: mvn --batch-mode --update-snapshots test
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+
+      - name: Package
+        run: mvn --batch-mode package -DskipTests
 
       - name: Login to Docker Hub
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
