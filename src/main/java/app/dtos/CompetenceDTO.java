@@ -1,6 +1,6 @@
-package app.DTOs;
+package app.dtos;
 
-import app.json.StrictBigDecimalDeserializer;
+import app.utils.StrictBigDecimalDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.math.BigDecimal;
