@@ -13,9 +13,13 @@ public class Routes
 {
     private static final String API_VERSION = "api/v1";
     private final SecurityRoutes securityRoutes;
+    private final HealthCheckRoute healthCheckRoute;
 
-    public Routes(SecurityController securityController)
+    public Routes(
+            HealthCheckRoute healthCheckRoute,
+            SecurityController securityController)
     {
+        this.healthCheckRoute = healthCheckRoute;
         this.securityRoutes = new SecurityRoutes(securityController);
     }
 
@@ -27,8 +31,7 @@ public class Routes
 
             path(API_VERSION, () ->
             {
-                get("/health-check", ctx -> ctx.status(200).json("{\"msg\": \"API is up and running\"}"));
-
+                healthCheckRoute.getRoutes().addEndpoints();
                 securityRoutes.getRoutes().addEndpoints();
             });
         };
