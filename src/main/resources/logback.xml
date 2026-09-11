@@ -1,32 +1,61 @@
 <configuration>
 
-<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-</appender>
+    <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}"/>
+    <property name="APP_LOG_FILE" value="logs/scrum-project"/>
+    <property name="APP_LOG_ARCHIVE" value="logs/archive/scrum-project/scrum-project"/>
+    <property name="ERROR_LOG_FILE" value="logs/error"/>
+    <property name="ERROR_LOG_ARCHIVE" value="logs/archive/error/error"/>
 
-<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${user.dir}/logs/javalin-app.log</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-        <fileNamePattern>${user.dir}/logs/javalin-app-%d{yyyy-MM-dd}.log</fileNamePattern>
-        <maxHistory>30</maxHistory>
-    </rollingPolicy>
-    <encoder>
-        <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-</appender>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-<root level="info">
-    <appender-ref ref="CONSOLE" />
-    <appender-ref ref="FILE" />
-</root>
+    <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${APP_LOG_FILE}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${APP_LOG_ARCHIVE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-<!-- Adjust log levels for specific packages if needed -->
-<logger name="app" level="debug" />
-<!-- Silence noisy frameworks -->
-<logger name="org.hibernate" level="WARN"/>
-<logger name="org.testcontainers" level="WARN"/>
-<logger name="com.github.dockerjava" level="WARN"/>
-<logger name="org.eclipse.jetty" level="WARN" />
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${ERROR_LOG_FILE}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${ERROR_LOG_ARCHIVE}.%d{YYYY-'W'ww}.gz</fileNamePattern>
+            <maxHistory>13</maxHistory> <!-- 13 weeks equal to 91 days -->
+            <totalSizeCap>250MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <logger name="app" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="APP_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
+
+    <!-- Third-party frameworks capped at WARN - add accordingly -->
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.testcontainers" level="WARN"/>
+    <logger name="com.github.dockerjava" level="WARN"/>
+    <logger name="org.eclipse.jetty" level="WARN"/>
+
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="com.zaxxer.hikari.HikariDataSource" level="INFO"/>
+
 </configuration>

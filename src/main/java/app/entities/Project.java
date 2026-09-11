@@ -1,19 +1,15 @@
 package app.entities;
 
 import jakarta.persistence.*;
-import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Entity
 @Table(name = "projects")
-public class Project
+public class Project implements IEntity
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
