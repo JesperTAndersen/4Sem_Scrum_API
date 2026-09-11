@@ -3,16 +3,21 @@ package app.config;
 import app.config.hibernate.HibernateConfig;
 import app.controllers.implementations.CompetenceController;
 import app.controllers.implementations.HealthCheckController;
+import app.controllers.implementations.StageController;
 import app.controllers.implementations.UserController;
 import app.controllers.interfaces.IHealthCheckController;
 import app.controllers.interfaces.IUserController;
 import app.controllers.interfaces.generic.ICrudController;
 import app.persistence.implementations.CompetenceDAO;
+import app.persistence.implementations.ProjectDAO;
+import app.persistence.implementations.StageDAO;
 import app.persistence.implementations.UserDAO;
 import app.persistence.interfaces.specific.IUserDAO;
 import app.services.implementations.CompetenceService;
+import app.services.implementations.StageService;
 import app.services.implementations.UserService;
 import app.services.interfaces.ICompetenceService;
+import app.services.interfaces.IStageService;
 import app.services.interfaces.IUserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -28,6 +33,8 @@ public final class DependencyContainer
     private final ObjectMapper objectMapper;
     private final IUserDAO userDAO;
     private final CompetenceDAO competenceDAO;
+    private final StageDAO stageDAO;
+    private final ProjectDAO projectDAO;
 
     @Getter
     private final IUserService userService;
@@ -39,6 +46,10 @@ public final class DependencyContainer
     private final IUserController userController;
     @Getter
     private final ICrudController competenceController;
+    @Getter
+    private final IStageService stageService;
+    @Getter
+    private final ICrudController stageController;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {
@@ -55,6 +66,11 @@ public final class DependencyContainer
         this.competenceDAO = new CompetenceDAO(entityManagerFactory);
         this.competenceService = new CompetenceService(competenceDAO);
         this.competenceController = new CompetenceController(competenceService);
+
+        this.stageDAO = new StageDAO(entityManagerFactory);
+        this.projectDAO = new ProjectDAO(entityManagerFactory);
+        this.stageService = new StageService(stageDAO, projectDAO);
+        this.stageController = new StageController(stageService);
 
     }
 
