@@ -2,5 +2,6 @@ package app.enums;
 
 public enum UserRole
 {
-    PROJECT_MANAGER
+    PROJECT_MANAGER,
+    EMPLOYEE
 }
