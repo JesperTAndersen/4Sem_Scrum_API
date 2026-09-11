@@ -2,6 +2,8 @@ package app.config;
 
 import app.routes.HealthCheckRoute;
 import app.routes.Routes;
+import app.controllers.routes.CompetenceRoutes;
+import app.controllers.routes.UserRoute;
 import app.exceptions.ApiException;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -63,7 +65,9 @@ public class ApplicationConfig
     private static Routes buildRoutes(DependencyContainer dependencyContainer)
     {
         return new Routes(
-                new HealthCheckRoute(dependencyContainer.getHealthCheckController())
+                new HealthCheckRoute(dependencyContainer.getHealthCheckController()),
+                new UserRoute(dependencyContainer.getUserController()),
+                new CompetenceRoutes(dependencyContainer.getCompetenceController())
         );
     }
 
