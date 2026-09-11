@@ -1,5 +1,6 @@
-package app.dao;
+package app.dao.implementations;
 
+import app.dao.interfaces.specific.IUserDAO;
 import app.enums.UserRole;
 import app.exceptions.DatabaseException;
 import app.entities.User;
@@ -9,6 +10,7 @@ import app.utils.ValidationUtil;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -44,14 +46,14 @@ public class UserDAO implements IUserDAO
     }
 
     @Override
-    public Set<User> getAll()
+    public List<User> getAll()
     {
         try(EntityManager em = emf.createEntityManager())
         {
             try
             {
                 TypedQuery<User> query = em.createQuery("SELECT u FROM User u", User.class);
-                return new HashSet<>(query.getResultList());
+                return query.getResultList();
             }
             catch (PersistenceException e)
             {
@@ -61,7 +63,7 @@ public class UserDAO implements IUserDAO
     }
 
     @Override
-    public User getByID(Long id)
+    public User get(Long id)
     {
         ValidationUtil.validateId(id);
 
