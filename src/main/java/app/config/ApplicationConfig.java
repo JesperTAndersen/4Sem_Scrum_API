@@ -5,6 +5,7 @@ import app.routes.*;
 import app.exceptions.ApiException;
 import app.routes.UserRoutes;
 import app.utils.ExecutionTimer;
+import app.utils.JWTUtil;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
@@ -24,6 +25,7 @@ public class ApplicationConfig
     public static Javalin startServer(int port)
     {
         ExecutionTimer.start();
+        JWTUtil.validate();
         DependencyContainer dependencyContainer = DependencyContainer.getInstance();
         Routes routes = buildRoutes(dependencyContainer);
 
@@ -43,6 +45,7 @@ public class ApplicationConfig
     // For test instances
     public static Javalin startServer(int port, EntityManagerFactory emf)
     {
+        JWTUtil.validate();
         DependencyContainer dependencyContainer = DependencyContainer.getTestInstance(emf);
         Routes routes = buildRoutes(dependencyContainer);
 
