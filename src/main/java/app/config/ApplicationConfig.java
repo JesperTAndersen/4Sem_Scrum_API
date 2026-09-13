@@ -23,12 +23,12 @@ public class ApplicationConfig
 
     public static Javalin startServer(int port)
     {
+        ExecutionTimer.start();
         DependencyContainer dependencyContainer = DependencyContainer.getInstance();
         Routes routes = buildRoutes(dependencyContainer);
 
         Javalin app = Javalin.create(config ->
         {
-            ExecutionTimer.start();
             configureRoutes(config, routes);
             configureCors(config);
             configureExceptions(config);
