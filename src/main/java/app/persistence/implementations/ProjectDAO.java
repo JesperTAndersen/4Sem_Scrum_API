@@ -2,6 +2,7 @@ package app.persistence.implementations;
 
 import app.entities.Project;
 import app.exceptions.DatabaseException;
+import app.persistence.interfaces.generic.ICrudDAO;
 import app.utils.DBValidator;
 import app.utils.ValidationUtil;
 import jakarta.persistence.EntityManager;
@@ -9,7 +10,9 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 
-public class ProjectDAO
+import java.util.List;
+
+public class ProjectDAO implements ICrudDAO<Project>
 {
     private final EntityManagerFactory emf;
 
@@ -37,5 +40,29 @@ public class ProjectDAO
                 throw new DatabaseException("Failed to fetch project by id: " + id, e);
             }
         }
+    }
+
+    @Override
+    public List<Project> getAll()
+    {
+        return List.of();
+    }
+
+    @Override
+    public Project create(Project project)
+    {
+        return null;
+    }
+
+    @Override
+    public boolean delete(Long id)
+    {
+        return false;
+    }
+
+    @Override
+    public Project update(Project project)
+    {
+        return null;
     }
 }
