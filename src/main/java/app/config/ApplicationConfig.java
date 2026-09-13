@@ -4,6 +4,7 @@ import app.routes.HealthCheckRoute;
 import app.routes.*;
 import app.exceptions.ApiException;
 import app.routes.UserRoutes;
+import app.utils.ExecutionTimer;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
@@ -27,6 +28,7 @@ public class ApplicationConfig
 
         Javalin app = Javalin.create(config ->
         {
+            ExecutionTimer.start();
             configureRoutes(config, routes);
             configureCors(config);
             configureExceptions(config);
@@ -34,6 +36,7 @@ public class ApplicationConfig
             configureLogger(config);
         }).start(port);
 
+        ExecutionTimer.finish("Scrum Project \"Estimo\" ready on port " + port);
         return app;
     }
 
