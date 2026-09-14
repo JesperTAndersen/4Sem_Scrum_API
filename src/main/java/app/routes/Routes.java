@@ -16,12 +16,14 @@ public class Routes
     private final HealthCheckRoute healthCheckRoute;
     private final UserRoutes userRoutes;
     private final CompetenceRoutes competenceRoutes;
+    private final ProjectRoutes projectRoutes;
 
-    public Routes(HealthCheckRoute healthCheckRoute, UserRoutes userRoute, CompetenceRoutes competenceRoutes)
+    public Routes(HealthCheckRoute healthCheckRoute, UserRoutes userRoute, CompetenceRoutes competenceRoutes, ProjectRoutes projectRoutes)
     {
         this.healthCheckRoute = healthCheckRoute;
         this.userRoutes = userRoute;
         this.competenceRoutes = competenceRoutes;
+        this.projectRoutes = projectRoutes;
     }
 
     public EndpointGroup getRoutes()
@@ -35,6 +37,7 @@ public class Routes
                 healthCheckRoute.getRoutes().addEndpoints();
                 userRoutes.getRoutes().addEndpoints();
                 competenceRoutes.getRoutes().addEndpoints();
+                projectRoutes.getRoutes().addEndpoints();
             });
         };
     }

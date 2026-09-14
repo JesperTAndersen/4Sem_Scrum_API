@@ -1,14 +1,19 @@
 package app.mappers;
 
+import app.DTOs.project.CreateProjectDTO;
 import app.DTOs.project.ProjectDTO;
+import app.DTOs.project.UpdateProjectDTO;
 import app.entities.Project;
+import app.enums.ProjectStatus;
 
-public class ProjectMapper {
-
-    private ProjectMapper() {
+public class ProjectMapper
+{
+    private ProjectMapper()
+    {
     }
 
-    public static ProjectDTO toDTO(Project project) {
+    public static ProjectDTO toDTO(Project project)
+    {
         return new ProjectDTO(
                 project.getId(),
                 project.getTitle(),
@@ -23,18 +28,32 @@ public class ProjectMapper {
         );
     }
 
-    public static Project toEntity(ProjectDTO dto) {
+    public static Project toEntity(CreateProjectDTO dto, ProjectStatus status, String createdBy)
+    {
         return Project.builder()
-                .id(dto.id())
+                .title(dto.title())
+                .description(dto.description())
+                .startDate(dto.startDate())
+                .deadline(dto.deadline())
+                .status(status)
+                .createdBy(createdBy)
+                .updatedBy(createdBy)
+                .build();
+    }
+
+    public static Project toEntity(UpdateProjectDTO dto, Project existingProject, String updatedBy)
+    {
+        return Project.builder()
+                .id(existingProject.getId())
                 .title(dto.title())
                 .description(dto.description())
                 .startDate(dto.startDate())
                 .deadline(dto.deadline())
                 .status(dto.status())
-                .createdBy(dto.createdBy())
-                .createdAt(dto.createdAt())
-                .updatedBy(dto.updatedBy())
-                .updatedAt(dto.updatedAt())
+                .createdBy(existingProject.getCreatedBy())
+                .createdAt(existingProject.getCreatedAt())
+                .updatedBy(updatedBy)
+                .updatedAt(existingProject.getUpdatedAt())
                 .build();
     }
 }

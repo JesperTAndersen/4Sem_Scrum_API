@@ -1,5 +1,6 @@
 package app.entities;
 
+import app.enums.ProjectStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

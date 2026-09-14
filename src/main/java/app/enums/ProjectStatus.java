@@ -1,4 +1,4 @@
-package app.entities;
+package app.enums;
 
 public enum ProjectStatus
 {

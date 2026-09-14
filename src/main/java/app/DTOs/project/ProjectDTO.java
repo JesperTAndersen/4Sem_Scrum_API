@@ -1,6 +1,6 @@
 package app.DTOs.project;
 
-import app.entities.ProjectStatus;
+import app.enums.ProjectStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
