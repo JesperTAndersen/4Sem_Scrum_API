@@ -73,7 +73,6 @@ public final class PasswordUtil
         }
     }
 
-
     private static boolean isNullOrBlank(String value)
     {
         return value == null || value.isBlank();
