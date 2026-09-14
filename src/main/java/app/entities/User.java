@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -32,7 +33,9 @@ public class User implements IEntity
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(name = "hashed_password", nullable = false)
+    @Getter
+    @Setter
+    @Column(name = "hashed_password", nullable = false, unique = false, length = 60)
     private String hashedPassword;
 
     @Getter
