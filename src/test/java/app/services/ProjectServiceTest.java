@@ -8,16 +8,12 @@ import app.entities.Project;
 import app.enums.ProjectStatus;
 import app.enums.UserRole;
 import app.exceptions.ApiException;
-import app.persistence.interfaces.specific.IProjectDAO;
+import app.persistence.testdoubles.InMemoryProjectDAO;
 import app.services.implementations.ProjectService;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -57,7 +53,7 @@ class ProjectServiceTest
         assertThat(created.title(), is(request.title()));
         assertThat(created.startDate(), is(request.startDate()));
         assertThat(created.deadline(), is(request.deadline()));
-        assertThat(projectDAO.lastCreated.getStatus(), is(ProjectStatus.DRAFT));
+        assertThat(projectDAO.getLastCreated().getStatus(), is(ProjectStatus.DRAFT));
     }
 
     @Test
@@ -76,7 +72,7 @@ class ProjectServiceTest
 
         assertThat(exception.getCode(), is(400));
         assertThat(exception.getMessage(), is("Project deadline cannot be before start date"));
-        assertThat(projectDAO.lastCreated, nullValue());
+        assertThat(projectDAO.getLastCreated(), nullValue());
     }
 
     @Test
@@ -101,7 +97,7 @@ class ProjectServiceTest
         assertThat(updated.startDate(), is(request.startDate()));
         assertThat(updated.deadline(), is(request.deadline()));
         assertThat(updated.status(), is(ProjectStatus.PLANNED));
-        assertThat(projectDAO.projects.get(existing.getId()).getTitle(), is("Updated title"));
+        assertThat(projectDAO.getStored(existing.getId()).getTitle(), is("Updated title"));
     }
 
     @Test
@@ -170,77 +166,4 @@ class ProjectServiceTest
                 .build();
     }
 
-    private static final class InMemoryProjectDAO implements IProjectDAO
-    {
-        private final Map<Long, Project> projects = new LinkedHashMap<>();
-        private Long nextId = 1L;
-        private Project lastCreated;
-
-        private InMemoryProjectDAO()
-        {
-        }
-
-        @Override
-        public Project create(Project project)
-        {
-            Project persisted = copyWithId(project, nextId++);
-            projects.put(persisted.getId(), persisted);
-            lastCreated = persisted;
-            return persisted;
-        }
-
-        @Override
-        public Project get(Long id)
-        {
-            Project project = projects.get(id);
-            if (project == null)
-            {
-                throw new jakarta.persistence.EntityNotFoundException("Project not found");
-            }
-            return project;
-        }
-
-        @Override
-        public List<Project> getAll()
-        {
-            return new ArrayList<>(projects.values());
-        }
-
-        @Override
-        public Project update(Project project)
-        {
-            get(project.getId());
-            projects.put(project.getId(), project);
-            return project;
-        }
-
-        @Override
-        public boolean delete(Long id)
-        {
-            return projects.remove(id) != null;
-        }
-
-        private void seed(Project project)
-        {
-            projects.put(project.getId(), project);
-            nextId = Math.max(nextId, project.getId() + 1);
-        }
-
-        private Project copyWithId(Project project, Long id)
-        {
-            LocalDateTime now = LocalDateTime.now();
-            return Project.builder()
-                    .id(id)
-                    .title(project.getTitle())
-                    .description(project.getDescription())
-                    .startDate(project.getStartDate())
-                    .deadline(project.getDeadline())
-                    .status(project.getStatus())
-                    .createdBy(project.getCreatedBy())
-                    .createdAt(now)
-                    .updatedBy(project.getUpdatedBy())
-                    .updatedAt(now)
-                    .build();
-        }
-    }
 }
