@@ -1,5 +1,6 @@
 package app.routes;
 
+import app.enums.Role;
 import io.javalin.apibuilder.EndpointGroup;
 import lombok.Getter;
 
@@ -31,7 +32,7 @@ public class Routes
     {
         return () ->
         {
-            get("/", ctx -> ctx.status(200).json(Map.of("message", "Welcome to the Scrum API!")));
+            get("/", ctx -> ctx.status(200).json(Map.of("message", "Welcome to the Scrum API!")), Role.ANYONE);
 
             path(API_VERSION, () ->
             {

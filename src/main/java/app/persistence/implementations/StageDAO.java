@@ -1,6 +1,6 @@
 package app.persistence.implementations;
 
-import app.persistence.interfaces.generic.ICrudDAO;
+import app.persistence.interfaces.specific.IStageDAO;
 import app.entities.Stage;
 import app.exceptions.DatabaseException;
 import app.utils.DBValidator;
@@ -14,7 +14,7 @@ import jakarta.persistence.TypedQuery;
 
 import java.util.List;
 
-public class StageDAO implements ICrudDAO<Stage>
+public class StageDAO implements IStageDAO
 {
     private final EntityManagerFactory emf;
 

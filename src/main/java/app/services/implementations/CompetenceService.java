@@ -1,7 +1,7 @@
 package app.services.implementations;
 
 import app.dtos.CompetenceDTO;
-import app.persistence.implementations.CompetenceDAO;
+import app.persistence.interfaces.specific.ICompetenceDAO;
 import app.entities.Competence;
 import app.exceptions.ApiException;
 import app.mappers.CompetenceMapper;
@@ -11,9 +11,9 @@ import java.util.List;
 
 public class CompetenceService implements ICompetenceService
 {
-    private final CompetenceDAO competenceDAO;
+    private final ICompetenceDAO competenceDAO;
 
-    public CompetenceService(CompetenceDAO competenceDAO)
+    public CompetenceService(ICompetenceDAO competenceDAO)
     {
         this.competenceDAO = competenceDAO;
     }

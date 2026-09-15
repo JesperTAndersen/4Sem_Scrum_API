@@ -1,8 +1,8 @@
 package app.controllers.implementations;
 
-import app.DTOs.project.CreateProjectDTO;
-import app.DTOs.project.ProjectDTO;
-import app.DTOs.project.UpdateProjectDTO;
+import app.dtos.project.CreateProjectDTO;
+import app.dtos.project.ProjectDTO;
+import app.dtos.project.UpdateProjectDTO;
 import app.controllers.interfaces.generic.ICrudController;
 import app.dtos.security.AuthenticatedUser;
 import app.services.interfaces.IProjectService;

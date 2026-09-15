@@ -1,8 +1,8 @@
 package app.mappers;
 
-import app.DTOs.project.CreateProjectDTO;
-import app.DTOs.project.ProjectDTO;
-import app.DTOs.project.UpdateProjectDTO;
+import app.dtos.project.CreateProjectDTO;
+import app.dtos.project.ProjectDTO;
+import app.dtos.project.UpdateProjectDTO;
 import app.entities.Project;
 import app.enums.ProjectStatus;
 

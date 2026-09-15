@@ -1,6 +1,7 @@
 package app.routes;
 
 import app.controllers.interfaces.IHealthCheckController;
+import app.enums.Role;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
@@ -16,6 +17,6 @@ public class HealthCheckRoute
 
     public EndpointGroup getRoutes()
     {
-        return () -> get("health", healthCheckController::healthCheck);
+        return () -> get("health", healthCheckController::healthCheck, Role.ANYONE);
     }
 }

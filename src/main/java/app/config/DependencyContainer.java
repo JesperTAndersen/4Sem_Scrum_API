@@ -10,6 +10,9 @@ import app.persistence.implementations.CompetenceDAO;
 import app.persistence.implementations.ProjectDAO;
 import app.persistence.implementations.StageDAO;
 import app.persistence.implementations.UserDAO;
+import app.persistence.interfaces.specific.ICompetenceDAO;
+import app.persistence.interfaces.specific.IProjectDAO;
+import app.persistence.interfaces.specific.IStageDAO;
 import app.persistence.interfaces.specific.IUserDAO;
 import app.services.implementations.CompetenceService;
 import app.services.implementations.SecurityService;
@@ -34,9 +37,9 @@ public final class DependencyContainer
     @Getter
     private final ObjectMapper objectMapper;
     private final IUserDAO userDAO;
-    private final CompetenceDAO competenceDAO;
-    private final StageDAO stageDAO;
-    private final ProjectDAO projectDAO;
+    private final ICompetenceDAO competenceDAO;
+    private final IStageDAO stageDAO;
+    private final IProjectDAO projectDAO;
 
     @Getter
     private final IUserService userService;

@@ -1,6 +1,6 @@
 package app.persistence.implementations;
 
-import app.persistence.interfaces.generic.ICrudDAO;
+import app.persistence.interfaces.specific.ICompetenceDAO;
 import app.entities.Competence;
 import app.exceptions.DatabaseException;
 import app.utils.DBValidator;
@@ -14,7 +14,7 @@ import jakarta.persistence.TypedQuery;
 
 import java.util.List;
 
-public class CompetenceDAO implements ICrudDAO<Competence>
+public class CompetenceDAO implements ICompetenceDAO
 {
     private final EntityManagerFactory emf;
 
