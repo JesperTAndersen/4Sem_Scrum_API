@@ -33,6 +33,7 @@ public class ApplicationConfig
         Javalin app = Javalin.create(config ->
         {
             configureRoutes(config, routes, dependencyContainer.getSecurityController());
+            configureSecurity(config, dependencyContainer);
             configureCors(config);
             configureExceptions(config);
             configureJackson(config, dependencyContainer);
@@ -53,6 +54,7 @@ public class ApplicationConfig
         Javalin app = Javalin.create(config ->
         {
             configureRoutes(config, routes, dependencyContainer.getSecurityController());
+            configureSecurity(config, dependencyContainer);
             configureCors(config);
             configureExceptions(config);
             configureJackson(config, dependencyContainer);
@@ -106,11 +108,14 @@ public class ApplicationConfig
     private static void configureRoutes(JavalinConfig config, Routes routes, ISecurityController securityController)
     {
         config.bundledPlugins.enableRouteOverview("/routes");
-        config.routes.beforeMatched(securityController::authenticate);
-        config.routes.beforeMatched(securityController::authorize);
         config.routes.apiBuilder(routes.getRoutes());
     }
 
+    private static void configureSecurity(JavalinConfig config, DependencyContainer dependencyContainer)
+    {
+        config.routes.beforeMatched(dependencyContainer.getSecurityController()::authenticate);
+        config.routes.beforeMatched(dependencyContainer.getSecurityController()::authorize);
+    }
 
     private static void configureExceptions(JavalinConfig config)
     {
