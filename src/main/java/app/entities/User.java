@@ -51,17 +51,16 @@ public class User implements IEntity
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public User(String firstName, String lastName, String email, String hashedPassword, Role role)
+    public User(String firstName, String lastName, String email, String hashedPassword)
     {
         ValidationUtil.validateNotBlank(firstName, "First name");
         ValidationUtil.validateNotBlank(lastName, "Last name");
-        ValidationUtil.validateNotNull(role, "Role");
 
         this.firstName = firstName.trim();
         this.lastName = lastName.trim();
         this.email = ValidationUtil.validateEmail(email);
         this.hashedPassword = hashedPassword.trim();
-        this.role = role;
+        this.role = Role.EMPLOYEE;
     }
 
     public void update(String firstName, String lastName)

@@ -26,7 +26,7 @@ public class UserController implements IUserController
         Long targetUserId = RequestUtil.requirePathId(ctx, "id");
 
         UserRoleUpdateDTO dto = ctx.bodyValidator(UserRoleUpdateDTO.class)
-            .check(d -> d.userRole() != null, "Role cannot be null")
+            .check(d -> d.role() != null, "Role cannot be null")
             .get();
 
         UserDTO userDTO = userService.changeRole(targetUserId, dto);
@@ -119,7 +119,7 @@ public class UserController implements IUserController
     public void getMe(Context ctx)
     {
         AuthenticatedUser authUser = SecurityUtil.getAuthenticatedUser(ctx);
-        UserDTO userDTO = userService.findById(authUser.userId());
+        UserDTO userDTO = userService.findById(authUser.id());
         ctx.status(200).json(userDTO);
     }
 }
