@@ -15,14 +15,18 @@ public class Routes
     private static final String API_VERSION = "api/v1";
     private final HealthCheckRoute healthCheckRoute;
     private final UserRoutes userRoutes;
+    private final StageRoutes stageRoutes;
+    private final TaskRoutes taskRoutes;
     private final CompetenceRoutes competenceRoutes;
     private final ProjectRoutes projectRoutes;
     private final SecurityRoutes securityRoutes;
 
-    public Routes(HealthCheckRoute healthCheckRoute, UserRoutes userRoute, CompetenceRoutes competenceRoutes, ProjectRoutes projectRoutes, SecurityRoutes securityRoutes)
+    public Routes(HealthCheckRoute healthCheckRoute, UserRoutes userRoute, StageRoutes stageRoute, TaskRoutes taskRoute, CompetenceRoutes competenceRoutes, ProjectRoutes projectRoutes, SecurityRoutes securityRoutes)
     {
         this.healthCheckRoute = healthCheckRoute;
         this.userRoutes = userRoute;
+        this.stageRoutes = stageRoute;
+        this.taskRoutes = taskRoute;
         this.competenceRoutes = competenceRoutes;
         this.projectRoutes = projectRoutes;
         this.securityRoutes = securityRoutes;
@@ -38,6 +42,8 @@ public class Routes
             {
                 healthCheckRoute.getRoutes().addEndpoints();
                 userRoutes.getRoutes().addEndpoints();
+                stageRoutes.getRoutes().addEndpoints();
+                taskRoutes.getRoutes().addEndpoints();
                 competenceRoutes.getRoutes().addEndpoints();
                 projectRoutes.getRoutes().addEndpoints();
                 securityRoutes.getRoutes().addEndpoints();

@@ -1,28 +1,27 @@
 package app.entities;
 
-import java.util.Set;
-import java.util.HashSet;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import lombok.Getter;
 
+@Getter
 @Entity
 public class Stage implements IEntity
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Override
-    public Long getId() { return id; }
-    public Long id() { return id; }
-    public String name;
+    private String name;
     @ManyToOne(fetch = FetchType.LAZY)
-    public Project project;
+    private Project project;
     //@OneToMany(mappedBy = "stage", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     //public Set<Task> tasks;
 
@@ -31,5 +30,41 @@ public class Stage implements IEntity
     {
         this.name = name;
         this.project = project;
+    }
+
+    public void update(String name)
+    {
+        this.name = name;
+    }
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate()
+    {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate()
+    {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @Override
+    public final boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null) return false;
+        if (!(o instanceof Stage)) return false;
+        return id != null && id.equals(((Stage)o).getId());
+    }
+
+    @Override
+    public final int hashCode()
+    {
+        return id.hashCode();
     }
 }

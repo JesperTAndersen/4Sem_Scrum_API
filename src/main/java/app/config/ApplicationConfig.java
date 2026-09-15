@@ -1,23 +1,27 @@
 package app.config;
 
-import app.routes.HealthCheckRoute;
-import app.routes.*;
-import app.exceptions.ApiException;
-import app.routes.UserRoutes;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import app.controllers.interfaces.ISecurityController;
+import app.exceptions.ApiException;
+import app.routes.CompetenceRoutes;
+import app.routes.HealthCheckRoute;
+import app.routes.ProjectRoutes;
+import app.routes.Routes;
+import app.routes.SecurityRoutes;
+import app.routes.StageRoutes;
+import app.routes.TaskRoutes;
+import app.routes.UserRoutes;
 import app.utils.ExecutionTimer;
 import app.utils.JWTUtil;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.HttpStatus;
 import io.javalin.json.JavalinJackson;
 import jakarta.persistence.EntityManagerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public class ApplicationConfig
 {
@@ -75,6 +79,8 @@ public class ApplicationConfig
         return new Routes(
                 new HealthCheckRoute(dependencyContainer.getHealthCheckController()),
                 new UserRoutes(dependencyContainer.getUserController()),
+                new StageRoutes(dependencyContainer.getStageController()),
+                new TaskRoutes(dependencyContainer.getTaskController()),
                 new CompetenceRoutes(dependencyContainer.getCompetenceController()),
                 new ProjectRoutes((dependencyContainer.getProjectController())),
                 new SecurityRoutes(dependencyContainer.getSecurityController())
