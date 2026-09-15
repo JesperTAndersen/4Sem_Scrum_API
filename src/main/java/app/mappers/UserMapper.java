@@ -1,5 +1,6 @@
 package app.mappers;
 
+import app.dtos.security.AuthenticatedUser;
 import app.dtos.user.UserDTO;
 import app.dtos.user.UserReferenceDTO;
 import app.entities.User;
@@ -15,7 +16,7 @@ public class UserMapper
             user.getFirstName(),
             user.getLastName(),
             user.getEmail(),
-            user.getUserRole(),
+            user.getRole(),
             user.getCreatedAt()
         );
     }
@@ -31,6 +32,15 @@ public class UserMapper
             user.getId(),
             user.getFirstName(),
             user.getLastName()
+        );
+    }
+
+    public static AuthenticatedUser toAuthenticatedUser(User user)
+    {
+        return new AuthenticatedUser(
+                user.getId(),
+                user.getEmail(),
+                user.getRole()
         );
     }
 }
