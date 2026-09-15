@@ -56,7 +56,8 @@ public class StageService implements IStageService
         validateName(dto.name());
 
         Stage stage = stageDAO.get(dto.id());
-        stage.name = dto.name().trim();
+        stage.update(dto.name().trim());
+        stageDAO.update(stage);
         return toDTO(stageDAO.update(stage));
     }
 
@@ -73,6 +74,6 @@ public class StageService implements IStageService
 
     private StageDTO toDTO(Stage stage)
     {
-        return new StageDTO(stage.id(), stage.name);
+        return new StageDTO(stage.getId(), stage.getName());
     }
 }
