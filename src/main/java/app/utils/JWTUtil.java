@@ -2,7 +2,7 @@ package app.utils;
 
 import app.exceptions.TokenCreationException;
 import app.exceptions.TokenVerificationException;
-import app.dtos.security.temp.UserSecurityDTO;
+import app.dtos.security.UserSecurityDTO;
 import app.enums.Role;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -12,9 +12,6 @@ import com.nimbusds.jwt.SignedJWT;
 
 import java.text.ParseException;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class JWTUtil
 {
@@ -50,7 +47,7 @@ public class JWTUtil
     {
     }
 
-    public static String createToken(Long id, String username, Set<Role> roles) throws TokenCreationException
+    public static String createToken(Long id, String username, Role role) throws TokenCreationException
     {
         try
         {
@@ -59,9 +56,7 @@ public class JWTUtil
                     .issuer(ISSUER)
                     .issueTime(new Date())
                     .claim("id", id)
-                    .claim("roles", roles.stream()
-                            .map(Role::name)
-                            .collect(Collectors.toList()))
+                    .claim("role", role)
                     .expirationTime(new Date(System.currentTimeMillis() + EXPIRY))
                     .build();
 
@@ -75,7 +70,7 @@ public class JWTUtil
         }
     }
 
-    public static UserSecurityDTO parseToken(String token)
+    public static UserSecurityDTO parseToken(String token) // TODO Align DTO's
     {
         try
         {
@@ -91,12 +86,11 @@ public class JWTUtil
                 throw new TokenVerificationException("Token expired");
             }
 
-            Set<Role> roles = new HashSet<>(claims.getStringListClaim("roles"))
-                    .stream()
-                    .map(Role::valueOf)
-                    .collect(Collectors.toSet());
-
-            return new UserSecurityDTO(claims.getLongClaim("id"), claims.getSubject(), roles);
+            return new UserSecurityDTO(
+                    claims.getLongClaim("id"),
+                    claims.getSubject(),
+                    Role.valueOf(claims.getStringClaim("role"))
+            );
         }
         catch (TokenVerificationException e)
         {
