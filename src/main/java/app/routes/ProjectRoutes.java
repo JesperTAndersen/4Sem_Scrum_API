@@ -19,8 +19,8 @@ public class ProjectRoutes
     {
         return () -> path("projects", () ->
         {
-            get(projectController::getAll, Role.PROJECT_MANAGER, Role.EMPLOYEE);
-            get("/{id}", projectController::get, Role.PROJECT_MANAGER, Role.EMPLOYEE);
+            get(projectController::getAll, Role.PROJECT_MANAGER);
+            get("/{id}", projectController::get, Role.PROJECT_MANAGER);
             post(projectController::create, Role.PROJECT_MANAGER);
             put("/{id}", projectController::update, Role.PROJECT_MANAGER);
             delete("/{id}", projectController::delete, Role.PROJECT_MANAGER);
