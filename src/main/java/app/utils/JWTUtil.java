@@ -1,8 +1,8 @@
 package app.utils;
 
+import app.dtos.security.AuthenticatedUser;
 import app.exceptions.TokenCreationException;
 import app.exceptions.TokenVerificationException;
-import app.dtos.security.UserSecurityDTO;
 import app.enums.Role;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -47,12 +47,12 @@ public class JWTUtil
     {
     }
 
-    public static String createToken(Long id, String username, Role role) throws TokenCreationException
+    public static String createToken(Long id, String email, Role role) throws TokenCreationException
     {
         try
         {
             JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                    .subject(username)
+                    .subject(email)
                     .issuer(ISSUER)
                     .issueTime(new Date())
                     .claim("id", id)
@@ -70,7 +70,7 @@ public class JWTUtil
         }
     }
 
-    public static UserSecurityDTO parseToken(String token) // TODO Align DTO's
+    public static AuthenticatedUser parseToken(String token)
     {
         try
         {
@@ -86,7 +86,7 @@ public class JWTUtil
                 throw new TokenVerificationException("Token expired");
             }
 
-            return new UserSecurityDTO(
+            return new AuthenticatedUser(
                     claims.getLongClaim("id"),
                     claims.getSubject(),
                     Role.valueOf(claims.getStringClaim("role"))
