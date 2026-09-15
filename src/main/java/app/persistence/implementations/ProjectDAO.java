@@ -2,7 +2,7 @@ package app.persistence.implementations;
 
 import app.entities.Project;
 import app.exceptions.DatabaseException;
-import app.persistence.interfaces.generic.ICrudDAO;
+import app.persistence.interfaces.specific.IProjectDAO;
 import app.utils.DBValidator;
 import app.utils.TransactionUtil;
 import app.utils.ValidationUtil;
@@ -14,7 +14,7 @@ import jakarta.persistence.TypedQuery;
 
 import java.util.List;
 
-public class ProjectDAO implements ICrudDAO<Project>
+public class ProjectDAO implements IProjectDAO
 {
     private final EntityManagerFactory emf;
 

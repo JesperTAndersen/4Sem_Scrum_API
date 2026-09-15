@@ -1,14 +1,14 @@
 package app.services.implementations;
 
-import app.DTOs.project.CreateProjectDTO;
-import app.DTOs.project.ProjectDTO;
-import app.DTOs.project.UpdateProjectDTO;
+import app.dtos.project.CreateProjectDTO;
+import app.dtos.project.ProjectDTO;
+import app.dtos.project.UpdateProjectDTO;
 import app.dtos.security.AuthenticatedUser;
 import app.entities.Project;
 import app.enums.ProjectStatus;
 import app.exceptions.ApiException;
 import app.mappers.ProjectMapper;
-import app.persistence.implementations.ProjectDAO;
+import app.persistence.interfaces.specific.IProjectDAO;
 import app.services.interfaces.IProjectService;
 import app.utils.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,9 +18,9 @@ import java.util.List;
 
 public class ProjectService implements IProjectService
 {
-    private final ProjectDAO projectDAO;
+    private final IProjectDAO projectDAO;
 
-    public ProjectService(ProjectDAO projectDAO)
+    public ProjectService(IProjectDAO projectDAO)
     {
         this.projectDAO = projectDAO;
     }
