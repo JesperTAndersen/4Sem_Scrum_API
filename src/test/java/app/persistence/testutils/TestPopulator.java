@@ -3,7 +3,7 @@ package app.persistence.testutils;
 import app.entities.Project;
 import app.entities.User;
 import app.enums.ProjectStatus;
-import app.enums.UserRole;
+import app.enums.Role;
 import app.utils.PasswordUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -47,9 +47,10 @@ public final class TestPopulator
     public static Map<String, User> populateUsers(EntityManagerFactory emf)
     {
         String password = PasswordUtil.hashPassword("Password123", 4);
-        User user1 = new User("Alice", "Manager", "alice@example.com", password, UserRole.PROJECT_MANAGER);
-        User user2 = new User("Bob", "Employee", "bob@example.com", password, UserRole.EMPLOYEE);
-        User user3 = new User("Carol", "Employee", "carol@example.com", password, UserRole.EMPLOYEE);
+        User user1 = new User("Alice", "Manager", "alice@example.com", password);
+        user1.changeRole(Role.PROJECT_MANAGER);
+        User user2 = new User("Bob", "Employee", "bob@example.com", password);
+        User user3 = new User("Carol", "Employee", "carol@example.com", password);
 
         try (EntityManager em = emf.createEntityManager())
         {

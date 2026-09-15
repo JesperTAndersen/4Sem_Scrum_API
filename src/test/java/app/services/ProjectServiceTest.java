@@ -6,7 +6,7 @@ import app.dtos.project.UpdateProjectDTO;
 import app.dtos.security.AuthenticatedUser;
 import app.entities.Project;
 import app.enums.ProjectStatus;
-import app.enums.UserRole;
+import app.enums.Role;
 import app.exceptions.ApiException;
 import app.persistence.testdoubles.InMemoryProjectDAO;
 import app.services.implementations.ProjectService;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProjectServiceTest
 {
     private static final AuthenticatedUser MANAGER = new AuthenticatedUser(
-            1L, "manager@example.com", UserRole.PROJECT_MANAGER
+            1L, "manager@example.com", Role.PROJECT_MANAGER
     );
 
     private InMemoryProjectDAO projectDAO;

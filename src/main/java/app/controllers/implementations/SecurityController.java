@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class SecurityController implements ISecurityController
 {
     private final ISecurityService securityService;
-    private final String USER_ATTRIBUTE = "user";
+    private final String USER_ATTRIBUTE = "authUser";
 
     public SecurityController(ISecurityService securityService)
     {
@@ -81,6 +81,12 @@ public class SecurityController implements ISecurityController
 
         AuthenticatedUser user = ctx.attribute(USER_ATTRIBUTE);
         validateUser(user);
+
+        if (ctx.routeRoles().isEmpty())
+        {
+            return;
+        }
+
         validateRole(ctx, user);
     }
 
@@ -120,7 +126,7 @@ public class SecurityController implements ISecurityController
 
     private void validateRole(Context ctx, AuthenticatedUser user)
     {
-        if (!user.role().equals(ctx.routeRoles().iterator().next()))
+        if (ctx.routeRoles().stream().noneMatch(role -> role.equals(user.role())))
         {
             throw new ForbiddenException("Access denied: required role is " + ctx.routeRoles());
         }

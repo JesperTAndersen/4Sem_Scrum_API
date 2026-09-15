@@ -1,6 +1,7 @@
 package app.routes;
 
 import app.controllers.interfaces.generic.ICrudController;
+import app.enums.Role;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
@@ -18,11 +19,11 @@ public class ProjectRoutes
     {
         return () -> path("projects", () ->
         {
-            get(projectController::getAll);
-            get("/{id}", projectController::get);
-            post(projectController::create);
-            put("/{id}", projectController::update);
-            delete("/{id}", projectController::delete);
+            get(projectController::getAll, Role.PROJECT_MANAGER, Role.EMPLOYEE);
+            get("/{id}", projectController::get, Role.PROJECT_MANAGER, Role.EMPLOYEE);
+            post(projectController::create, Role.PROJECT_MANAGER);
+            put("/{id}", projectController::update, Role.PROJECT_MANAGER);
+            delete("/{id}", projectController::delete, Role.PROJECT_MANAGER);
         });
     }
 }

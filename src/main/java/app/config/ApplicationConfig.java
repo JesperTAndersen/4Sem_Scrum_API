@@ -4,6 +4,7 @@ import app.routes.HealthCheckRoute;
 import app.routes.*;
 import app.exceptions.ApiException;
 import app.routes.UserRoutes;
+import app.controllers.interfaces.ISecurityController;
 import app.utils.ExecutionTimer;
 import app.utils.JWTUtil;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -31,7 +32,7 @@ public class ApplicationConfig
 
         Javalin app = Javalin.create(config ->
         {
-            configureRoutes(config, routes);
+            configureRoutes(config, routes, dependencyContainer.getSecurityController());
             configureCors(config);
             configureExceptions(config);
             configureJackson(config, dependencyContainer);
@@ -51,7 +52,7 @@ public class ApplicationConfig
 
         Javalin app = Javalin.create(config ->
         {
-            configureRoutes(config, routes);
+            configureRoutes(config, routes, dependencyContainer.getSecurityController());
             configureCors(config);
             configureExceptions(config);
             configureJackson(config, dependencyContainer);
@@ -102,9 +103,11 @@ public class ApplicationConfig
         });
     }
 
-    private static void configureRoutes(JavalinConfig config, Routes routes)
+    private static void configureRoutes(JavalinConfig config, Routes routes, ISecurityController securityController)
     {
         config.bundledPlugins.enableRouteOverview("/routes");
+        config.routes.beforeMatched(securityController::authenticate);
+        config.routes.beforeMatched(securityController::authorize);
         config.routes.apiBuilder(routes.getRoutes());
     }
 

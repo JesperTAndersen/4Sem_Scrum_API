@@ -2,7 +2,7 @@ package app.persistence.daos;
 
 import app.config.HibernateTestConfig;
 import app.entities.User;
-import app.enums.UserRole;
+import app.enums.Role;
 import app.persistence.implementations.UserDAO;
 import app.persistence.testutils.TestPopulator;
 import app.utils.PasswordUtil;
@@ -44,12 +44,12 @@ class UserDAOTest
     void create()
     {
         User created = userDAO.create(new User("Test", "User", "test@example.com",
-                PasswordUtil.hashPassword("Password123", 4), UserRole.EMPLOYEE));
+                PasswordUtil.hashPassword("Password123", 4)));
 
         assertThat(created.getId(), notNullValue());
         User fetched = userDAO.get(created.getId());
         assertThat(fetched.getEmail(), is("test@example.com"));
-        assertThat(fetched.getUserRole(), is(UserRole.EMPLOYEE));
+        assertThat(fetched.getRole(), is(Role.EMPLOYEE));
         assertTrue(fetched.verifyPassword("Password123"));
     }
 
@@ -68,7 +68,7 @@ class UserDAOTest
     void findByEmailRoleAndExistence()
     {
         User employee = seeded.get("user2");
-        Set<User> employees = userDAO.findByRole(UserRole.EMPLOYEE);
+        Set<User> employees = userDAO.findByRole(Role.EMPLOYEE);
 
         assertThat(userDAO.findByEmail("bob@example.com").orElseThrow().getId(), is(employee.getId()));
         assertThat(userDAO.findByEmail("missing@example.com"), is(Optional.empty()));
@@ -84,7 +84,7 @@ class UserDAOTest
     {
         User user = seeded.get("user1");
         user.update("Updated", "Manager");
-        user.changeRole(UserRole.EMPLOYEE);
+        user.changeRole(Role.EMPLOYEE);
         user.changeEmail("updated@example.com");
 
         userDAO.update(user);
@@ -93,7 +93,7 @@ class UserDAOTest
         assertThat(fetched.getFirstName(), is("Updated"));
         assertThat(fetched.getLastName(), is("Manager"));
         assertThat(fetched.getEmail(), is("updated@example.com"));
-        assertThat(fetched.getUserRole(), is(UserRole.EMPLOYEE));
+        assertThat(fetched.getRole(), is(Role.EMPLOYEE));
     }
 
     @Test
@@ -110,7 +110,7 @@ class UserDAOTest
     @DisplayName("Read, update, and delete - should reject invalid IDs and missing users")
     void invalidIdsAndMissingUsers()
     {
-        User withoutId = new User("No", "ID", "noid@example.com", PasswordUtil.hashPassword("Password123", 4), UserRole.EMPLOYEE);
+        User withoutId = new User("No", "ID", "noid@example.com", PasswordUtil.hashPassword("Password123", 4));
 
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> userDAO.get(null)),
