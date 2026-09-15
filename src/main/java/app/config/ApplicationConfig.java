@@ -66,6 +66,8 @@ public class ApplicationConfig
         return new Routes(
                 new HealthCheckRoute(dependencyContainer.getHealthCheckController()),
                 new UserRoutes(dependencyContainer.getUserController()),
+                new StageRoutes(dependencyContainer.getStageController()),
+                new TaskRoutes(dependencyContainer.getTaskController()),
                 new CompetenceRoutes(dependencyContainer.getCompetenceController())
         );
     }
