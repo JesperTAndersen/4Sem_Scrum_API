@@ -5,6 +5,6 @@ import io.javalin.security.RouteRole;
 public enum Role implements RouteRole
 {
     ANYONE,
-    ADMIN,
-    PROJECT_MANAGER
+    PROJECT_MANAGER, // Admin
+    EMPLOYEE // User
 }

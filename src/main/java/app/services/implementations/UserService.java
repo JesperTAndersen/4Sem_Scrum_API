@@ -2,7 +2,7 @@ package app.services.implementations;
 
 import app.dtos.security.AuthenticatedUser;
 import app.dtos.user.*;
-import app.enums.UserRole;
+import app.enums.Role;
 import app.exceptions.ConflictException;
 import app.exceptions.UnauthorizedActionException;
 import app.exceptions.ValidationException;
@@ -39,8 +39,7 @@ public class UserService implements IUserService
             dto.firstName(),
             dto.lastName(),
             dto.email(),
-            hashedPassword,
-            UserRole.EMPLOYEE
+            hashedPassword
         );
 
         User created = userDAO.create(user);
@@ -89,7 +88,7 @@ public class UserService implements IUserService
         ValidationUtil.validateNotNull(dto, "User Role");
 
         User targetUser = userDAO.get(targetUserId);
-        targetUser.changeRole(dto.userRole());
+        targetUser.changeRole(dto.role());
 
         User updated = userDAO.update(targetUser);
         return UserMapper.toDTO(updated);
@@ -134,7 +133,7 @@ public class UserService implements IUserService
         ValidationUtil.validateNotNull(authUser, "Authenticated User");
         ValidationUtil.validateId(targetUserId);
 
-        if (authUser.userId().equals(targetUserId))
+        if (authUser.id().equals(targetUserId))
         {
             throw new IllegalArgumentException("Cannot delete your own account");
         }
@@ -145,7 +144,7 @@ public class UserService implements IUserService
     private void validateOwnershipOrAdmin(AuthenticatedUser authUser, Long targetUserId) {
         ValidationUtil.validateNotNull(authUser, "Authenticated User");
 
-        boolean isOwner = authUser.userId().equals(targetUserId);
+        boolean isOwner = authUser.id().equals(targetUserId);
 
         if (!isOwner)
         {
@@ -175,7 +174,7 @@ public class UserService implements IUserService
         requireMinimumLength(dto.firstName(), "First name");
         requireMinimumLength(dto.lastName(), "Last name");
 
-        if (!authUser.userId().equals(targetUserId))
+        if (!authUser.id().equals(targetUserId))
         {
             throw new UnauthorizedActionException("You can only update your own profile");
         }

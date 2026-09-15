@@ -1,11 +1,11 @@
 package app.dtos.security;
 
-import app.enums.UserRole;
+import app.enums.Role;
 
 public record AuthenticatedUser(
-        Long userId,
+        Long id,
         String email,
-        UserRole userRole
+        Role role
 )
 {
 }

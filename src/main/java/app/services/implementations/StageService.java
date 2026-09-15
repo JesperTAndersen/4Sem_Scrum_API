@@ -4,8 +4,8 @@ import app.dtos.stage.StageCreateDTO;
 import app.dtos.stage.StageDTO;
 import app.entities.Project;
 import app.entities.Stage;
-import app.persistence.implementations.ProjectDAO;
-import app.persistence.implementations.StageDAO;
+import app.persistence.interfaces.specific.IProjectDAO;
+import app.persistence.interfaces.specific.IStageDAO;
 import app.services.interfaces.IStageService;
 import app.utils.ValidationUtil;
 
@@ -13,10 +13,10 @@ import java.util.List;
 
 public class StageService implements IStageService
 {
-    private final StageDAO stageDAO;
-    private final ProjectDAO projectDAO;
+    private final IStageDAO stageDAO;
+    private final IProjectDAO projectDAO;
 
-    public StageService(StageDAO stageDAO, ProjectDAO projectDAO)
+    public StageService(IStageDAO stageDAO, IProjectDAO projectDAO)
     {
         this.stageDAO = stageDAO;
         this.projectDAO = projectDAO;

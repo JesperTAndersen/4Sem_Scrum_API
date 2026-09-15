@@ -4,6 +4,9 @@ import app.routes.HealthCheckRoute;
 import app.routes.*;
 import app.exceptions.ApiException;
 import app.routes.UserRoutes;
+import app.controllers.interfaces.ISecurityController;
+import app.utils.ExecutionTimer;
+import app.utils.JWTUtil;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
@@ -22,30 +25,36 @@ public class ApplicationConfig
 
     public static Javalin startServer(int port)
     {
+        ExecutionTimer.start();
+        JWTUtil.validate();
         DependencyContainer dependencyContainer = DependencyContainer.getInstance();
         Routes routes = buildRoutes(dependencyContainer);
 
         Javalin app = Javalin.create(config ->
         {
-            configureRoutes(config, routes);
+            configureRoutes(config, routes, dependencyContainer.getSecurityController());
+            configureSecurity(config, dependencyContainer);
             configureCors(config);
             configureExceptions(config);
             configureJackson(config, dependencyContainer);
             configureLogger(config);
         }).start(port);
 
+        ExecutionTimer.finish("Scrum Project \"Estimo\" ready on port " + port);
         return app;
     }
 
     // For test instances
     public static Javalin startServer(int port, EntityManagerFactory emf)
     {
+        JWTUtil.validate();
         DependencyContainer dependencyContainer = DependencyContainer.getTestInstance(emf);
         Routes routes = buildRoutes(dependencyContainer);
 
         Javalin app = Javalin.create(config ->
         {
-            configureRoutes(config, routes);
+            configureRoutes(config, routes, dependencyContainer.getSecurityController());
+            configureSecurity(config, dependencyContainer);
             configureCors(config);
             configureExceptions(config);
             configureJackson(config, dependencyContainer);
@@ -66,7 +75,9 @@ public class ApplicationConfig
         return new Routes(
                 new HealthCheckRoute(dependencyContainer.getHealthCheckController()),
                 new UserRoutes(dependencyContainer.getUserController()),
-                new CompetenceRoutes(dependencyContainer.getCompetenceController())
+                new CompetenceRoutes(dependencyContainer.getCompetenceController()),
+                new ProjectRoutes((dependencyContainer.getProjectController())),
+                new SecurityRoutes(dependencyContainer.getSecurityController())
         );
     }
 
@@ -94,12 +105,17 @@ public class ApplicationConfig
         });
     }
 
-    private static void configureRoutes(JavalinConfig config, Routes routes)
+    private static void configureRoutes(JavalinConfig config, Routes routes, ISecurityController securityController)
     {
         config.bundledPlugins.enableRouteOverview("/routes");
         config.routes.apiBuilder(routes.getRoutes());
     }
 
+    private static void configureSecurity(JavalinConfig config, DependencyContainer dependencyContainer)
+    {
+        config.routes.beforeMatched(dependencyContainer.getSecurityController()::authenticate);
+        config.routes.beforeMatched(dependencyContainer.getSecurityController()::authorize);
+    }
 
     private static void configureExceptions(JavalinConfig config)
     {

@@ -1,6 +1,6 @@
 package app.dtos.user;
 
-import app.enums.UserRole;
+import app.enums.Role;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
@@ -10,7 +10,7 @@ public record UserDTO(
     String firstName,
     String lastName,
     String email,
-    UserRole userRole,
+    Role role,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     LocalDateTime createdAt
 )

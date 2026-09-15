@@ -1,9 +1,9 @@
-package app.entities;
+package app.enums;
 
 public enum ProjectStatus
 {
+    DRAFT,
     PLANNED,
     IN_PROGRESS,
-    COMPLETED,
-    DRAFT
+    COMPLETED
 }
