@@ -1,7 +1,7 @@
 package app.persistence.implementations;
 
+import app.enums.Role;
 import app.persistence.interfaces.specific.IUserDAO;
-import app.enums.UserRole;
 import app.exceptions.DatabaseException;
 import app.entities.User;
 import app.utils.DBValidator;
@@ -169,15 +169,15 @@ public class UserDAO implements IUserDAO
     }
 
     @Override
-    public Set<User> findByRole(UserRole role)
+    public Set<User> findByRole(Role role)
     {
-        ValidationUtil.validateNotNull(role, "UserRole");
+        ValidationUtil.validateNotNull(role, "Role");
 
         try(EntityManager em = emf.createEntityManager())
         {
             try
             {
-                TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u.userRole = :role", User.class)
+                TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u.role = :role", User.class)
                     .setParameter("role", role);
                 return new HashSet<>(query.getResultList());
             }

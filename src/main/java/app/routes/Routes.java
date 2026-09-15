@@ -1,6 +1,5 @@
 package app.routes;
 
-import app.routes.CompetenceRoutes;
 import io.javalin.apibuilder.EndpointGroup;
 import lombok.Getter;
 
@@ -17,13 +16,15 @@ public class Routes
     private final UserRoutes userRoutes;
     private final CompetenceRoutes competenceRoutes;
     private final ProjectRoutes projectRoutes;
+    private final SecurityRoutes securityRoutes;
 
-    public Routes(HealthCheckRoute healthCheckRoute, UserRoutes userRoute, CompetenceRoutes competenceRoutes, ProjectRoutes projectRoutes)
+    public Routes(HealthCheckRoute healthCheckRoute, UserRoutes userRoute, CompetenceRoutes competenceRoutes, ProjectRoutes projectRoutes, SecurityRoutes securityRoutes)
     {
         this.healthCheckRoute = healthCheckRoute;
         this.userRoutes = userRoute;
         this.competenceRoutes = competenceRoutes;
         this.projectRoutes = projectRoutes;
+        this.securityRoutes = securityRoutes;
     }
 
     public EndpointGroup getRoutes()
@@ -38,6 +39,7 @@ public class Routes
                 userRoutes.getRoutes().addEndpoints();
                 competenceRoutes.getRoutes().addEndpoints();
                 projectRoutes.getRoutes().addEndpoints();
+                securityRoutes.getRoutes().addEndpoints();
             });
         };
     }

@@ -1,12 +1,13 @@
 package app.entities;
 
-import app.enums.UserRole;
+import app.enums.Role;
 import app.utils.PasswordUtil;
 import app.utils.ValidationUtil;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -32,13 +33,15 @@ public class User implements IEntity
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(name = "hashed_password", nullable = false)
+    @Getter
+    @Setter
+    @Column(name = "hashed_password", nullable = false, unique = false, length = 60)
     private String hashedPassword;
 
     @Getter
     @Enumerated(EnumType.STRING)
     @Column(name = "user_role", nullable = false)
-    private UserRole userRole;
+    private Role role;
 
     @Getter
     @Column(name = "created_at", updatable = false)
@@ -48,17 +51,16 @@ public class User implements IEntity
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public User(String firstName, String lastName, String email, String hashedPassword, UserRole userRole)
+    public User(String firstName, String lastName, String email, String hashedPassword)
     {
         ValidationUtil.validateNotBlank(firstName, "First name");
         ValidationUtil.validateNotBlank(lastName, "Last name");
-        ValidationUtil.validateNotNull(userRole, "User role");
 
         this.firstName = firstName.trim();
         this.lastName = lastName.trim();
         this.email = ValidationUtil.validateEmail(email);
         this.hashedPassword = hashedPassword.trim();
-        this.userRole = userRole;
+        this.role = Role.EMPLOYEE;
     }
 
     public void update(String firstName, String lastName)
@@ -70,10 +72,10 @@ public class User implements IEntity
         this.lastName = lastName.trim();
     }
 
-    public void changeRole(UserRole newRole)
+    public void changeRole(Role newRole)
     {
-        ValidationUtil.validateNotNull(newRole, "User role");
-        this.userRole = newRole;
+        ValidationUtil.validateNotNull(newRole, "Role");
+        this.role = newRole;
     }
 
     public void changeEmail(String newEmail)

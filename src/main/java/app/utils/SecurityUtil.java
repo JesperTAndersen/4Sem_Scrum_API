@@ -37,7 +37,7 @@ public class SecurityUtil
             throw new AuthenticationException("No authenticated user found");
         }
 
-        if (authUser.userId() == null || authUser.userId() <= 0)
+        if (authUser.id() == null || authUser.id() <= 0)
         {
             throw new AuthenticationException("Authenticated user id is invalid");
         }

@@ -33,6 +33,12 @@
 
         <!-- Jackson -->
         <jackson.version>2.20.0</jackson.version>
+
+        <!-- Security -->
+        <jbcrypt.version>0.4</jbcrypt.version>
+
+        <!-- JSON Web Token -->
+        <nimbusds.version>10.0.2</nimbusds.version>
     </properties>
 
     <dependencies>
@@ -153,6 +159,20 @@
             <artifactId>testcontainers-junit-jupiter</artifactId>
             <version>${testcontainers.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- SECURITY -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>${jbcrypt.version}</version>
+        </dependency>
+
+        <!-- JSON WEB TOKEN -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>${nimbusds.version}</version>
         </dependency>
 
     </dependencies>
