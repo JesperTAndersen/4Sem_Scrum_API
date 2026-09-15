@@ -1,0 +1,114 @@
+@token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJKb2huLUFkbWluIiwicm9sZXMiOlsiVVNFUiJdLCJpc3MiOiJESGFuZ2FhcmQiLCJpZCI6MSwiZXhwIjoxNzgwNDM2ODA4LCJpYXQiOjE3ODA0MzUwMDh9.JRI56RJChkzZCiO9_nYad_nXxKoCboGv8irJfOpl120
+@id=4
+
+### Register user
+POST {{url}}/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "John-Admin",
+  "email": "john@admin.com",
+  "password": "P4sswo8d?"
+}
+
+### Login
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@admin.com",
+  "password": "P4sswo8d?"
+}
+
+### Get user info for account page
+GET {{url}}/users/2
+Content-Type: application/json
+Authorization: Bearer: {{token}}
+
+### Register secondary user (for update/delete testing)
+POST {{url}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "jane@user.com",
+  "username": "Jane-User",
+  "password": "P4sswo8d?"
+}
+
+### Login secondary user
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "jane@user.com",
+  "password": "P4sswo8d?"
+}
+
+### Update email only
+PUT {{url}}/users/{{id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "jane@updated.com"
+}
+
+### Update username only
+PUT {{url}}/users/{{id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "Jane-Updated"
+}
+
+### Update password only
+PUT {{url}}/users/{{id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "password": "Upd4t3D!"
+}
+
+### Update all fields
+PUT {{url}}/users/{{id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "jane@updated2.com",
+  "username": "Jane-Updated2",
+  "password": "Upd4t3D2!"
+}
+
+### Update another user's account (expect 403)
+PUT {{url}}/users/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "hacked@admin.com"
+}
+
+### Delete another user's account (expect 403)
+DELETE {{url}}/users/1
+Authorization: Bearer {{token}}
+
+### Update nonexistent user (expect 403)
+PUT {{url}}/users/999
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "ghost@user.com"
+}
+
+### Delete nonexistent user (expect 404)
+DELETE {{url}}/users/999
+Authorization: Bearer {{token}}
+
+### Delete secondary user (expect 204)
+DELETE {{url}}/users/{{id}}
+Authorization: Bearer {{token}}

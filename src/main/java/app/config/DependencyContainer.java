@@ -3,6 +3,7 @@ package app.config;
 import app.config.hibernate.HibernateConfig;
 import app.controllers.implementations.*;
 import app.controllers.interfaces.IHealthCheckController;
+import app.controllers.interfaces.ISecurityController;
 import app.controllers.interfaces.IUserController;
 import app.controllers.interfaces.generic.ICrudController;
 import app.persistence.implementations.CompetenceDAO;
@@ -14,10 +15,12 @@ import app.persistence.interfaces.specific.IProjectDAO;
 import app.persistence.interfaces.specific.IStageDAO;
 import app.persistence.interfaces.specific.IUserDAO;
 import app.services.implementations.CompetenceService;
+import app.services.implementations.SecurityService;
 import app.services.implementations.ProjectService;
 import app.services.implementations.StageService;
 import app.services.implementations.UserService;
 import app.services.interfaces.ICompetenceService;
+import app.services.interfaces.ISecurityService;
 import app.services.interfaces.IProjectService;
 import app.services.interfaces.IStageService;
 import app.services.interfaces.IUserService;
@@ -56,7 +59,10 @@ public final class DependencyContainer
     private final IProjectService projectService;
     @Getter
     private final ICrudController projectController;
-
+    @Getter
+    private final ISecurityController securityController;
+    @Getter
+    private final ISecurityService securityService;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {
@@ -82,6 +88,8 @@ public final class DependencyContainer
         this.projectService = new ProjectService(projectDAO);
         this.projectController = new ProjectController(projectService);
 
+        this.securityService = new SecurityService(userDAO);
+        this.securityController = new SecurityController(securityService);
     }
 
     public static DependencyContainer getInstance()

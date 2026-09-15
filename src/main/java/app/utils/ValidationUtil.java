@@ -113,6 +113,19 @@ public class ValidationUtil
         return trimmed.toLowerCase();
     }
 
+    public static void validatePassword(String password)
+    {
+        if (password == null || password.isBlank())
+        {
+            throw new ValidationException("Password cannot be blank");
+        }
+
+        if (!password.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[\\p{Punct}]).{8,}$"))
+        {
+            throw new ValidationException("Password must contain uppercase, lowercase, digit and special character");
+        }
+    }
+
     public static void validateNotEmpty(java.util.Collection<?> collection, String fieldName)
     {
         if (collection == null || collection.isEmpty())

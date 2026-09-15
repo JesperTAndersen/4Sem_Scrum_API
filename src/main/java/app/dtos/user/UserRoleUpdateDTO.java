@@ -1,9 +1,9 @@
 package app.dtos.user;
 
-import app.enums.UserRole;
+import app.enums.Role;
 
 public record UserRoleUpdateDTO(
-    UserRole userRole
+    Role role
 )
 {
 }
