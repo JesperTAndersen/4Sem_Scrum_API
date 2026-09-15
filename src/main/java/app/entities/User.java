@@ -1,6 +1,6 @@
 package app.entities;
 
-import app.enums.UserRole;
+import app.enums.Role;
 import app.utils.PasswordUtil;
 import app.utils.ValidationUtil;
 import jakarta.persistence.*;
@@ -41,7 +41,7 @@ public class User implements IEntity
     @Getter
     @Enumerated(EnumType.STRING)
     @Column(name = "user_role", nullable = false)
-    private UserRole userRole;
+    private Role role;
 
     @Getter
     @Column(name = "created_at", updatable = false)
@@ -51,17 +51,17 @@ public class User implements IEntity
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public User(String firstName, String lastName, String email, String hashedPassword, UserRole userRole)
+    public User(String firstName, String lastName, String email, String hashedPassword, Role role)
     {
         ValidationUtil.validateNotBlank(firstName, "First name");
         ValidationUtil.validateNotBlank(lastName, "Last name");
-        ValidationUtil.validateNotNull(userRole, "User role");
+        ValidationUtil.validateNotNull(role, "Role");
 
         this.firstName = firstName.trim();
         this.lastName = lastName.trim();
         this.email = ValidationUtil.validateEmail(email);
         this.hashedPassword = hashedPassword.trim();
-        this.userRole = userRole;
+        this.role = role;
     }
 
     public void update(String firstName, String lastName)
@@ -73,10 +73,10 @@ public class User implements IEntity
         this.lastName = lastName.trim();
     }
 
-    public void changeRole(UserRole newRole)
+    public void changeRole(Role newRole)
     {
-        ValidationUtil.validateNotNull(newRole, "User role");
-        this.userRole = newRole;
+        ValidationUtil.validateNotNull(newRole, "Role");
+        this.role = newRole;
     }
 
     public void changeEmail(String newEmail)
