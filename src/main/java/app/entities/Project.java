@@ -1,14 +1,16 @@
 package app.entities;
 
+import app.enums.ProjectStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "projects")
 public class Project implements IEntity
@@ -44,4 +46,18 @@ public class Project implements IEntity
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate()
+    {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate()
+    {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
