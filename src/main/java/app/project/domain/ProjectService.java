@@ -2,6 +2,7 @@ package app.project.domain;
 
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
+import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
 import app.security.presentation.dto.AuthenticatedUser;
 import app.project.domain.Project;
@@ -53,10 +54,10 @@ public class ProjectService implements IProjectService
     }
 
     @Override
-    public List<ProjectDTO> getAll()
+    public List<SlimProjectDTO> getAll()
     {
         return projectDAO.getAll().stream()
-                .map(ProjectMapper::toDTO)
+                .map(ProjectMapper::toSlimProjectDTO)
                 .toList();
     }
 
