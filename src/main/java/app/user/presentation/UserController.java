@@ -1,6 +1,5 @@
 package app.user.presentation;
 
-import app.user.presentation.IUserController;
 import app.security.presentation.dto.AuthenticatedUser;
 import app.user.presentation.dto.*;
 import app.user.domain.IUserService;
