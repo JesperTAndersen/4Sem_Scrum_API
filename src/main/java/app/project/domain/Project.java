@@ -4,11 +4,14 @@ import app.shared.domain.IEntity;
 
 import app.project.domain.ProjectStatus;
 import app.user.domain.User;
+import app.stage.domain.Stage;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor
@@ -48,6 +51,10 @@ public class Project implements IEntity
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "updated_by", nullable = false)
     private User updatedBy;
+
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<Stage> stages = new HashSet<>();
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
