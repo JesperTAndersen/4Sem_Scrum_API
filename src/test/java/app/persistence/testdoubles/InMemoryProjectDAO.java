@@ -1,7 +1,7 @@
 package app.persistence.testdoubles;
 
-import app.entities.Project;
-import app.persistence.interfaces.specific.IProjectDAO;
+import app.project.domain.Project;
+import app.project.data.IProjectDAO;
 import jakarta.persistence.EntityNotFoundException;
 
 import java.time.LocalDateTime;

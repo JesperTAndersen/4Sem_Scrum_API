@@ -1,12 +1,12 @@
 package app.controllers;
 
-import app.controllers.implementations.SecurityController;
-import app.dtos.security.AuthenticatedUser;
-import app.dtos.security.LoginRequestDTO;
-import app.dtos.user.CreateUserRequestDTO;
-import app.enums.Role;
+import app.security.presentation.SecurityController;
+import app.security.presentation.dto.AuthenticatedUser;
+import app.security.presentation.dto.LoginRequestDTO;
+import app.user.presentation.dto.CreateUserRequestDTO;
+import app.security.domain.Role;
 import app.exceptions.ApiException;
-import app.services.interfaces.ISecurityService;
+import app.security.domain.ISecurityService;
 import io.javalin.Javalin;
 import org.junit.jupiter.api.Test;
 

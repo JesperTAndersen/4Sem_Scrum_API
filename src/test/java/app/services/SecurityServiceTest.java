@@ -1,12 +1,12 @@
 package app.services;
 
-import app.dtos.security.AuthenticatedUser;
-import app.dtos.security.LoginRequestDTO;
-import app.entities.User;
-import app.enums.Role;
+import app.security.presentation.dto.AuthenticatedUser;
+import app.security.presentation.dto.LoginRequestDTO;
+import app.user.domain.User;
+import app.security.domain.Role;
 import app.exceptions.UnauthorizedException;
-import app.persistence.interfaces.specific.IUserDAO;
-import app.services.implementations.SecurityService;
+import app.user.data.IUserDAO;
+import app.security.domain.SecurityService;
 import app.utils.JWTUtil;
 import app.utils.PasswordUtil;
 import org.junit.jupiter.api.DisplayName;

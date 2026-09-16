@@ -1,9 +1,9 @@
 package app.persistence.testutils;
 
-import app.entities.Project;
-import app.entities.User;
-import app.enums.ProjectStatus;
-import app.enums.Role;
+import app.project.domain.Project;
+import app.user.domain.User;
+import app.project.domain.ProjectStatus;
+import app.security.domain.Role;
 import app.utils.PasswordUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;

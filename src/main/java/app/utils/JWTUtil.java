@@ -1,9 +1,9 @@
 package app.utils;
 
-import app.dtos.security.AuthenticatedUser;
+import app.security.presentation.dto.AuthenticatedUser;
 import app.exceptions.TokenCreationException;
 import app.exceptions.TokenVerificationException;
-import app.enums.Role;
+import app.security.domain.Role;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;

@@ -1,15 +1,15 @@
 package app.services;
 
-import app.dtos.project.CreateProjectDTO;
-import app.dtos.project.ProjectDTO;
-import app.dtos.project.UpdateProjectDTO;
-import app.dtos.security.AuthenticatedUser;
-import app.entities.Project;
-import app.enums.ProjectStatus;
-import app.enums.Role;
+import app.project.presentation.dto.CreateProjectDTO;
+import app.project.presentation.dto.ProjectDTO;
+import app.project.presentation.dto.UpdateProjectDTO;
+import app.security.presentation.dto.AuthenticatedUser;
+import app.project.domain.Project;
+import app.project.domain.ProjectStatus;
+import app.security.domain.Role;
 import app.exceptions.ApiException;
 import app.persistence.testdoubles.InMemoryProjectDAO;
-import app.services.implementations.ProjectService;
+import app.project.domain.ProjectService;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
