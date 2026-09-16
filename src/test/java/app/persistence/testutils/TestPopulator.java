@@ -20,12 +20,13 @@ public final class TestPopulator
 
     public static Map<String, Project> populateProjects(EntityManagerFactory emf)
     {
+        Map<String, User> users = populateUsers(emf);
         Project project1 = project("Website redesign", "Redesign the public website", ProjectStatus.IN_PROGRESS,
-                "manager@example.com", LocalDate.of(2026, 1, 5), LocalDate.of(2026, 6, 30));
+                users.get("user1"), LocalDate.of(2026, 1, 5), LocalDate.of(2026, 6, 30));
         Project project2 = project("Mobile application", "Build the mobile application", ProjectStatus.DRAFT,
-                "manager@example.com", LocalDate.of(2026, 3, 1), LocalDate.of(2026, 10, 31));
+                users.get("user1"), LocalDate.of(2026, 3, 1), LocalDate.of(2026, 10, 31));
         Project project3 = project("Completed migration", "Migrate the legacy platform", ProjectStatus.COMPLETED,
-                "admin@example.com", LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31));
+                users.get("user2"), LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31));
 
         try (EntityManager em = emf.createEntityManager())
         {
@@ -69,7 +70,7 @@ public final class TestPopulator
         return seeded;
     }
 
-    private static Project project(String title, String description, ProjectStatus status, String user,
+    private static Project project(String title, String description, ProjectStatus status, User user,
                                    LocalDate startDate, LocalDate deadline)
     {
         return Project.builder()

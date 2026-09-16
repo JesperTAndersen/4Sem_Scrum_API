@@ -94,7 +94,7 @@ class ProjectDAOTest
                 .deadline(project.getDeadline())
                 .status(ProjectStatus.COMPLETED)
                 .createdBy(project.getCreatedBy())
-                .updatedBy("admin@example.com")
+                .updatedBy(project.getUpdatedBy())
                 .createdAt(project.getCreatedAt())
                 .updatedAt(previousUpdatedAt)
                 .build();
@@ -138,8 +138,8 @@ class ProjectDAOTest
                 .startDate(LocalDate.of(2026, 1, 1))
                 .deadline(LocalDate.of(2026, 12, 31))
                 .status(status)
-                .createdBy("test@example.com")
-                .updatedBy("test@example.com")
+                .createdBy(seeded.get("project1").getCreatedBy())
+                .updatedBy(seeded.get("project1").getUpdatedBy())
                 .build();
     }
 }
