@@ -7,6 +7,7 @@ import app.project.presentation.dto.SlimProjectDTO;
 import app.stage.domain.Stage;
 import app.task.domain.Task;
 import app.user.domain.User;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -20,7 +21,8 @@ import static org.hamcrest.Matchers.is;
 class ProjectMapperTest
 {
     @Test
-    void mapsStagesAndTasksIntoProjectDTO()
+    @DisplayName("Map project - should include its stages and tasks")
+    void mapProjectIncludesStagesAndTasks()
     {
         Project project = project();
         Stage planning = new Stage("Planning", project);
@@ -44,7 +46,8 @@ class ProjectMapperTest
     }
 
     @Test
-    void mapsTotalAndCompletedTaskCountsIntoSlimProjectDTO()
+    @DisplayName("Map slim project - should include total and completed task counts")
+    void mapSlimProjectIncludesTaskCounts()
     {
         Project project = project();
         Stage stage = new Stage("Planning", project);
