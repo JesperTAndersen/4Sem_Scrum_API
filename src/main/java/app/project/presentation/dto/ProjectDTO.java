@@ -2,9 +2,11 @@ package app.project.presentation.dto;
 
 import app.project.domain.ProjectStatus;
 import app.user.presentation.dto.UserReferenceDTO;
+import app.stage.presentation.dto.StageDTO;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ProjectDTO(
         Long id,
@@ -16,6 +18,7 @@ public record ProjectDTO(
         UserReferenceDTO createdBy,
         LocalDateTime createdAt,
         UserReferenceDTO updatedBy,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        List<StageDTO> stages
 ) {
 }
