@@ -2,8 +2,11 @@ package app.stage.domain;
 
 import app.shared.domain.IEntity;
 import app.project.domain.Project;
+import app.task.domain.Task;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,6 +14,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Getter;
@@ -25,8 +29,9 @@ public class Stage implements IEntity
     private String name;
     @ManyToOne(fetch = FetchType.LAZY)
     private Project project;
-    //@OneToMany(mappedBy = "stage", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    //public Set<Task> tasks;
+
+    @OneToMany(mappedBy = "stage", fetch = FetchType.LAZY)
+    private Set<Task> tasks = new HashSet<>();
 
     public Stage() {}
     public Stage(String name, Project project)
