@@ -5,6 +5,8 @@ import app.project.presentation.dto.ProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
 import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
+import app.user.data.UserMapper;
+import app.user.domain.User;
 
 public class ProjectMapper
 {
@@ -21,14 +23,14 @@ public class ProjectMapper
                 project.getStartDate(),
                 project.getDeadline(),
                 project.getStatus(),
-                project.getCreatedBy(),
+                UserMapper.toReferenceDTO(project.getCreatedBy()),
                 project.getCreatedAt(),
-                project.getUpdatedBy(),
+                UserMapper.toReferenceDTO(project.getUpdatedBy()),
                 project.getUpdatedAt()
         );
     }
 
-    public static Project toEntity(CreateProjectDTO dto, ProjectStatus status, String createdBy)
+    public static Project toEntity(CreateProjectDTO dto, ProjectStatus status, User createdBy)
     {
         return Project.builder()
                 .title(dto.title())
@@ -41,7 +43,7 @@ public class ProjectMapper
                 .build();
     }
 
-    public static Project toEntity(UpdateProjectDTO dto, Project existingProject, String updatedBy)
+    public static Project toEntity(UpdateProjectDTO dto, Project existingProject, User updatedBy)
     {
         return Project.builder()
                 .id(existingProject.getId())

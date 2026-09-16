@@ -3,6 +3,7 @@ package app.project.domain;
 import app.shared.domain.IEntity;
 
 import app.project.domain.ProjectStatus;
+import app.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,14 +38,16 @@ public class Project implements IEntity
     @Column(nullable = false)
     private ProjectStatus status;
 
-    @Column(nullable = false, length = 250)
-    private String createdBy;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false, length = 250)
-    private String updatedBy;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "updated_by", nullable = false)
+    private User updatedBy;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;

@@ -1,6 +1,7 @@
 package app.project.presentation.dto;
 
 import app.project.domain.ProjectStatus;
+import app.user.presentation.dto.UserReferenceDTO;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,9 +13,9 @@ public record ProjectDTO(
         LocalDate startDate,
         LocalDate deadline,
         ProjectStatus status,
-        String createdBy, //TODO UserReferenceDTO
+        UserReferenceDTO createdBy,
         LocalDateTime createdAt,
-        String updatedBy,
+        UserReferenceDTO updatedBy,
         LocalDateTime updatedAt
 ) {
 }
