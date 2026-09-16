@@ -1,9 +1,9 @@
 package app.persistence.daos;
 
 import app.config.HibernateTestConfig;
-import app.entities.User;
-import app.enums.Role;
-import app.persistence.implementations.UserDAO;
+import app.user.domain.User;
+import app.security.domain.Role;
+import app.user.data.UserDAO;
 import app.persistence.testutils.TestPopulator;
 import app.utils.PasswordUtil;
 import jakarta.persistence.EntityManagerFactory;

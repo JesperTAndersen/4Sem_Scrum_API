@@ -1,6 +1,6 @@
 package app.utils;
 
-import app.dtos.security.AuthenticatedUser;
+import app.security.presentation.dto.AuthenticatedUser;
 import app.exceptions.AuthenticationException;
 import io.javalin.http.Context;
 import io.javalin.websocket.WsContext;

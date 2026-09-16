@@ -1,9 +1,9 @@
 package app.persistence.daos;
 
 import app.config.HibernateTestConfig;
-import app.entities.Project;
-import app.enums.ProjectStatus;
-import app.persistence.implementations.ProjectDAO;
+import app.project.domain.Project;
+import app.project.domain.ProjectStatus;
+import app.project.data.ProjectDAO;
 import app.persistence.testutils.TestPopulator;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityNotFoundException;

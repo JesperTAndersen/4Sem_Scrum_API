@@ -2,11 +2,11 @@ package app.config.hibernate;
 
 import org.hibernate.cfg.Configuration;
 
-import app.entities.Competence;
-import app.entities.Project;
-import app.entities.Stage;
-import app.entities.Task;
-import app.entities.User;
+import app.competence.domain.Competence;
+import app.project.domain.Project;
+import app.stage.domain.Stage;
+import app.task.domain.Task;
+import app.user.domain.User;
 
 final class EntityRegistry
 {
