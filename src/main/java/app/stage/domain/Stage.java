@@ -45,6 +45,14 @@ public class Stage implements IEntity
         this.name = name;
     }
 
+    public void addTask(Task task)
+    {
+        if (task != null)
+        {
+            tasks.add(task);
+        }
+    }
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -73,6 +81,6 @@ public class Stage implements IEntity
     @Override
     public final int hashCode()
     {
-        return id.hashCode();
+        return getClass().hashCode();
     }
 }
