@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import app.config.ApplicationConfig;
 import app.config.HibernateTestConfig;
 import app.persistence.testutils.TestPopulator;
@@ -25,6 +27,7 @@ class ApiTest implements BeforeAllCallback, AutoCloseable
     private static EntityManagerFactory emf;
     private static Javalin app;
     private boolean started = false;
+    static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void beforeAll(ExtensionContext context)
@@ -47,7 +50,7 @@ class ApiTest implements BeforeAllCallback, AutoCloseable
         // register callback
         context.getRoot().getStore(GLOBAL).put("ApiTest", this);
 
-        RestAssured.baseURI = "http://localhost:7080";
+        RestAssured.baseURI = "http://localhost:7080/api/v1";
 
         JWT_TOKEN = JWTUtil.createToken(1L, "test@example.org", Role.PROJECT_MANAGER);
     }

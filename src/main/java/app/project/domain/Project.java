@@ -5,7 +5,6 @@ import app.shared.domain.IEntity;
 import app.project.domain.ProjectStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.Builder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
