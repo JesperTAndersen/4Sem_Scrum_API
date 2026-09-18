@@ -76,8 +76,8 @@ public class ProjectService implements IProjectService
                 getAuthenticatedUser(authUser)
         );
 
-        Project updatedProject = projectDAO.update(project);
-        return ProjectMapper.toDTO(updatedProject);
+        projectDAO.update(project);
+        return ProjectMapper.toDTO(getExistingProject(id));
     }
 
     @Override

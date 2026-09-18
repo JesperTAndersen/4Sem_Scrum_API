@@ -35,6 +35,8 @@ public class ProjectDAO implements IProjectDAO
                 Project project = em.createQuery(
                                 """
                                         SELECT DISTINCT p FROM Project p
+                                        LEFT JOIN FETCH p.createdBy
+                                        LEFT JOIN FETCH p.updatedBy
                                         LEFT JOIN FETCH p.stages s
                                         LEFT JOIN FETCH s.tasks
                                         WHERE p.id = :id""",
@@ -69,6 +71,8 @@ public class ProjectDAO implements IProjectDAO
                 TypedQuery<Project> query = em.createQuery(
                         """ 
                                 SELECT DISTINCT p FROM Project p 
+                                LEFT JOIN FETCH p.createdBy
+                                LEFT JOIN FETCH p.updatedBy
                                 LEFT JOIN FETCH p.stages s
                                 LEFT JOIN FETCH s.tasks 
                                 ORDER BY p.id""",
