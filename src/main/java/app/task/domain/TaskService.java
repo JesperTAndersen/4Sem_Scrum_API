@@ -71,6 +71,6 @@ public class TaskService implements ITaskService
 
     private TaskDTO toDTO(Task task)
     {
-        return new TaskDTO(task.getId(), task.getName(), task.getEstimate(), task.getDuration(), task.getCrewSize());
+        return new TaskDTO(task.getId(), task.getName(), task.getEstimate(), task.getDuration(), task.getCrewSize(), task.getStatus());
     }
 }

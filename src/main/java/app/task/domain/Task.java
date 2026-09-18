@@ -57,6 +57,15 @@ public class Task implements IEntity
         this.duration = duration;
         this.crewSize = crewSize;
         this.status = TaskStatus.NOT_STARTED;
+        if (stage != null)
+        {
+            stage.addTask(this);
+        }
+    }
+
+    public void changeStatus(TaskStatus status)
+    {
+        this.status = status;
     }
 
     // TODO: employees
@@ -98,6 +107,6 @@ public class Task implements IEntity
     @Override
     public final int hashCode()
     {
-        return id.hashCode();
+        return getClass().hashCode();
     }
 }

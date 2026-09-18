@@ -32,7 +32,21 @@ public class ProjectDAO implements IProjectDAO
         {
             try
             {
-                return DBValidator.validateExists(em.find(Project.class, id), id, Project.class);
+                Project project = em.createQuery(
+                                """
+                                        SELECT DISTINCT p FROM Project p
+                                        LEFT JOIN FETCH p.stages s
+                                        LEFT JOIN FETCH s.tasks
+                                        WHERE p.id = :id""",
+
+                                Project.class
+                        )
+                        .setParameter("id", id)
+                        .getResultStream()
+                        .findFirst()
+                        .orElse(null);
+
+                return DBValidator.validateExists(project, id, Project.class);
             }
             catch (EntityNotFoundException e)
             {
@@ -53,7 +67,11 @@ public class ProjectDAO implements IProjectDAO
             try
             {
                 TypedQuery<Project> query = em.createQuery(
-                        "SELECT p FROM Project p ORDER BY p.id",
+                        """ 
+                                SELECT DISTINCT p FROM Project p 
+                                LEFT JOIN FETCH p.stages s
+                                LEFT JOIN FETCH s.tasks 
+                                ORDER BY p.id""",
                         Project.class
                 );
 

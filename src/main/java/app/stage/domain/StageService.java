@@ -74,6 +74,6 @@ public class StageService implements IStageService
 
     private StageDTO toDTO(Stage stage)
     {
-        return new StageDTO(stage.getId(), stage.getName());
+        return new StageDTO(stage.getId(), stage.getName(), List.of());
     }
 }
