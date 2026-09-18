@@ -104,7 +104,7 @@ public final class DependencyContainer
         this.securityService = new SecurityService(userDAO);
         this.securityController = new SecurityController(securityService);
         this.taskDAO = new TaskDAO(entityManagerFactory);
-        this.taskService = new TaskService(taskDAO, stageDAO);
+        this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO);
         this.taskController = new TaskController(taskService);
     }
 

@@ -7,6 +7,7 @@ import static io.javalin.apibuilder.ApiBuilder.put;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
 import app.shared.presentation.ICrudController;
+import app.security.domain.Role;
 import io.javalin.apibuilder.EndpointGroup;
 
 public class TaskRoutes
@@ -23,11 +24,11 @@ public class TaskRoutes
         return () ->
             path("tasks", () ->
             {
-                get("", taskController::getAll);
-                get("{id}", taskController::get);
-                post("", taskController::create);
-                put("{id}", taskController::update);
-                delete("{id}", taskController::delete);
+                get(taskController::getAll, Role.PROJECT_MANAGER);
+                get("/{id}", taskController::get, Role.PROJECT_MANAGER);
+                post(taskController::create, Role.PROJECT_MANAGER);
+                put("/{id}", taskController::update, Role.PROJECT_MANAGER);
+                delete("/{id}", taskController::delete, Role.PROJECT_MANAGER);
             });
     }
 }
