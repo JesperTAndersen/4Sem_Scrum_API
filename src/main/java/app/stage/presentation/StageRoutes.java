@@ -7,6 +7,7 @@ import static io.javalin.apibuilder.ApiBuilder.put;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
 import app.shared.presentation.ICrudController;
+import app.security.domain.Role;
 import io.javalin.apibuilder.EndpointGroup;
 
 public class StageRoutes
@@ -23,11 +24,11 @@ public class StageRoutes
         return () ->
             path("stages", () ->
             {
-                get("", stageController::getAll);
-                get("{id}", stageController::get);
-                post("", stageController::create);
-                put("{id}", stageController::update);
-                delete("{id}", stageController::delete);
+                get(stageController::getAll, Role.PROJECT_MANAGER);
+                get("/{id}", stageController::get, Role.PROJECT_MANAGER);
+                post(stageController::create, Role.PROJECT_MANAGER);
+                put("/{id}", stageController::update, Role.PROJECT_MANAGER);
+                delete("/{id}", stageController::delete, Role.PROJECT_MANAGER);
             });
     }
 }

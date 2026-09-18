@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
+import static io.javalin.apibuilder.ApiBuilder.get;
 import static org.hamcrest.Matchers.is;
 
 class SecurityControllerTest
@@ -27,12 +28,15 @@ class SecurityControllerTest
             config.routes.beforeMatched(securityController::authorize);
             config.routes.exception(ApiException.class,
                     (exception, ctx) -> ctx.status(exception.getCode()).json(Map.of("message", exception.getMessage())));
-            config.routes.get("/protected", ctx -> ctx.status(200), Role.EMPLOYEE);
-        }).start(0);
+            config.routes.apiBuilder(() -> get("/protected", ctx -> ctx.status(200), Role.EMPLOYEE));
+        });
+        app.start(0);
 
         try
         {
             given()
+                    .baseUri("http://localhost")
+                    .basePath("")
                     .port(app.port())
                     .when()
                     .get("/protected")
