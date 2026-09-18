@@ -4,10 +4,8 @@ import app.stage.presentation.dto.StageCreateDTO;
 import app.stage.presentation.dto.StageDTO;
 import app.stage.presentation.dto.StageUpdateDTO;
 import app.project.domain.Project;
-import app.stage.domain.Stage;
-import app.project.data.IProjectDAO;
+import app.shared.data.IReadDAO;
 import app.stage.data.IStageDAO;
-import app.stage.domain.IStageService;
 import app.utils.ValidationUtil;
 import app.stage.data.StageMapper;
 import app.exceptions.ApiException;
@@ -18,12 +16,12 @@ import java.util.List;
 public class StageService implements IStageService
 {
     private final IStageDAO stageDAO;
-    private final IProjectDAO projectDAO;
+    private final IReadDAO<Project> projectReader;
 
-    public StageService(IStageDAO stageDAO, IProjectDAO projectDAO)
+    public StageService(IStageDAO stageDAO, IReadDAO<Project> projectReader)
     {
         this.stageDAO = stageDAO;
-        this.projectDAO = projectDAO;
+        this.projectReader = projectReader;
     }
 
     @Override
@@ -36,7 +34,7 @@ public class StageService implements IStageService
         Project project;
         try
         {
-            project = projectDAO.get(dto.projectId());
+            project = projectReader.get(dto.projectId());
         }
         catch (EntityNotFoundException e)
         {
