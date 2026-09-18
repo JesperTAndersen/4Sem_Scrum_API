@@ -54,7 +54,19 @@ public class StageDAO implements IStageDAO
         {
             try
             {
-                return DBValidator.validateExists(em.find(Stage.class, id), id, Stage.class);
+                Stage stage = em.createQuery(
+                                """
+                                SELECT DISTINCT s FROM Stage s
+                                LEFT JOIN FETCH s.tasks
+                                WHERE s.id = :id
+                                """,
+                                Stage.class)
+                        .setParameter("id", id)
+                        .getResultStream()
+                        .findFirst()
+                        .orElse(null);
+
+                return DBValidator.validateExists(stage, id, Stage.class);
             }
             catch (EntityNotFoundException e)
             {
@@ -74,7 +86,13 @@ public class StageDAO implements IStageDAO
         {
             try
             {
-                TypedQuery<Stage> query = em.createQuery("SELECT s FROM Stage s ORDER BY s.id", Stage.class);
+                TypedQuery<Stage> query = em.createQuery(
+                        """
+                        SELECT DISTINCT s FROM Stage s
+                        LEFT JOIN FETCH s.tasks
+                        ORDER BY s.id
+                        """,
+                        Stage.class);
                 return query.getResultList();
             }
             catch (PersistenceException e)

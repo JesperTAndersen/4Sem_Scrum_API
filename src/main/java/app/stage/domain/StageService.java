@@ -2,12 +2,16 @@ package app.stage.domain;
 
 import app.stage.presentation.dto.StageCreateDTO;
 import app.stage.presentation.dto.StageDTO;
+import app.stage.presentation.dto.StageUpdateDTO;
 import app.project.domain.Project;
 import app.stage.domain.Stage;
 import app.project.data.IProjectDAO;
 import app.stage.data.IStageDAO;
 import app.stage.domain.IStageService;
 import app.utils.ValidationUtil;
+import app.stage.data.StageMapper;
+import app.exceptions.ApiException;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 
@@ -29,7 +33,15 @@ public class StageService implements IStageService
         ValidationUtil.validateId(dto.projectId());
         validateName(dto.name());
 
-        Project project = projectDAO.get(dto.projectId());
+        Project project;
+        try
+        {
+            project = projectDAO.get(dto.projectId());
+        }
+        catch (EntityNotFoundException e)
+        {
+            throw new ApiException(404, "Project not found with id: " + dto.projectId());
+        }
         Stage created = stageDAO.create(new Stage(dto.name().trim(), project));
         return toDTO(created);
     }
@@ -37,7 +49,7 @@ public class StageService implements IStageService
     @Override
     public StageDTO get(Long id)
     {
-        return toDTO(stageDAO.get(id));
+        return toDTO(getExistingStage(id));
     }
 
     @Override
@@ -55,15 +67,30 @@ public class StageService implements IStageService
         ValidationUtil.validateId(dto.id());
         validateName(dto.name());
 
-        Stage stage = stageDAO.get(dto.id());
+        Stage stage = getExistingStage(dto.id());
         stage.update(dto.name().trim());
         stageDAO.update(stage);
-        return toDTO(stageDAO.update(stage));
+        return get(dto.id());
+    }
+
+    @Override
+    public StageDTO update(Long id, StageUpdateDTO dto)
+    {
+        ValidationUtil.validateId(id);
+        ValidationUtil.validateNotNull(dto, "Stage");
+        validateName(dto.name());
+
+        Stage stage = getExistingStage(id);
+        stage.update(dto.name().trim());
+        stageDAO.update(stage);
+        return get(id);
     }
 
     @Override
     public void delete(Long id)
     {
+        ValidationUtil.validateId(id);
+        getExistingStage(id);
         stageDAO.delete(id);
     }
 
@@ -72,8 +99,20 @@ public class StageService implements IStageService
         ValidationUtil.validateNotBlank(name, "Stage name");
     }
 
+    private Stage getExistingStage(Long id)
+    {
+        try
+        {
+            return stageDAO.get(id);
+        }
+        catch (EntityNotFoundException e)
+        {
+            throw new ApiException(404, "Stage not found with id: " + id);
+        }
+    }
+
     private StageDTO toDTO(Stage stage)
     {
-        return new StageDTO(stage.getId(), stage.getName(), List.of());
+        return StageMapper.toDTO(stage);
     }
 }
