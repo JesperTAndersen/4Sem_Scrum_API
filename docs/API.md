@@ -42,7 +42,7 @@ All project endpoints require `PROJECT_MANAGER`.
 | Method | Path | Request body | Success response | Notes |
 |---|---|---|---|---|
 | `GET` | `/projects` | — | `200` `ProjectSlim[]` | Returns project summaries and task counts. |
-| `GET` | `/projects/{id}` | — | `200` `Project` | Returns the `Project → Stage → Task` hierarchy. |
+| `GET` | `/projects/{id}` | — | `200` `Project` | Returns the `Project → Stage → Task → Competence` hierarchy. |
 | `POST` | `/projects` | [Create project](#create-project-request) | `201` `Project` | New projects have `DRAFT` status. |
 | `PUT` | `/projects/{id}` | [Update project](#update-project-request) | `200` `Project` | `status` is required. |
 | `DELETE` | `/projects/{id}` | — | `204` no body | — |
@@ -61,16 +61,15 @@ All stage endpoints require `PROJECT_MANAGER`.
 
 ### Tasks
 
-Task endpoints currently require authentication, but do not yet have a
-route-level manager restriction.
+All task endpoints require `PROJECT_MANAGER`.
 
 | Method | Path | Request body | Success response | Notes |
 |---|---|---|---|---|
 | `GET` | `/tasks` | — | `200` `Task[]` | — |
 | `GET` | `/tasks/{id}` | — | `200` `Task` | — |
 | `POST` | `/tasks` | [Create task](#create-task-request) | `201` `Task` | The referenced stage must exist. |
-| `PUT` | `/tasks/{id}` | — | — | Route exists but is **not implemented**; do not use it yet. |
-| `DELETE` | `/tasks/{id}` | — | `200` no body | — |
+| `PUT` | `/tasks/{id}` | [Update task](#update-task-request) | `200` `Task` | Updates task-owned fields; the task remains in its current stage. |
+| `DELETE` | `/tasks/{id}` | — | `204` no body | — |
 
 ### Competencies
 
@@ -184,10 +183,22 @@ Project statuses: `DRAFT`, `PLANNED`, `IN_PROGRESS`, `COMPLETED`.
   "stageId": 10,
   "name": "Requirements",
   "estimate": 8.0,
-  "duration": 8.0,
-  "crewSize": 1
+  "competenceIds": [1, 2]
 }
 ```
+
+### Update task request
+
+```json
+{
+  "name": "Updated requirements",
+  "estimate": 16.0,
+  "competenceIds": [1, 2]
+}
+```
+
+Task create and update requests require at least one `competenceIds` value. A task's
+stage is selected only when it is created and cannot be changed by an update.
 
 ### Competence request
 
@@ -290,9 +301,10 @@ Project statuses: `DRAFT`, `PLANNED`, `IN_PROGRESS`, `COMPLETED`.
           "id": 100,
           "name": "Requirements",
           "estimate": 8.0,
-          "duration": 8.0,
-          "crewSize": 1,
-          "status": "NOT_STARTED"
+          "status": "NOT_STARTED",
+          "competences": [
+            { "id": 1, "name": "Backend development", "rate": 850.00 }
+          ]
         }
       ]
     }
@@ -317,9 +329,10 @@ Project statuses: `DRAFT`, `PLANNED`, `IN_PROGRESS`, `COMPLETED`.
   "id": 100,
   "name": "Requirements",
   "estimate": 8.0,
-  "duration": 8.0,
-  "crewSize": 1,
-  "status": "NOT_STARTED"
+  "status": "NOT_STARTED",
+  "competences": [
+    { "id": 1, "name": "Backend development", "rate": 850.00 }
+  ]
 }
 ```
 
@@ -348,7 +361,7 @@ Project statuses: `DRAFT`, `PLANNED`, `IN_PROGRESS`, `COMPLETED`.
 
 ### API error
 
-Project and stage validation/not-found errors use this response shape:
+Project, stage, and task validation/not-found errors use this response shape:
 
 ```json
 {
