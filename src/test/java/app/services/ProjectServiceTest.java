@@ -8,9 +8,11 @@ import app.project.presentation.dto.UpdateProjectDTO;
 import app.security.presentation.dto.AuthenticatedUser;
 import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
+import app.user.domain.User;
 import app.security.domain.Role;
 import app.exceptions.ApiException;
 import app.persistence.testdoubles.InMemoryProjectDAO;
+import app.persistence.testdoubles.InMemoryUserDAO;
 import app.project.domain.ProjectService;
 import org.junit.jupiter.api.*;
 
@@ -26,6 +28,9 @@ class ProjectServiceTest
     private static final AuthenticatedUser MANAGER = new AuthenticatedUser(
             1L, "manager@example.com", Role.PROJECT_MANAGER
     );
+    private static final User MANAGER_USER = new User(
+            "Project", "Manager", "manager@example.com", "hashed-password"
+    );
 
     private InMemoryProjectDAO projectDAO;
     private ProjectService projectService;
@@ -34,7 +39,7 @@ class ProjectServiceTest
     void setUp()
     {
         projectDAO = new InMemoryProjectDAO();
-        projectService = new ProjectService(projectDAO);
+        projectService = new ProjectService(projectDAO, new InMemoryUserDAO(MANAGER_USER));
     }
 
     @Test
@@ -51,7 +56,7 @@ class ProjectServiceTest
         ProjectDTO created = projectService.create(MANAGER, request);
 
         assertThat(created.status(), is(ProjectStatus.DRAFT));
-        assertThat(created.createdBy(), is(MANAGER.email()));
+        assertThat(created.createdBy().firstName(), is(MANAGER_USER.getFirstName()));
         assertThat(created.title(), is(request.title()));
         assertThat(created.startDate(), is(request.startDate()));
         assertThat(created.deadline(), is(request.deadline()));
@@ -161,9 +166,9 @@ class ProjectServiceTest
                 .startDate(LocalDate.of(2026, 1, 1))
                 .deadline(LocalDate.of(2026, 12, 31))
                 .status(status)
-                .createdBy(MANAGER.email())
+                .createdBy(MANAGER_USER)
                 .createdAt(LocalDateTime.of(2026, 1, 1, 9, 0))
-                .updatedBy(MANAGER.email())
+                .updatedBy(MANAGER_USER)
                 .updatedAt(LocalDateTime.of(2026, 1, 1, 9, 0))
                 .build();
     }

@@ -5,10 +5,13 @@ import app.exceptions.UnauthorizedException;
 import app.exceptions.BadRequestException;
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
+import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
 import app.security.presentation.dto.AuthenticatedUser;
 import app.project.data.ProjectMapper;
 import app.project.data.IProjectDAO;
+import app.shared.data.IReadDAO;
+import app.user.domain.User;
 import app.utils.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -18,10 +21,12 @@ import java.util.List;
 public class ProjectService implements IProjectService
 {
     private final IProjectDAO projectDAO;
+    private final IReadDAO<User> userDAO;
 
-    public ProjectService(IProjectDAO projectDAO)
+    public ProjectService(IProjectDAO projectDAO, IReadDAO<User> userDAO)
     {
         this.projectDAO = projectDAO;
+        this.userDAO = userDAO;
     }
 
     @Override
@@ -33,7 +38,7 @@ public class ProjectService implements IProjectService
         Project project = ProjectMapper.toEntity(
                 dto,
                 ProjectStatus.DRAFT,
-                authUser.email()
+                getAuthenticatedUser(authUser)
         );
 
         Project createdProject = projectDAO.create(project);
@@ -47,10 +52,10 @@ public class ProjectService implements IProjectService
     }
 
     @Override
-    public List<ProjectDTO> getAll()
+    public List<SlimProjectDTO> getAll()
     {
         return projectDAO.getAll().stream()
-                .map(ProjectMapper::toDTO)
+                .map(ProjectMapper::toSlimProjectDTO)
                 .toList();
     }
 
@@ -66,11 +71,11 @@ public class ProjectService implements IProjectService
         Project project = ProjectMapper.toEntity(
                 dto,
                 existingProject,
-                authUser.email()
+                getAuthenticatedUser(authUser)
         );
 
-        Project updatedProject = projectDAO.update(project);
-        return ProjectMapper.toDTO(updatedProject);
+        projectDAO.update(project);
+        return ProjectMapper.toDTO(getExistingProject(id));
     }
 
     @Override
@@ -162,9 +167,19 @@ public class ProjectService implements IProjectService
 
     private void validateAuthenticatedUser(AuthenticatedUser authUser)
     {
-        if (authUser == null || authUser.email() == null || authUser.email().isBlank())
+        if (authUser == null || authUser.id() == null || authUser.email() == null || authUser.email().isBlank())
         {
             throw new UnauthorizedException("Authenticated user is required");
         }
+    }
+
+    private User getAuthenticatedUser(AuthenticatedUser authUser)
+    {
+        User user = userDAO.get(authUser.id());
+        if (user == null)
+        {
+            throw new UnauthorizedException("Authenticated user is required");
+        }
+        return user;
     }
 }

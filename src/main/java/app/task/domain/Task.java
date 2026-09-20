@@ -8,14 +8,15 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Getter;
@@ -28,19 +29,27 @@ public class Task implements IEntity
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private float estimate; /* in hours */
-    private float duration; /* in hours */
-    private int crewSize;
-    public static enum TaskStatus
+    private double estimate;
+
+    // Sprint-later fields:
+    // private double duration;
+    // private int crewSize;
+    public enum TaskStatus
     {
         NOT_STARTED,
         IN_PROGESS,
         DONE,
         ;
     }
+
     private TaskStatus status;
-    @ManyToOne
-    private Competence competency;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "task_competences",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "competence_id")
+    )
+    private Set<Competence> requiredCompetences = new HashSet<>();
     // TODO: dependencies
     @ManyToOne(fetch = FetchType.LAZY)
     private Stage stage;
@@ -48,15 +57,38 @@ public class Task implements IEntity
     //@OneToMany(fetch = FetchType.LAZY)
     //private Set<Employee> assigned = new HashSet<>();
 
-    public Task() {}
-    public Task(Stage stage, String name, float estimate, float duration, int crewSize)
+    public Task()
+    {
+    }
+
+    public Task(Stage stage, String name, double estimate)
+    {
+        this(stage, name, estimate, Set.of());
+    }
+
+    public Task(Stage stage, String name, double estimate, Set<Competence> requiredCompetences)
     {
         this.stage = stage;
         this.name = name;
         this.estimate = estimate;
-        this.duration = duration;
-        this.crewSize = crewSize;
+        this.requiredCompetences = new HashSet<>(requiredCompetences);
         this.status = TaskStatus.NOT_STARTED;
+        if (stage != null)
+        {
+            stage.addTask(this);
+        }
+    }
+
+    public void changeStatus(TaskStatus status)
+    {
+        this.status = status;
+    }
+
+    public void update(String name, double estimate, Set<Competence> requiredCompetences)
+    {
+        this.name = name;
+        this.estimate = estimate;
+        this.requiredCompetences = new HashSet<>(requiredCompetences);
     }
 
     // TODO: employees
@@ -69,7 +101,6 @@ public class Task implements IEntity
     //{
     //    this.assigned.remove(employee);
     //}
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -92,12 +123,12 @@ public class Task implements IEntity
         if (this == o) return true;
         if (o == null) return false;
         if (!(o instanceof Task)) return false;
-        return id != null && id.equals(((Task)o).getId());
+        return id != null && id.equals(((Task) o).getId());
     }
 
     @Override
     public final int hashCode()
     {
-        return id.hashCode();
+        return getClass().hashCode();
     }
 }

@@ -2,10 +2,9 @@ package app.task.presentation.dto;
 
 import java.util.Set;
 
-public record TaskCreateDTO(
-        Long stageId,
+public record TaskUpdateDTO(
         String name,
-        double estimate,
+        Double estimate,
         Set<Long> competenceIds)
 {
 }

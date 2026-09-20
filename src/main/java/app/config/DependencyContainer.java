@@ -99,12 +99,12 @@ public final class DependencyContainer
         this.projectDAO = new ProjectDAO(entityManagerFactory);
         this.stageService = new StageService(stageDAO, projectDAO);
         this.stageController = new StageController(stageService);
-        this.projectService = new ProjectService(projectDAO);
+        this.projectService = new ProjectService(projectDAO, userDAO);
         this.projectController = new ProjectController(projectService);
         this.securityService = new SecurityService(userDAO);
         this.securityController = new SecurityController(securityService);
         this.taskDAO = new TaskDAO(entityManagerFactory);
-        this.taskService = new TaskService(taskDAO, stageDAO);
+        this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO);
         this.taskController = new TaskController(taskService);
     }
 

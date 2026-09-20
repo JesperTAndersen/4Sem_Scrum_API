@@ -2,6 +2,7 @@ package app.project.presentation;
 
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
+import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
 import app.shared.presentation.ICrudController;
 import app.security.presentation.dto.AuthenticatedUser;
@@ -49,7 +50,7 @@ public class ProjectController implements ICrudController
     @Override
     public void getAll(Context ctx)
     {
-        List<ProjectDTO> projects = projectService.getAll();
+        List<SlimProjectDTO> projects = projectService.getAll();
         ctx.status(200).json(projects);
     }
 

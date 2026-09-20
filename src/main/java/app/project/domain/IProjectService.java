@@ -2,6 +2,7 @@ package app.project.domain;
 
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
+import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
 import app.security.presentation.dto.AuthenticatedUser;
 
@@ -13,7 +14,7 @@ public interface IProjectService
 
     ProjectDTO get(Long id);
 
-    List<ProjectDTO> getAll();
+    List<SlimProjectDTO> getAll();
 
     ProjectDTO update(AuthenticatedUser authUser, Long id, UpdateProjectDTO dto);
 

@@ -2,9 +2,15 @@ package app.project.data;
 
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
+import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
 import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
+import app.user.data.UserMapper;
+import app.user.domain.User;
+import app.stage.data.StageMapper;
+import app.task.presentation.dto.TaskCountDTO;
+import app.task.domain.Task;
 
 public class ProjectMapper
 {
@@ -21,14 +27,40 @@ public class ProjectMapper
                 project.getStartDate(),
                 project.getDeadline(),
                 project.getStatus(),
-                project.getCreatedBy(),
+                UserMapper.toReferenceDTO(project.getCreatedBy()),
                 project.getCreatedAt(),
-                project.getUpdatedBy(),
-                project.getUpdatedAt()
+                UserMapper.toReferenceDTO(project.getUpdatedBy()),
+                project.getUpdatedAt(),
+                project.getStages().stream().map(StageMapper::toDTO).toList()
         );
     }
 
-    public static Project toEntity(CreateProjectDTO dto, ProjectStatus status, String createdBy)
+    public static SlimProjectDTO toSlimProjectDTO(Project project)
+    {
+        int total = project.getStages().stream()
+                .mapToInt(stage -> stage.getTasks().size())
+                .sum();
+        int finished = project.getStages().stream()
+                .flatMap(stage -> stage.getTasks().stream())
+                .map(Task::getStatus)
+                .filter(Task.TaskStatus.DONE::equals)
+                .toList()
+                .size();
+
+        return new SlimProjectDTO(
+                project.getId(),
+                project.getTitle(),
+                project.getDescription(),
+                UserMapper.toReferenceDTO(project.getCreatedBy()),
+                project.getStartDate(),
+                project.getDeadline(),
+                new TaskCountDTO(total, finished),
+                project.getStatus()
+
+        );
+    }
+
+    public static Project toEntity(CreateProjectDTO dto, ProjectStatus status, User createdBy)
     {
         return Project.builder()
                 .title(dto.title())
@@ -41,7 +73,7 @@ public class ProjectMapper
                 .build();
     }
 
-    public static Project toEntity(UpdateProjectDTO dto, Project existingProject, String updatedBy)
+    public static Project toEntity(UpdateProjectDTO dto, Project existingProject, User updatedBy)
     {
         return Project.builder()
                 .id(existingProject.getId())
