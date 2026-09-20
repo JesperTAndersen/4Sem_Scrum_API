@@ -2,6 +2,8 @@ package app.config;
 
 import java.util.Map;
 
+import app.exceptions.ConfigurationException;
+import app.exceptions.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,26 +129,45 @@ public class ApplicationConfig
     {
         config.routes.exception(ApiException.class, (e, ctx) ->
         {
-            log.warn("{} {} - {}", ctx.method(), ctx.path(), e.getMessage());
-            ctx.status(e.getCode())
-                    .json(Map.of("status", e.getCode(),
-                            "message", e.getMessage()));
+            boolean isServerFault = e.getCode() >= 500;
+            ErrorResponse error = isServerFault
+                    ? ErrorResponse.of(e.getCode(), "Internal server error", ctx.path())
+                    : ErrorResponse.of(e.getCode(), e.getMessage(), ctx.path());
+
+            if (isServerFault)
+            {
+                log.error("{} {} - [{}] {}", ctx.method(), ctx.path(), error.errorId(), e.getMessage(), e);
+            }
+            else
+            {
+                log.warn("{} {} - [{}] {}", ctx.method(), ctx.path(), error.errorId(), e.getMessage());
+            }
+
+            ctx.status(e.getCode()).json(error);
+        });
+
+        config.routes.exception(ConfigurationException.class, (e, ctx) ->
+        {
+            ErrorResponse error = ErrorResponse.of(HttpStatus.INTERNAL_SERVER_ERROR.getCode(),
+                    "Internal server error", ctx.path());
+            log.error("{} {} - [{}] Configuration error: {}", ctx.method(), ctx.path(), error.errorId(), e.getMessage(), e);
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR.getCode()).json(error);
         });
 
         config.routes.exception(NumberFormatException.class, (e, ctx) ->
         {
-            log.warn("{} {} - Invalid number format: {}", ctx.method(), ctx.path(), e.getMessage());
-            ctx.status(HttpStatus.BAD_REQUEST.getCode())
-                    .json(Map.of("status", HttpStatus.BAD_REQUEST.getCode(),
-                            "message", "Invalid ID format: expected a number"));
+            ErrorResponse error = ErrorResponse.of(HttpStatus.BAD_REQUEST.getCode(),
+                    "Invalid ID format: expected a number", ctx.path());
+            log.warn("{} {} - [{}] Invalid number format: {}", ctx.method(), ctx.path(), error.errorId(), e.getMessage());
+            ctx.status(HttpStatus.BAD_REQUEST.getCode()).json(error);
         });
 
         config.routes.exception(Exception.class, (e, ctx) ->
         {
-            log.error("{} {} - Unhandled exception", ctx.method(), ctx.path(), e);
-            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR.getCode())
-                    .json(Map.of("status", HttpStatus.INTERNAL_SERVER_ERROR.getCode(),
-                            "message", "Internal server error"));
+            ErrorResponse error = ErrorResponse.of(HttpStatus.INTERNAL_SERVER_ERROR.getCode(),
+                    "Internal server error", ctx.path());
+            log.error("{} {} - [{}] Unhandled exception", ctx.method(), ctx.path(), error.errorId(), e);
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR.getCode()).json(error);
         });
     }
 
