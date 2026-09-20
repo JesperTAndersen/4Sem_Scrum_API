@@ -1,15 +1,14 @@
 package app.project.domain;
 
+import app.exceptions.NotFoundException;
+import app.exceptions.UnauthorizedException;
+import app.exceptions.BadRequestException;
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
 import app.security.presentation.dto.AuthenticatedUser;
-import app.project.domain.Project;
-import app.project.domain.ProjectStatus;
-import app.exceptions.ApiException;
 import app.project.data.ProjectMapper;
 import app.project.data.IProjectDAO;
-import app.project.domain.IProjectService;
 import app.utils.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -85,7 +84,7 @@ public class ProjectService implements IProjectService
         }
         catch (EntityNotFoundException e)
         {
-            throw new ApiException(404, "Project not found with id: " + id);
+            throw new NotFoundException("Project not found with id: " + id);
         }
     }
 
@@ -99,7 +98,7 @@ public class ProjectService implements IProjectService
         }
         catch (EntityNotFoundException e)
         {
-            throw new ApiException(404, "Project not found with id: " + id);
+            throw new NotFoundException("Project not found with id: " + id);
         }
     }
 
@@ -107,7 +106,7 @@ public class ProjectService implements IProjectService
     {
         if (dto == null)
         {
-            throw new ApiException(400, "Project payload is required");
+            throw new BadRequestException("Project payload is required");
         }
 
         validateProjectFields(dto.title(), dto.description(), dto.startDate(), dto.deadline());
@@ -117,14 +116,14 @@ public class ProjectService implements IProjectService
     {
         if (dto == null)
         {
-            throw new ApiException(400, "Project payload is required");
+            throw new BadRequestException("Project payload is required");
         }
 
         validateProjectFields(dto.title(), dto.description(), dto.startDate(), dto.deadline());
 
         if (dto.status() == null)
         {
-            throw new ApiException(400, "Project status is required");
+            throw new BadRequestException("Project status is required");
         }
     }
 
@@ -132,32 +131,32 @@ public class ProjectService implements IProjectService
     {
         if (title == null || title.isBlank())
         {
-            throw new ApiException(400, "Project title is required");
+            throw new BadRequestException("Project title is required");
         }
 
         if (title.trim().length() > 250)
         {
-            throw new ApiException(400, "Project title must be at most 250 characters");
+            throw new BadRequestException("Project title must be at most 250 characters");
         }
 
         if (description != null && description.length() > 500)
         {
-            throw new ApiException(400, "Project description must be at most 500 characters");
+            throw new BadRequestException("Project description must be at most 500 characters");
         }
 
         if (startDate == null)
         {
-            throw new ApiException(400, "Project start date is required");
+            throw new BadRequestException("Project start date is required");
         }
 
         if (deadline == null)
         {
-            throw new ApiException(400, "Project deadline is required");
+            throw new BadRequestException("Project deadline is required");
         }
 
         if (deadline.isBefore(startDate))
         {
-            throw new ApiException(400, "Project deadline cannot be before start date");
+            throw new BadRequestException("Project deadline cannot be before start date");
         }
     }
 
@@ -165,7 +164,7 @@ public class ProjectService implements IProjectService
     {
         if (authUser == null || authUser.email() == null || authUser.email().isBlank())
         {
-            throw new ApiException(401, "Authenticated user is required");
+            throw new UnauthorizedException("Authenticated user is required");
         }
     }
 }
