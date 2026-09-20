@@ -30,10 +30,10 @@ class ProjectMapperTest
         project.getStages().add(planning);
         project.getStages().add(delivery);
 
-        new Task(planning, "Requirements", 4, 4, 1);
-        Task completedTask = new Task(planning, "Design", 8, 8, 1);
+        new Task(planning, "Requirements", 4);
+        Task completedTask = new Task(planning, "Design", 8);
         completedTask.changeStatus(Task.TaskStatus.DONE);
-        new Task(delivery, "Implementation", 16, 16, 2);
+        new Task(delivery, "Implementation", 16);
 
         ProjectDTO result = ProjectMapper.toDTO(project);
 
@@ -53,8 +53,8 @@ class ProjectMapperTest
         Stage stage = new Stage("Planning", project);
         project.getStages().add(stage);
 
-        new Task(stage, "Requirements", 4, 4, 1);
-        Task completedTask = new Task(stage, "Design", 8, 8, 1);
+        new Task(stage, "Requirements", 4);
+        Task completedTask = new Task(stage, "Design", 8);
         completedTask.changeStatus(Task.TaskStatus.DONE);
 
         SlimProjectDTO result = ProjectMapper.toSlimProjectDTO(project);

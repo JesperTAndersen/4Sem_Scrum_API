@@ -54,7 +54,18 @@ public class TaskDAO implements ICrudDAO<Task>
         {
             try
             {
-                return DBValidator.validateExists(em.find(Task.class, id), id, Task.class);
+                Task task = em.createQuery(
+                                """
+                                SELECT DISTINCT t FROM Task t
+                                LEFT JOIN FETCH t.requiredCompetences
+                                WHERE t.id = :id
+                                """,
+                                Task.class)
+                        .setParameter("id", id)
+                        .getResultStream()
+                        .findFirst()
+                        .orElse(null);
+                return DBValidator.validateExists(task, id, Task.class);
             }
             catch (EntityNotFoundException e)
             {
@@ -74,7 +85,13 @@ public class TaskDAO implements ICrudDAO<Task>
         {
             try
             {
-                TypedQuery<Task> query = em.createQuery("SELECT s FROM Task s ORDER BY s.id", Task.class);
+                TypedQuery<Task> query = em.createQuery(
+                        """
+                        SELECT DISTINCT t FROM Task t
+                        LEFT JOIN FETCH t.requiredCompetences
+                        ORDER BY t.id
+                        """,
+                        Task.class);
                 return query.getResultList();
             }
             catch (PersistenceException e)
