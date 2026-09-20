@@ -2,10 +2,8 @@ package app.competence.domain;
 
 import app.competence.presentation.dto.CompetenceDTO;
 import app.competence.data.ICompetenceDAO;
-import app.competence.domain.Competence;
-import app.exceptions.ApiException;
 import app.competence.data.CompetenceMapper;
-import app.competence.domain.ICompetenceService;
+import app.exceptions.BadRequestException;
 
 import java.util.List;
 
@@ -58,12 +56,12 @@ public class CompetenceService implements ICompetenceService
     {
         if (dto == null || dto.name() == null || dto.name().isBlank())
         {
-            throw new ApiException(400, "Name is required");
+            throw new BadRequestException("Name is required");
         }
 
         if (dto.rate() == null)
         {
-            throw new ApiException(400, "Rate is required and must be a number");
+            throw new BadRequestException("Rate is required and must be a number");
         }
     }
 }
