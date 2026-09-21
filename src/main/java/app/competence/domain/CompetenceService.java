@@ -6,6 +6,7 @@ import app.competence.presentation.dto.CompetenceUpdateDTO;
 import app.competence.data.ICompetenceDAO;
 import app.competence.data.CompetenceMapper;
 import app.exceptions.BadRequestException;
+import app.exceptions.ConflictException;
 import app.utils.ValidationUtil;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class CompetenceService implements ICompetenceService
     public CompetenceDTO create(CompetenceCreateDTO dto)
     {
         validate(dto);
-        validateNameIsUnique(dto.name().trim(), null);
+        validateNameIsUnique(dto.name().trim().toLowerCase(), null);
         Competence created = competenceDAO.create(CompetenceMapper.toEntity(dto));
         return CompetenceMapper.toDTO(created);
     }
@@ -47,7 +48,7 @@ public class CompetenceService implements ICompetenceService
     {
         validate(dto);
         ValidationUtil.validateId(id);
-        String name = dto.name().trim();
+        String name = dto.name().trim().toLowerCase();
         validateNameIsUnique(name, id);
         Competence updated = competenceDAO.get(id);
         updated.update(name, dto.rate());
@@ -58,6 +59,11 @@ public class CompetenceService implements ICompetenceService
     @Override
     public void delete(Long id)
     {
+        ValidationUtil.validateId(id);
+        if (competenceDAO.isInUse(id))
+        {
+            throw new ConflictException("Competence is used by one or more tasks and must be deactivated instead");
+        }
         competenceDAO.delete(id);
     }
 

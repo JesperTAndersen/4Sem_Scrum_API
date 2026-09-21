@@ -41,13 +41,13 @@ public class Competence implements IEntity
 
     public Competence(String name, BigDecimal rate)
     {
-        this.name = name;
+        this.name = name.trim().toLowerCase();
         this.rate = rate;
     }
 
     public void update(String name, BigDecimal rate)
     {
-        this.name = name;
+        this.name = name.trim().toLowerCase();
         this.rate = rate;
     }
 
@@ -59,6 +59,7 @@ public class Competence implements IEntity
     @PrePersist
     protected void onCreate()
     {
+        this.name = name.trim().toLowerCase();
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
@@ -67,6 +68,7 @@ public class Competence implements IEntity
     @PreUpdate
     protected void onUpdate()
     {
+        this.name = name.trim().toLowerCase();
         this.updatedAt = LocalDateTime.now();
     }
 

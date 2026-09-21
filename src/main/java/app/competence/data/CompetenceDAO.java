@@ -1,6 +1,5 @@
 package app.competence.data;
 
-import app.competence.data.ICompetenceDAO;
 import app.competence.domain.Competence;
 import app.exceptions.DatabaseException;
 import app.exceptions.NotFoundException;
@@ -186,7 +185,8 @@ public class CompetenceDAO implements ICompetenceDAO
                     query += " AND c.id <> :excludedId";
                 }
 
-                var typedQuery = em.createQuery(query, Long.class).setParameter("name", name);
+                var typedQuery = em.createQuery(query, Long.class)
+                        .setParameter("name", name.trim().toLowerCase());
                 if (excludedId != null)
                 {
                     typedQuery.setParameter("excludedId", excludedId);
@@ -196,6 +196,31 @@ public class CompetenceDAO implements ICompetenceDAO
             catch (PersistenceException e)
             {
                 throw new DatabaseException("Failed to check competence name", e);
+            }
+        }
+    }
+
+    @Override
+    public boolean isInUse(Long id)
+    {
+        ValidationUtil.validateId(id);
+
+        try (EntityManager em = emf.createEntityManager())
+        {
+            try
+            {
+                Long count = em.createQuery("""
+                        SELECT COUNT(t)
+                        FROM Task t JOIN t.requiredCompetences c
+                        WHERE c.id = :id
+                        """, Long.class)
+                        .setParameter("id", id)
+                        .getSingleResult();
+                return count > 0;
+            }
+            catch (PersistenceException e)
+            {
+                throw new DatabaseException("Failed to check competence usage: " + id, e);
             }
         }
     }
