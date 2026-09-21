@@ -1,5 +1,6 @@
 package app.stage.domain;
 
+import app.exceptions.NotFoundException;
 import app.stage.presentation.dto.StageCreateDTO;
 import app.stage.presentation.dto.StageDTO;
 import app.stage.presentation.dto.StageUpdateDTO;
@@ -38,7 +39,7 @@ public class StageService implements IStageService
         }
         catch (EntityNotFoundException e)
         {
-            throw new ApiException(404, "Project not found with id: " + dto.projectId());
+            throw new NotFoundException("Project not found with id: " + dto.projectId());
         }
         Stage created = stageDAO.create(new Stage(dto.name().trim(), project));
         return toDTO(created);
@@ -105,7 +106,7 @@ public class StageService implements IStageService
         }
         catch (EntityNotFoundException e)
         {
-            throw new ApiException(404, "Stage not found with id: " + id);
+            throw new NotFoundException("Stage not found with id: " + id);
         }
     }
 
