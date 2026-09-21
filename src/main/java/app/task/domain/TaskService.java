@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import app.competence.domain.Competence;
 import app.competence.presentation.dto.CompetenceDTO;
+import app.exceptions.BadRequestException;
+import app.exceptions.NotFoundException;
 import app.task.presentation.dto.TaskCreateDTO;
 import app.task.presentation.dto.TaskDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
@@ -101,7 +103,7 @@ public class TaskService implements ITaskService
     {
         if (estimate == null)
         {
-            throw new ApiException(400, "Task estimate is required");
+            throw new BadRequestException("Task estimate is required");
         }
     }
 
@@ -109,7 +111,7 @@ public class TaskService implements ITaskService
     {
         if (competenceIds == null || competenceIds.isEmpty())
         {
-            throw new ApiException(400, "At least one competence is required");
+            throw new BadRequestException("At least one competence is required");
         }
 
         return competenceIds.stream()
@@ -125,7 +127,7 @@ public class TaskService implements ITaskService
         }
         catch (EntityNotFoundException e)
         {
-            throw new ApiException(404, "Competence not found with id: " + id);
+            throw new NotFoundException("Competence not found with id: " + id);
         }
     }
 
@@ -137,7 +139,7 @@ public class TaskService implements ITaskService
         }
         catch (EntityNotFoundException e)
         {
-            throw new ApiException(404, "Task not found with id: " + id);
+            throw new NotFoundException("Task not found with id: " + id);
         }
     }
 

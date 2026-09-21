@@ -1,5 +1,6 @@
 package app.stage.data;
 
+import app.exceptions.NotFoundException;
 import app.stage.data.IStageDAO;
 import app.stage.domain.Stage;
 import app.exceptions.DatabaseException;
@@ -71,7 +72,7 @@ public class StageDAO implements IStageDAO
             }
             catch (EntityNotFoundException e)
             {
-                throw e;
+                throw new NotFoundException("No stage found with id: " + id);
             }
             catch (PersistenceException e)
             {
@@ -123,7 +124,7 @@ public class StageDAO implements IStageDAO
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No stage found with id: " + stage.getId());
             }
             catch (PersistenceException e)
             {
@@ -151,7 +152,7 @@ public class StageDAO implements IStageDAO
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No stage found with id: " + id);
             }
             catch (PersistenceException e)
             {

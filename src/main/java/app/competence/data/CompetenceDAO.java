@@ -3,6 +3,7 @@ package app.competence.data;
 import app.competence.data.ICompetenceDAO;
 import app.competence.domain.Competence;
 import app.exceptions.DatabaseException;
+import app.exceptions.NotFoundException;
 import app.utils.DBValidator;
 import app.utils.TransactionUtil;
 import app.utils.ValidationUtil;
@@ -58,7 +59,7 @@ public class CompetenceDAO implements ICompetenceDAO
             }
             catch (EntityNotFoundException e)
             {
-                throw e;
+                throw new NotFoundException("No competence found with id: " + id);
             }
             catch (PersistenceException e)
             {
@@ -103,7 +104,7 @@ public class CompetenceDAO implements ICompetenceDAO
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No competence found with id: " + competence.getId());
             }
             catch (PersistenceException e)
             {
@@ -132,7 +133,7 @@ public class CompetenceDAO implements ICompetenceDAO
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No competence found with id: " + id);
             }
             catch (PersistenceException e)
             {

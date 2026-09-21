@@ -1,7 +1,7 @@
 package app.user.data;
 
+import app.exceptions.NotFoundException;
 import app.security.domain.Role;
-import app.user.data.IUserDAO;
 import app.exceptions.DatabaseException;
 import app.user.domain.User;
 import app.utils.DBValidator;
@@ -76,7 +76,7 @@ public class UserDAO implements IUserDAO
             }
             catch (EntityNotFoundException e)
             {
-                throw e;
+                throw new NotFoundException("No user found with id: " + id);
             }
             catch (PersistenceException e)
             {
@@ -105,7 +105,7 @@ public class UserDAO implements IUserDAO
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No user found with id: " + user.getId());
             }
             catch (PersistenceException e)
             {
@@ -134,7 +134,7 @@ public class UserDAO implements IUserDAO
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No user found with id: " + id);
             }
             catch (PersistenceException e)
             {

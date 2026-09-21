@@ -1,7 +1,7 @@
 package app.utils;
 
+import app.exceptions.UnauthorizedException;
 import app.security.presentation.dto.AuthenticatedUser;
-import app.exceptions.AuthenticationException;
 import io.javalin.http.Context;
 import io.javalin.websocket.WsContext;
 
@@ -34,17 +34,17 @@ public class SecurityUtil
     {
         if (authUser == null)
         {
-            throw new AuthenticationException("No authenticated user found");
+            throw new UnauthorizedException("No authenticated user found");
         }
 
         if (authUser.id() == null || authUser.id() <= 0)
         {
-            throw new AuthenticationException("Authenticated user id is invalid");
+            throw new UnauthorizedException("Authenticated user id is invalid");
         }
 
         if (authUser.email() == null || authUser.email().isBlank())
         {
-            throw new AuthenticationException("Authenticated user email is invalid");
+            throw new UnauthorizedException("Authenticated user email is invalid");
         }
     }
 }
