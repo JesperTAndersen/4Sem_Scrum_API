@@ -2,7 +2,7 @@ package app.exceptions;
 
 import io.javalin.http.HttpStatus;
 
-public class ConfigurationException extends RuntimeException
+public class ConfigurationException extends ApiException
 {
     public ConfigurationException(String message)
     {
