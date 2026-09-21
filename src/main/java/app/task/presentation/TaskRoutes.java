@@ -3,18 +3,17 @@ package app.task.presentation;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
-import static io.javalin.apibuilder.ApiBuilder.put;
 import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.apibuilder.ApiBuilder.put;
 
-import app.shared.presentation.ICrudController;
 import app.security.domain.Role;
 import io.javalin.apibuilder.EndpointGroup;
 
 public class TaskRoutes
 {
-    private final ICrudController taskController;
+    private final TaskController taskController;
 
-    public TaskRoutes(ICrudController taskController)
+    public TaskRoutes(TaskController taskController)
     {
         this.taskController = taskController;
     }
@@ -29,6 +28,9 @@ public class TaskRoutes
                 post(taskController::create, Role.PROJECT_MANAGER);
                 put("/{id}", taskController::update, Role.PROJECT_MANAGER);
                 delete("/{id}", taskController::delete, Role.PROJECT_MANAGER);
+                get("/{id}/competences", taskController::getAllCompetence, Role.PROJECT_MANAGER);
+                put("/{id}/competences", taskController::assignCompetence, Role.PROJECT_MANAGER);
+                delete("/{id}/competences", taskController::unassignCompetence, Role.PROJECT_MANAGER);
             });
     }
 }

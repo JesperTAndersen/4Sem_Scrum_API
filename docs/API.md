@@ -86,6 +86,14 @@ route-level manager restriction.
 
 `rate` must be a JSON number, not a numeric string.
 
+### Task Competencies
+
+| Method | Path | Request body | Success response |
+|---|---|---|---|
+| `GET` | `/tasks/{id}/competences` | — | `200` `TaskCompetence[]` |
+| `PUT` | `/tasks/{id}/competences` | [Task Competence request](#task-competence-request) | `204` |
+| `DELETE` | `/tasks/{id}/competences/{id}` | — | `501` |
+
 ### Users
 
 User endpoints currently require authentication. Profile operations are limited
@@ -182,8 +190,7 @@ Project statuses: `DRAFT`, `PLANNED`, `IN_PROGRESS`, `COMPLETED`.
 {
   "stageId": 10,
   "name": "Requirements",
-  "estimate": 8.0,
-  "competenceIds": [1, 2]
+  "estimate": 8.0
 }
 ```
 
@@ -192,8 +199,7 @@ Project statuses: `DRAFT`, `PLANNED`, `IN_PROGRESS`, `COMPLETED`.
 ```json
 {
   "name": "Updated requirements",
-  "estimate": 16.0,
-  "competenceIds": [1, 2]
+  "estimate": 16.0
 }
 ```
 
@@ -206,6 +212,15 @@ stage is selected only when it is created and cannot be changed by an update.
 {
   "name": "Backend development",
   "rate": 850.00
+}
+```
+
+### Task Competence request
+
+```json
+{
+  "competenceId": 1,
+  "estimate": 16.0
 }
 ```
 

@@ -1,8 +1,11 @@
 package app.task.data;
 
+import java.util.List;
+
+import app.exceptions.DatabaseException;
 import app.shared.data.ICrudDAO;
 import app.task.domain.Task;
-import app.exceptions.DatabaseException;
+import app.task.domain.TaskCompetence;
 import app.utils.DBValidator;
 import app.utils.TransactionUtil;
 import app.utils.ValidationUtil;
@@ -11,8 +14,6 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TypedQuery;
-
-import java.util.List;
 
 public class TaskDAO implements ICrudDAO<Task>
 {
@@ -97,6 +98,28 @@ public class TaskDAO implements ICrudDAO<Task>
             catch (PersistenceException e)
             {
                 throw new DatabaseException("Failed to fetch all tasks", e);
+            }
+        }
+    }
+
+    public List<TaskCompetence> getAllCompetence(Long id)
+    {
+        try (EntityManager em = emf.createEntityManager())
+        {
+            try
+            {
+                TypedQuery<TaskCompetence> query = em.createQuery(
+                        """
+                        SELECT DISTINCT tc FROM TaskCompetence tc
+                        WHERE tc.task.id = :id
+                        """,
+                        TaskCompetence.class);
+                query.setParameter("id", id);
+                return query.getResultList();
+            }
+            catch (PersistenceException e)
+            {
+                throw new DatabaseException("Failed to fetch all competence tasks", e);
             }
         }
     }

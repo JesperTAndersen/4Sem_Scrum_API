@@ -1,22 +1,20 @@
 package app.task.domain;
 
-import app.shared.domain.IEntity;
-import app.competence.domain.Competence;
-import app.stage.domain.Stage;
-
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import app.competence.domain.Competence;
+import app.shared.domain.IEntity;
+import app.stage.domain.Stage;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Getter;
@@ -43,13 +41,10 @@ public class Task implements IEntity
     }
 
     private TaskStatus status;
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "task_competences",
-            joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "competence_id")
-    )
-    private Set<Competence> requiredCompetences = new HashSet<>();
+
+    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<TaskCompetence> requiredCompetences = new HashSet<>();
+
     // TODO: dependencies
     @ManyToOne(fetch = FetchType.LAZY)
     private Stage stage;
@@ -63,19 +58,14 @@ public class Task implements IEntity
 
     public Task(Stage stage, String name, double estimate)
     {
-        this(stage, name, estimate, Set.of());
-    }
-
-    public Task(Stage stage, String name, double estimate, Set<Competence> requiredCompetences)
-    {
         this.stage = stage;
         this.name = name;
         this.estimate = estimate;
-        this.requiredCompetences = new HashSet<>(requiredCompetences);
         this.status = TaskStatus.NOT_STARTED;
-        if (stage != null)
-        {
-            stage.addTask(this);
+        if (stage != null) {
+            if (stage != null) {
+                stage.addTask(this);
+            }
         }
     }
 
@@ -84,11 +74,15 @@ public class Task implements IEntity
         this.status = status;
     }
 
-    public void update(String name, double estimate, Set<Competence> requiredCompetences)
+    public void assignCompetence(Competence competence, float estimate)
+    {
+        this.requiredCompetences.add(new TaskCompetence(this, competence, estimate));
+    }
+
+    public void update(String name, double estimate)
     {
         this.name = name;
         this.estimate = estimate;
-        this.requiredCompetences = new HashSet<>(requiredCompetences);
     }
 
     // TODO: employees

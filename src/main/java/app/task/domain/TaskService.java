@@ -6,16 +6,15 @@ import java.util.stream.Collectors;
 
 import app.competence.domain.Competence;
 import app.competence.presentation.dto.CompetenceDTO;
+import app.exceptions.ApiException;
+import app.shared.data.IReadDAO;
+import app.stage.domain.Stage;
+import app.task.data.TaskDAO;
+import app.task.data.TaskMapper;
+import app.task.presentation.dto.TaskCompetenceDTO;
 import app.task.presentation.dto.TaskCreateDTO;
 import app.task.presentation.dto.TaskDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
-import app.stage.domain.Stage;
-import app.task.domain.Task;
-import app.task.data.TaskDAO;
-import app.task.data.TaskMapper;
-import app.task.domain.ITaskService;
-import app.exceptions.ApiException;
-import app.shared.data.IReadDAO;
 import app.utils.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -38,13 +37,11 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         ValidationUtil.validateId(dto.stageId());
         validateName(dto.name());
-        Set<Competence> competences = getRequiredCompetences(dto.competenceIds());
 
         Stage stage = stageReader.get(dto.stageId());
         Task created = taskDAO.create(new Task(stage,
                     dto.name().trim(),
-                    dto.estimate(),
-                    competences));
+                    dto.estimate()));
         return TaskMapper.toDTO(created);
     }
 
@@ -66,8 +63,7 @@ public class TaskService implements ITaskService
     public TaskDTO update(TaskDTO dto)
     {
         ValidationUtil.validateNotNull(dto, "Task");
-        return update(dto.id(), new TaskUpdateDTO(dto.name(), dto.estimate(),
-                dto.competences().stream().map(CompetenceDTO::id).collect(Collectors.toSet())));
+        return update(dto.id(), new TaskUpdateDTO(dto.name(), dto.estimate()));
     }
 
     @Override
@@ -77,10 +73,9 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         validateName(dto.name());
         validateEstimate(dto.estimate());
-        Set<Competence> competences = getRequiredCompetences(dto.competenceIds());
 
         Task task = getExistingTask(id);
-        task.update(dto.name().trim(), dto.estimate(), competences);
+        task.update(dto.name().trim(), dto.estimate());
         taskDAO.update(task);
         return get(id);
     }
@@ -90,6 +85,21 @@ public class TaskService implements ITaskService
     {
         getExistingTask(id);
         taskDAO.delete(id);
+    }
+
+    public List<TaskCompetenceDTO> getAllCompetence(Long id)
+    {
+        return taskDAO.getAllCompetence(id).stream()
+                .map(TaskMapper::toDTO)
+                .toList();
+    }
+
+    public void competence(Long id, TaskCompetenceDTO dto)
+    {
+        Task task = getExistingTask(id);
+        Competence competence = competenceReader.get(dto.competenceId());
+        task.assignCompetence(competence, dto.estimate());
+        taskDAO.update(task);
     }
 
     private void validateName(String name)

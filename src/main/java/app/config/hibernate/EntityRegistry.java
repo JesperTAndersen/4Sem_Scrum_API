@@ -6,6 +6,7 @@ import app.competence.domain.Competence;
 import app.project.domain.Project;
 import app.stage.domain.Stage;
 import app.task.domain.Task;
+import app.task.domain.TaskCompetence;
 import app.user.domain.User;
 
 final class EntityRegistry
@@ -21,6 +22,7 @@ final class EntityRegistry
         configuration.addAnnotatedClass(Project.class);
         configuration.addAnnotatedClass(Stage.class);
         configuration.addAnnotatedClass(Task.class);
+        configuration.addAnnotatedClass(TaskCompetence.class);
         configuration.addAnnotatedClass(User.class);
         // TODO: Add more entities here...
     }

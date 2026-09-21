@@ -1,11 +1,9 @@
 package app.task.data;
 
-import app.competence.data.CompetenceMapper;
-import app.competence.presentation.dto.CompetenceDTO;
 import app.task.domain.Task;
+import app.task.domain.TaskCompetence;
+import app.task.presentation.dto.TaskCompetenceDTO;
 import app.task.presentation.dto.TaskDTO;
-
-import java.util.Comparator;
 
 public final class TaskMapper
 {
@@ -17,11 +15,15 @@ public final class TaskMapper
                 task.getId(),
                 task.getName(),
                 task.getEstimate(),
-                task.getStatus(),
-                task.getRequiredCompetences().stream()
-                        .map(CompetenceMapper::toDTO)
-                        .sorted(Comparator.comparing(CompetenceDTO::id))
-                        .toList()
+                task.getStatus()
+        );
+    }
+
+    public static TaskCompetenceDTO toDTO(TaskCompetence task)
+    {
+        return new TaskCompetenceDTO(
+                task.getId(),
+                task.getEstimate()
         );
     }
 }

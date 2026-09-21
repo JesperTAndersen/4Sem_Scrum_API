@@ -37,8 +37,7 @@ class TaskTest
         {
             "stageId": %d,
             "name": "Define requirements",
-            "estimate": 8.0,
-            "competenceIds": [%d, %d]
+            "estimate": 8.0
         }
         """.formatted(stageId, backendCompetenceId, testingCompetenceId);
 
@@ -56,13 +55,11 @@ class TaskTest
         long taskId = createdTask.get("id").asLong();
         assertEquals("Define requirements", createdTask.get("name").asText());
         assertEquals("NOT_STARTED", createdTask.get("status").asText());
-        assertCompetences(createdTask, backendCompetenceId, testingCompetenceId);
 
         String updateJSON = """
         {
             "name": "Updated requirements",
-            "estimate": 16.0,
-            "competenceIds": [%d, %d]
+            "estimate": 16.0
         }
         """.formatted(backendCompetenceId, testingCompetenceId);
 
@@ -80,18 +77,31 @@ class TaskTest
         assertEquals(taskId, updatedTask.get("id").asLong());
         assertEquals("Updated requirements", updatedTask.get("name").asText());
         assertEquals(16.0, updatedTask.get("estimate").asDouble());
-        assertCompetences(updatedTask, backendCompetenceId, testingCompetenceId);
+
+        String competenceJSON = """
+        {
+            "competenceId": %d,
+            "estimate": 16.0
+        }
+        """.formatted(backendCompetenceId);
+
+        given()
+            .header("Content-Type", "application/json")
+            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
+            .body(competenceJSON)
+            .when()
+            .put("/tasks/"+taskId+"/competences")
+            .then()
+            .statusCode(204);
 
         JsonNode fetchedTask = getJson("/tasks/" + taskId);
         assertEquals("Updated requirements", fetchedTask.get("name").asText());
         assertEquals(16.0, fetchedTask.get("estimate").asDouble());
-        assertCompetences(fetchedTask, backendCompetenceId, testingCompetenceId);
 
         JsonNode stage = getJson("/stages/" + stageId);
         JsonNode taskInStage = findById(stage.get("tasks"), taskId);
         assertNotNull(taskInStage, "The created task must be returned by its stage");
         assertEquals("Updated requirements", taskInStage.get("name").asText());
-        assertCompetences(taskInStage, backendCompetenceId, testingCompetenceId);
 
         JsonNode project = getJson("/projects/1");
         JsonNode stageInProject = findById(project.get("stages"), stageId);
@@ -99,7 +109,16 @@ class TaskTest
         JsonNode taskInProject = findById(stageInProject.get("tasks"), taskId);
         assertNotNull(taskInProject,
             "The task must be returned in the Project -> Stage -> Task hierarchy");
-        assertCompetences(taskInProject, backendCompetenceId, testingCompetenceId);
+
+        JsonNode competences = getJson("/tasks/"+taskId+"/competences");
+        assertTrue(competences.isArray());
+        int elems = 0;
+        for (JsonNode value : competences) {
+            assertEquals(16.0, value.get("estimate").asDouble());
+            assertEquals(backendCompetenceId, value.get("competenceId").asLong());
+            ++elems;
+        }
+        assertEquals(1, elems);
     }
 
     @Test
@@ -197,14 +216,5 @@ class TaskTest
             }
         }
         return null;
-    }
-
-    private void assertCompetences(JsonNode task, long firstId, long secondId)
-    {
-        JsonNode competences = task.get("competences");
-        assertTrue(competences.isArray());
-        assertEquals(2, competences.size());
-        assertNotNull(findById(competences, firstId));
-        assertNotNull(findById(competences, secondId));
     }
 }
