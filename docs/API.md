@@ -71,20 +71,24 @@ All task endpoints require `PROJECT_MANAGER`.
 | `PUT` | `/tasks/{id}` | [Update task](#update-task-request) | `200` `Task` | Updates task-owned fields; the task remains in its current stage. |
 | `DELETE` | `/tasks/{id}` | — | `204` no body | — |
 
-### Competencies
+### Competences
 
 Competency endpoints currently require authentication, but do not yet have a
 route-level manager restriction.
 
-| Method | Path | Request body | Success response |
-|---|---|---|---|
-| `GET` | `/competences` | — | `200` `Competence[]` |
-| `GET` | `/competences/{id}` | — | `200` `Competence` |
-| `POST` | `/competences` | [Competence request](#competence-request) | `201` `Competence` |
-| `PUT` | `/competences/{id}` | [Competence request](#competence-request) | `200` `Competence` |
-| `DELETE` | `/competences/{id}` | — | `204` no body |
+| Method | Path | Request body | Success response | Notes |
+|---|---|---|---|---|
+| `GET` | `/competences` | — | `200` `Competence[]` | — |
+| `GET` | `/competences/{id}` | — | `200` `Competence` | — |
+| `POST` | `/competences` | [Competence request](#competence-request) | `201` `Competence` | Name is stored lowercase and must be unique. |
+| `PUT` | `/competences/{id}` | [Competence request](#competence-request) | `200` `Competence` | Name is stored lowercase and must be unique. |
+| `PATCH` | `/competences/{id}/activate` | — | `204` no body | Allows new task assignments. |
+| `PATCH` | `/competences/{id}/deactivate` | — | `204` no body | Prevents new task assignments. |
+| `DELETE` | `/competences/{id}` | — | `204` no body | Only unused competences can be deleted; a referenced competence returns `409` and must be deactivated instead. |
 
-`rate` must be a JSON number, not a numeric string.
+Competence names are trimmed and stored lowercase. They must be 2–100 characters,
+use the API's supported text characters, and are unique case-insensitively. `rate`
+must be a positive JSON number, not a numeric string.
 
 ### Users
 
@@ -198,7 +202,9 @@ Project statuses: `DRAFT`, `PLANNED`, `IN_PROGRESS`, `COMPLETED`.
 ```
 
 Task create and update requests require at least one `competenceIds` value. A task's
-stage is selected only when it is created and cannot be changed by an update.
+stage is selected only when it is created and cannot be changed by an update. Inactive
+competences cannot be assigned to a new task. An existing task may retain a previously
+assigned competence after it becomes inactive.
 
 ### Competence request
 
@@ -303,7 +309,14 @@ stage is selected only when it is created and cannot be changed by an update.
           "estimate": 8.0,
           "status": "NOT_STARTED",
           "competences": [
-            { "id": 1, "name": "Backend development", "rate": 850.00 }
+            {
+              "id": 1,
+              "name": "backend development",
+              "rate": 850.00,
+              "active": true,
+              "createdAt": "2026-01-01T09:00:00",
+              "updatedAt": "2026-01-02T10:00:00"
+            }
           ]
         }
       ]
@@ -331,7 +344,14 @@ stage is selected only when it is created and cannot be changed by an update.
   "estimate": 8.0,
   "status": "NOT_STARTED",
   "competences": [
-    { "id": 1, "name": "Backend development", "rate": 850.00 }
+    {
+      "id": 1,
+      "name": "backend development",
+      "rate": 850.00,
+      "active": true,
+      "createdAt": "2026-01-01T09:00:00",
+      "updatedAt": "2026-01-02T10:00:00"
+    }
   ]
 }
 ```
@@ -341,8 +361,11 @@ stage is selected only when it is created and cannot be changed by an update.
 ```json
 {
   "id": 1,
-  "name": "Backend development",
-  "rate": 850.00
+  "name": "backend development",
+  "rate": 850.00,
+  "active": true,
+  "createdAt": "2026-01-01T09:00:00",
+  "updatedAt": "2026-01-02T10:00:00"
 }
 ```
 

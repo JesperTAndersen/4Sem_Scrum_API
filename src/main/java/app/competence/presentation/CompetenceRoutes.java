@@ -1,15 +1,14 @@
 package app.competence.presentation;
 
-import app.shared.presentation.ICrudController;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class CompetenceRoutes
 {
-    private final ICrudController competenceController;
+    private final ICompetenceController competenceController;
 
-    public CompetenceRoutes(ICrudController competenceController)
+    public CompetenceRoutes(ICompetenceController competenceController)
     {
         this.competenceController = competenceController;
     }
@@ -22,6 +21,8 @@ public class CompetenceRoutes
             get("/{id}", competenceController::get);
             post(competenceController::create);
             put("/{id}", competenceController::update);
+            patch("/{id}/activate",competenceController::setActive);
+            patch("/{id}/deactivate",competenceController::setInactive);
             delete("/{id}", competenceController::delete);
         });
     }

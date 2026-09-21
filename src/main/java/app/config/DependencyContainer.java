@@ -1,11 +1,12 @@
 package app.config;
 
+import app.competence.presentation.CompetenceController;
+import app.competence.presentation.ICompetenceController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import app.config.hibernate.HibernateConfig;
-import app.competence.presentation.CompetenceController;
 import app.presentation.health.HealthCheckController;
 import app.project.presentation.ProjectController;
 import app.security.presentation.SecurityController;
@@ -61,7 +62,7 @@ public final class DependencyContainer
     @Getter
     private final IUserController userController;
     @Getter
-    private final ICrudController competenceController;
+    private final ICompetenceController competenceController;
     @Getter
     private final IStageService stageService;
     @Getter

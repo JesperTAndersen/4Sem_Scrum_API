@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
@@ -23,11 +24,53 @@ public class Competence implements IEntity
     @Column(name = "competence_id", nullable = false)
     private Long id;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true, length = 100)
     private String name;
 
     @Column(name = "rate", nullable = false)
     private BigDecimal rate;
+
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    public Competence(String name, BigDecimal rate)
+    {
+        this.name = name.trim().toLowerCase();
+        this.rate = rate;
+    }
+
+    public void update(String name, BigDecimal rate)
+    {
+        this.name = name.trim().toLowerCase();
+        this.rate = rate;
+    }
+
+    public void setActive(boolean active)
+    {
+        this.active = active;
+    }
+
+    @PrePersist
+    protected void onCreate()
+    {
+        this.name = name.trim().toLowerCase();
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate()
+    {
+        this.name = name.trim().toLowerCase();
+        this.updatedAt = LocalDateTime.now();
+    }
 
     @Override
     public final boolean equals(Object o)
