@@ -5,4 +5,7 @@ import app.shared.data.ICrudDAO;
 
 public interface ICompetenceDAO extends ICrudDAO<Competence>
 {
+    boolean existsByName(String name, Long excludedId);
+
+    void setActive(Long id, boolean active);
 }

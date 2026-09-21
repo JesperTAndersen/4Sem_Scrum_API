@@ -1,6 +1,7 @@
 package app.competence.data;
 
 import app.competence.presentation.dto.CompetenceDTO;
+import app.competence.presentation.dto.CompetenceCreateDTO;
 import app.competence.domain.Competence;
 
 public class CompetenceMapper
@@ -15,16 +16,15 @@ public class CompetenceMapper
         return new CompetenceDTO(
                 competence.getId(),
                 competence.getName(),
-                competence.getRate()
+                competence.getRate(),
+                competence.isActive(),
+                competence.getCreatedAt(),
+                competence.getUpdatedAt()
         );
     }
 
-    public static Competence toEntity(CompetenceDTO dto)
+    public static Competence toEntity(CompetenceCreateDTO dto)
     {
-        return new Competence(
-                dto.id(),
-                dto.name(),
-                dto.rate()
-        );
+        return new Competence(dto.name().trim(), dto.rate());
     }
 }

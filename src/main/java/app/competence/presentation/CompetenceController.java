@@ -1,11 +1,14 @@
 package app.competence.presentation;
 
-import app.shared.presentation.ICrudController;
 import app.competence.presentation.dto.CompetenceDTO;
+import app.competence.presentation.dto.CompetenceCreateDTO;
+import app.competence.presentation.dto.CompetenceUpdateDTO;
 import app.competence.domain.ICompetenceService;
+import app.utils.RequestUtil;
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 
-public class CompetenceController implements ICrudController
+public class CompetenceController implements ICompetenceController
 {
     private final ICompetenceService iCompetenceService;
 
@@ -16,13 +19,12 @@ public class CompetenceController implements ICrudController
 
     public void create(Context ctx)
     {
-        CompetenceDTO body = ctx.bodyValidator(CompetenceDTO.class)
+        CompetenceCreateDTO body = ctx.bodyValidator(CompetenceCreateDTO.class)
                 .check(competence -> competence.name() != null, "Name is required")
                 .check(competence -> competence.rate() != null, "Rate is required")
                 .get();
 
-        CompetenceDTO dto = new CompetenceDTO(null, body.name(), body.rate());
-        ctx.status(201).json(iCompetenceService.create(dto));
+        ctx.status(HttpStatus.CREATED).json(iCompetenceService.create(body));
     }
 
     public void getAll(Context ctx)
@@ -32,26 +34,41 @@ public class CompetenceController implements ICrudController
 
     public void get(Context ctx)
     {
-        Long id = Long.parseLong(ctx.pathParam("id"));
+        Long id = RequestUtil.requirePathId(ctx, "id");
         ctx.json(iCompetenceService.get(id));
     }
 
     public void update(Context ctx)
     {
-        Long id = Long.parseLong(ctx.pathParam("id"));
-        CompetenceDTO body = ctx.bodyValidator(CompetenceDTO.class)
+        Long id = RequestUtil.requirePathId(ctx, "id");
+        CompetenceUpdateDTO body = ctx.bodyValidator(CompetenceUpdateDTO.class)
                 .check(competence -> competence.name() != null, "Name is required")
                 .check(competence -> competence.rate() != null, "Rate is required")
                 .get();
 
-        CompetenceDTO dto = new CompetenceDTO(id, body.name(), body.rate());
-        ctx.json(iCompetenceService.update(dto));
+        ctx.json(iCompetenceService.update(id, body));
     }
 
     public void delete(Context ctx)
     {
-        Long id = Long.parseLong(ctx.pathParam("id"));
+        Long id = RequestUtil.requirePathId(ctx, "id");
         iCompetenceService.delete(id);
-        ctx.status(204);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    @Override
+    public void setActive(Context ctx)
+    {
+        Long id = RequestUtil.requirePathId(ctx, "id");
+        iCompetenceService.setActive(id, true);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    @Override
+    public void setInactive(Context ctx)
+    {
+        Long id = RequestUtil.requirePathId(ctx, "id");
+        iCompetenceService.setActive(id, false);
+        ctx.status(HttpStatus.NO_CONTENT);
     }
 }
