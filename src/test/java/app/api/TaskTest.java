@@ -39,7 +39,7 @@ class TaskTest
             "name": "Define requirements",
             "estimate": 8.0
         }
-        """.formatted(stageId, backendCompetenceId, testingCompetenceId);
+        """.formatted(stageId);
 
         ResponseBodyExtractionOptions taskResponse = given()
             .header("Content-Type", "application/json")
@@ -61,7 +61,7 @@ class TaskTest
             "name": "Updated requirements",
             "estimate": 16.0
         }
-        """.formatted(backendCompetenceId, testingCompetenceId);
+        """.formatted();
 
         ResponseBodyExtractionOptions updatedResponse = given()
             .header("Content-Type", "application/json")
@@ -96,6 +96,7 @@ class TaskTest
         JsonNode fetchedTask = getJson("/tasks/" + taskId);
         assertEquals("Updated requirements", fetchedTask.get("name").asText());
         assertEquals(16.0, fetchedTask.get("estimate").asDouble());
+        assertEquals(32.0, fetchedTask.get("totalEstimate").asDouble());
 
         JsonNode stage = getJson("/stages/" + stageId);
         JsonNode taskInStage = findById(stage.get("tasks"), taskId);

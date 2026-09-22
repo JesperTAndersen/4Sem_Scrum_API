@@ -11,10 +11,15 @@ public final class TaskMapper
 
     public static TaskDTO toDTO(Task task)
     {
+        double totalEstimate = task.getEstimate();
+        for (TaskCompetence tc : task.getRequiredCompetences()) {
+            totalEstimate += tc.getEstimate();
+        }
         return new TaskDTO(
                 task.getId(),
                 task.getName(),
                 task.getEstimate(),
+                totalEstimate,
                 task.getStatus()
         );
     }
