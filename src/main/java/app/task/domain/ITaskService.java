@@ -11,6 +11,7 @@ import app.task.presentation.dto.TaskUpdateDTO;
 public interface ITaskService extends ICrudService<TaskCreateDTO, TaskDTO>
 {
     TaskDTO update(Long id, TaskUpdateDTO dto);
-    public void competence(Long id, TaskCompetenceDTO dto);
+    public void addCompetence(Long id, TaskCompetenceDTO dto);
+    public void remCompetence(Long id, Long competenceId);
     public List<TaskCompetenceDTO> getAllCompetence(Long id);
 }

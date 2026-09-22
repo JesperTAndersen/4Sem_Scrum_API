@@ -118,6 +118,14 @@ class TaskTest
             ++elems;
         }
         assertEquals(1, elems);
+
+        given()
+            .header("Content-Type", "application/json")
+            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
+            .when()
+            .delete("/tasks/"+taskId+"/competences/"+backendCompetenceId)
+            .then()
+            .statusCode(204);
     }
 
     @Test

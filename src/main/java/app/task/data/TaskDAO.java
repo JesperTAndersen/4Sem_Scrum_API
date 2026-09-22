@@ -13,6 +13,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 
 public class TaskDAO implements ICrudDAO<Task>
@@ -117,8 +118,65 @@ public class TaskDAO implements ICrudDAO<Task>
                 query.setParameter("id", id);
                 return query.getResultList();
             }
+            catch (EntityNotFoundException e)
+            {
+                throw e;
+            }
             catch (PersistenceException e)
             {
+                throw new DatabaseException("Failed to fetch all competence tasks", e);
+            }
+        }
+    }
+
+    public TaskCompetence getCompetence(Long id, Long competenceId)
+    {
+        try (EntityManager em = emf.createEntityManager())
+        {
+            try
+            {
+                TypedQuery<TaskCompetence> query = em.createQuery(
+                        """
+                        SELECT DISTINCT tc FROM TaskCompetence tc
+                        WHERE tc.task.id = :id AND tc.competence.id = :competenceId
+                        """,
+                        TaskCompetence.class);
+                query.setParameter("id", id);
+                query.setParameter("competenceId", competenceId);
+                return query.getSingleResultOrNull();
+            }
+            catch (PersistenceException e)
+            {
+                throw new DatabaseException("Failed to fetch all competence tasks", e);
+            }
+        }
+    }
+
+    public void remCompetence(Long id, Long competenceId)
+    {
+        try (EntityManager em = emf.createEntityManager())
+        {
+            try
+            {
+                em.getTransaction().begin();
+                Query query = em.createQuery(
+                        """
+                        DELETE FROM TaskCompetence tc
+                        WHERE tc.task.id = :id AND tc.competence.id = :competenceId
+                        """);
+                query.setParameter("id", id);
+                query.setParameter("competenceId", competenceId);
+                query.executeUpdate();
+                em.getTransaction().commit();
+            }
+            catch (EntityNotFoundException e)
+            {
+                TransactionUtil.rollback(em);
+                throw e;
+            }
+            catch (PersistenceException e)
+            {
+                TransactionUtil.rollback(em);
                 throw new DatabaseException("Failed to fetch all competence tasks", e);
             }
         }

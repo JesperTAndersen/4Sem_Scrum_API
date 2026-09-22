@@ -76,7 +76,13 @@ public class Task implements IEntity
 
     public void assignCompetence(Competence competence, float estimate)
     {
-        this.requiredCompetences.add(new TaskCompetence(this, competence, estimate));
+        TaskCompetence tc = new TaskCompetence(this, competence, estimate);
+        this.requiredCompetences.add(tc);
+    }
+
+    public void unassignCompetence(TaskCompetence competence)
+    {
+        this.requiredCompetences.remove(competence);
     }
 
     public void update(String name, double estimate)

@@ -69,16 +69,19 @@ public class TaskController implements ICrudController
         ctx.status(200).json(list);
     }
 
-    public void assignCompetence(Context ctx)
+    public void addCompetence(Context ctx)
     {
         Long id = RequestUtil.requirePathId(ctx, "id");
         TaskCompetenceDTO dto = ctx.bodyAsClass(TaskCompetenceDTO.class);
-        taskService.competence(id, dto);
+        taskService.addCompetence(id, dto);
         ctx.status(204);
     }
 
-    public void unassignCompetence(Context ctx)
+    public void remCompetence(Context ctx)
     {
-        ctx.status(501);
+        Long id = RequestUtil.requirePathId(ctx, "id");
+        Long competenceId = RequestUtil.requirePathId(ctx, "competenceId");
+        taskService.remCompetence(id, competenceId);
+        ctx.status(204);
     }
 }

@@ -93,12 +93,21 @@ public class TaskService implements ITaskService
                 .toList();
     }
 
-    public void competence(Long id, TaskCompetenceDTO dto)
+    public void addCompetence(Long id, TaskCompetenceDTO dto)
     {
         Task task = getExistingTask(id);
         Competence competence = getExistingCompetence(dto.competenceId());
         task.assignCompetence(competence, dto.estimate());
         taskDAO.update(task);
+    }
+
+    public void remCompetence(Long id, Long competenceId)
+    {
+        try {
+            taskDAO.remCompetence(id, competenceId);
+        } catch (EntityNotFoundException e) {
+            throw new ApiException(404, "Task#"+id+" not found with Competence#" + competenceId);
+        }
     }
 
     private void validateName(String name)
