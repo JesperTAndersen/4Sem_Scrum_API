@@ -20,6 +20,7 @@ public record ProjectDTO(
         UserReferenceDTO updatedBy,
         LocalDateTime updatedAt,
         double totalEstimatedHours,
-        List<StageDTO> stages
+        List<StageDTO> stages,
+        int numOfTasks
 ) {
 }
