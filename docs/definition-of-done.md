@@ -15,7 +15,7 @@ A user story is considered done when:
 - No `TODO` comments are left in the code; follow-up work is tracked as a GitHub issue in the backlog, and lasting decisions or limitations go in the documentation
 
 ## Documentation
-- New or changed endpoints are documented following the template in [coding standards](./docs/coding-standards.md)
+- New or changed endpoints are documented following the template in [coding standards](coding-standards.md)
 
 ## Delivery
 - Changes are reviewed and merged to the main branch via pull request
