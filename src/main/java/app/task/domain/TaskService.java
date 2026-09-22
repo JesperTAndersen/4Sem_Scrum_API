@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import app.competence.domain.Competence;
-import app.competence.presentation.dto.CompetenceDTO;
 import app.exceptions.ApiException;
 import app.shared.data.IReadDAO;
 import app.stage.domain.Stage;
@@ -97,7 +96,7 @@ public class TaskService implements ITaskService
     public void competence(Long id, TaskCompetenceDTO dto)
     {
         Task task = getExistingTask(id);
-        Competence competence = competenceReader.get(dto.competenceId());
+        Competence competence = getExistingCompetence(dto.competenceId());
         task.assignCompetence(competence, dto.estimate());
         taskDAO.update(task);
     }

@@ -91,7 +91,7 @@ route-level manager restriction.
 | Method | Path | Request body | Success response |
 |---|---|---|---|
 | `GET` | `/tasks/{id}/competences` | — | `200` `TaskCompetence[]` |
-| `PUT` | `/tasks/{id}/competences` | [Task Competence request](#task-competence-request) | `204` |
+| `POST` | `/tasks/{id}/competences` | [Task Competence request](#task-competence-request) | `204` |
 | `DELETE` | `/tasks/{id}/competences/{id}` | — | `501` |
 
 ### Users

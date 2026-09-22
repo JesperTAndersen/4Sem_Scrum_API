@@ -38,7 +38,8 @@ public class TaskCompetence
         if (this == o) return true;
         if (o == null) return false;
         if (!(o instanceof TaskCompetence)) return false;
-        return id != null && id.equals(((TaskCompetence) o).getId());
+        TaskCompetence tc = (TaskCompetence)o;
+        return task != null && tc.competence != null && task.equals(tc.task) && competence.equals(tc.competence);
     }
 
     @Override

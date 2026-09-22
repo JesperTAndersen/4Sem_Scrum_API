@@ -84,13 +84,12 @@ class TaskTest
             "estimate": 16.0
         }
         """.formatted(backendCompetenceId);
-
         given()
             .header("Content-Type", "application/json")
             .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
             .body(competenceJSON)
             .when()
-            .put("/tasks/"+taskId+"/competences")
+            .post("/tasks/"+taskId+"/competences")
             .then()
             .statusCode(204);
 
