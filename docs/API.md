@@ -298,10 +298,12 @@ assigned competence after it becomes inactive.
   "createdAt": "2026-01-01T09:00:00",
   "updatedBy": { "id": 1, "firstName": "Alice", "lastName": "Manager" },
   "updatedAt": "2026-01-02T10:00:00",
+  "totalEstimatedHours": 8.0,
   "stages": [
     {
       "id": 10,
       "name": "Planning",
+      "totalEstimatedHours": 8.0,
       "tasks": [
         {
           "id": 100,
@@ -331,9 +333,14 @@ assigned competence after it becomes inactive.
 {
   "id": 10,
   "name": "Planning",
+  "totalEstimatedHours": 0.0,
   "tasks": []
 }
 ```
+
+`totalEstimatedHours` is derived from the current task estimates. The project response
+uses the same field name and derives its total from its stage totals, so no separate
+roll-up value is stored.
 
 ### Task
 

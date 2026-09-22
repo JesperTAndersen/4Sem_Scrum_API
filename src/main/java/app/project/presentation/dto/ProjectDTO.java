@@ -19,6 +19,7 @@ public record ProjectDTO(
         LocalDateTime createdAt,
         UserReferenceDTO updatedBy,
         LocalDateTime updatedAt,
+        double totalEstimatedHours,
         List<StageDTO> stages
 ) {
 }

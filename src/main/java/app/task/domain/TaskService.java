@@ -40,6 +40,7 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         ValidationUtil.validateId(dto.stageId());
         validateName(dto.name());
+        validateEstimate(dto.estimate());
         Set<Competence> competences = getRequiredCompetences(dto.competenceIds(), Set.of());
 
         Stage stage = stageReader.get(dto.stageId());
@@ -106,6 +107,11 @@ public class TaskService implements ITaskService
         if (estimate == null)
         {
             throw new BadRequestException("Task estimate is required");
+        }
+
+        if (!Double.isFinite(estimate) || estimate < 0)
+        {
+            throw new BadRequestException("Task estimate must be a non-negative number of hours");
         }
     }
 

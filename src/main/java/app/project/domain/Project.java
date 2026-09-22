@@ -59,6 +59,13 @@ public class Project implements IEntity
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    public double getTotalEstimatedHours()
+    {
+        return stages.stream()
+                .mapToDouble(Stage::getTotalEstimatedHours)
+                .sum();
+    }
+
     @PrePersist
     protected void onCreate()
     {

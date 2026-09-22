@@ -13,6 +13,7 @@ public final class StageMapper
         return new StageDTO(
                 stage.getId(),
                 stage.getName(),
+                stage.getTotalEstimatedHours(),
                 stage.getTasks().stream().map(TaskMapper::toDTO).toList()
         );
     }
