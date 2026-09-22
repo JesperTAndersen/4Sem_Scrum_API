@@ -40,7 +40,7 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         ValidationUtil.validateId(dto.stageId());
         validateName(dto.name());
-        Set<Competence> competences = getRequiredCompetences(dto.competenceIds());
+        Set<Competence> competences = getRequiredCompetences(dto.competenceIds(), Set.of());
 
         Stage stage = stageReader.get(dto.stageId());
         Task created = taskDAO.create(new Task(stage,
@@ -79,9 +79,11 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         validateName(dto.name());
         validateEstimate(dto.estimate());
-        Set<Competence> competences = getRequiredCompetences(dto.competenceIds());
-
         Task task = getExistingTask(id);
+        Set<Long> existingCompetenceIds = task.getRequiredCompetences().stream()
+                .map(Competence::getId)
+                .collect(Collectors.toSet());
+        Set<Competence> competences = getRequiredCompetences(dto.competenceIds(), existingCompetenceIds);
         task.update(dto.name().trim(), dto.estimate(), competences);
         taskDAO.update(task);
         return get(id);
@@ -107,7 +109,7 @@ public class TaskService implements ITaskService
         }
     }
 
-    private Set<Competence> getRequiredCompetences(Set<Long> competenceIds)
+    private Set<Competence> getRequiredCompetences(Set<Long> competenceIds, Set<Long> allowedInactiveIds)
     {
         if (competenceIds == null || competenceIds.isEmpty())
         {
@@ -116,7 +118,20 @@ public class TaskService implements ITaskService
 
         return competenceIds.stream()
                 .map(this::getExistingCompetence)
+                .map(competence ->
+                {
+                    validateCanBeAssigned(competence, allowedInactiveIds);
+                    return competence;
+                })
                 .collect(Collectors.toSet());
+    }
+
+    private void validateCanBeAssigned(Competence competence, Set<Long> allowedInactiveIds)
+    {
+        if (!competence.isActive() && !allowedInactiveIds.contains(competence.getId()))
+        {
+            throw new BadRequestException("Inactive competence cannot be assigned to a task: " + competence.getId());
+        }
     }
 
     private Competence getExistingCompetence(Long id)
