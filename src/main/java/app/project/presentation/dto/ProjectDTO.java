@@ -1,6 +1,7 @@
 package app.project.presentation.dto;
 
 import app.project.domain.ProjectStatus;
+import app.task.presentation.dto.TaskCountDTO;
 import app.user.presentation.dto.UserReferenceDTO;
 import app.stage.presentation.dto.StageDTO;
 
@@ -21,6 +22,6 @@ public record ProjectDTO(
         LocalDateTime updatedAt,
         double totalEstimatedHours,
         List<StageDTO> stages,
-        int numOfTasks
+        TaskCountDTO tasks
 ) {
 }
