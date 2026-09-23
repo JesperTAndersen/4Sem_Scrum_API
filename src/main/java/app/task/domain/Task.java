@@ -1,21 +1,15 @@
 package app.task.domain;
 
-import app.shared.domain.IEntity;
-import app.competence.domain.Competence;
-import app.stage.domain.Stage;
-
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
+import app.competence.domain.Competence;
+import app.shared.domain.IEntity;
+import app.stage.domain.Stage;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -29,7 +23,7 @@ public class Task implements IEntity
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private double estimate;
+    private double minDuration;
 
     // Sprint-later fields:
     // private double duration;
@@ -37,19 +31,17 @@ public class Task implements IEntity
     public enum TaskStatus
     {
         NOT_STARTED,
-        IN_PROGESS,
+        IN_PROGRESS,
         DONE,
         ;
     }
 
     private TaskStatus status;
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "task_competences",
-            joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "competence_id")
-    )
-    private Set<Competence> requiredCompetences = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Competence competence;
+    private double estimate;
+
     // TODO: dependencies
     @ManyToOne(fetch = FetchType.LAZY)
     private Stage stage;
@@ -61,21 +53,16 @@ public class Task implements IEntity
     {
     }
 
-    public Task(Stage stage, String name, double estimate)
-    {
-        this(stage, name, estimate, Set.of());
-    }
-
-    public Task(Stage stage, String name, double estimate, Set<Competence> requiredCompetences)
+    public Task(Stage stage, String name, double minDuration)
     {
         this.stage = stage;
         this.name = name;
-        this.estimate = estimate;
-        this.requiredCompetences = new HashSet<>(requiredCompetences);
+        this.minDuration = minDuration;
         this.status = TaskStatus.NOT_STARTED;
-        if (stage != null)
-        {
-            stage.addTask(this);
+        if (stage != null) {
+            if (stage != null) {
+                stage.addTask(this);
+            }
         }
     }
 
@@ -84,11 +71,18 @@ public class Task implements IEntity
         this.status = status;
     }
 
-    public void update(String name, double estimate, Set<Competence> requiredCompetences)
+    public void setCompetence(Competence competence, float estimate)
     {
-        this.name = name;
+        this.competence = competence;
         this.estimate = estimate;
-        this.requiredCompetences = new HashSet<>(requiredCompetences);
+    }
+
+    public void update(String name, Double minDuration)
+    {
+        if (name != null)
+            this.name = name.trim();
+        if (minDuration != null)
+            this.minDuration = minDuration;
     }
 
     // TODO: employees

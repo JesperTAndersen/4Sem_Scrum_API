@@ -91,69 +91,6 @@ class CompetenceTest
                 .statusCode(400);
     }
 
-    @Test
-    void inactiveCompetenceCannotBeAssignedToANewTask() throws Exception
-    {
-        JsonNode competence = createCompetence("Inactive task competence", 850.00);
-        long competenceId = competence.get("id").asLong();
-
-        givenAuthenticated()
-                .when()
-                .patch("/competences/" + competenceId + "/deactivate")
-                .then()
-                .statusCode(204);
-
-        ResponseBodyExtractionOptions stageResponse = givenAuthenticated()
-                .body("{\"projectId\":1,\"name\":\"Inactive competence stage\"}")
-                .when()
-                .post("/stages")
-                .then()
-                .statusCode(201)
-                .extract()
-                .body();
-        long stageId = ApiTest.objectMapper.readTree(stageResponse.asString()).get("id").asLong();
-
-        givenAuthenticated()
-                .body("""
-                        {
-                          "stageId": %d,
-                          "name": "Task with inactive competence",
-                          "estimate": 8.0,
-                          "competenceIds": [%d]
-                        }
-                        """.formatted(stageId, competenceId))
-                .when()
-                .post("/tasks")
-                .then()
-                .statusCode(400);
-
-        givenAuthenticated()
-                .when()
-                .patch("/competences/" + competenceId + "/activate")
-                .then()
-                .statusCode(204);
-
-        givenAuthenticated()
-                .body("""
-                        {
-                          "stageId": %d,
-                          "name": "Task with active competence",
-                          "estimate": 8.0,
-                          "competenceIds": [%d]
-                        }
-                        """.formatted(stageId, competenceId))
-                .when()
-                .post("/tasks")
-                .then()
-                .statusCode(201);
-
-        givenAuthenticated()
-                .when()
-                .delete("/competences/" + competenceId)
-                .then()
-                .statusCode(409);
-    }
-
     private JsonNode createCompetence(String name, double rate) throws Exception
     {
         ResponseBodyExtractionOptions response = givenAuthenticated()

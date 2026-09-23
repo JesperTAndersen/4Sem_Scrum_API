@@ -19,9 +19,10 @@ Tasks belong to a stage and define an estimate plus the competences needed to pe
 |---|---|---|
 | `id` | number | Unique identifier |
 | `name` | string | Task name |
-| `estimate` | number | Non-negative estimated hours |
-| `status` | enum | `NOT_STARTED`, `IN_PROGESS`, or `DONE` |
-| `competences` | [Competence](competences.md#competence-object)[] | Required competences |
+| `minDuration` | number | Non-negative minimum duration hours |
+| `competenceId` | number | [competence](competences.md) ID, 0 == not set |
+| `estimate` | number | Non-negative estimated hours for competence |
+| `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
 
 ## GET /tasks
 
@@ -37,11 +38,10 @@ Creates a task in the supplied stage. Inactive competences cannot be assigned to
 |---|---|---|---|
 | `stageId` | number | yes | Existing stage ID |
 | `name` | string | yes | Not blank |
-| `estimate` | number | yes | Zero or greater |
-| `competenceIds` | number[] | yes | At least one existing, active competence |
+| `minDuration` | number | yes | Zero or greater |
 
 ```json
-{ "stageId": 10, "name": "Requirements", "estimate": 8.0, "competenceIds": [1, 2] }
+{ "stageId": 10, "name": "Requirements", "minDuration": 8.0, "competenceId" : 0, "estimate" : 0.0 }
 ```
 
 **Success response:** `201 Created` with a Task object.  
@@ -63,12 +63,13 @@ Updates task-owned fields; it does not change the task's stage. An existing task
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `name` | string | yes | Not blank |
-| `estimate` | number | yes | Zero or greater |
-| `competenceIds` | number[] | yes | At least one existing competence |
+| `name` | string | no | Not blank |
+| `minDuration` | number | no | Zero or greater |
+| `competenceId` | number | no | Existing competence and is active. Set to 0 to remove competence |
+| `estimate` | number | yes if competenceId != 0 | Non-negative estimate in hours for competence |
 
 ```json
-{ "name": "Updated requirements", "estimate": 16.0, "competenceIds": [1, 2] }
+{ "name": "Update Requirements", "minDuration": 16.0, "competenceId" : 1, "estimate" : 6.0 }
 ```
 
 **Success response:** `200 OK` with a Task object.  

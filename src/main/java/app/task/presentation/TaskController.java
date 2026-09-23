@@ -1,13 +1,14 @@
 package app.task.presentation;
 
+import java.util.List;
+import java.util.Objects;
+
+import app.shared.presentation.ICrudController;
+import app.task.domain.ITaskService;
 import app.task.presentation.dto.TaskCreateDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
-import app.task.domain.ITaskService;
-import app.shared.presentation.ICrudController;
 import app.utils.RequestUtil;
 import io.javalin.http.Context;
-
-import java.util.Objects;
 
 public class TaskController implements ICrudController
 {
@@ -25,8 +26,6 @@ public class TaskController implements ICrudController
                 .check(Objects::nonNull, "Task payload is required")
                 .check(task -> task.stageId() != null, "Stage id is required")
                 .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
-                .check(task -> task.competenceIds() != null && !task.competenceIds().isEmpty(),
-                        "At least one competence is required")
                 .get();
         ctx.status(201).json(taskService.create(dto));
     }
@@ -49,10 +48,6 @@ public class TaskController implements ICrudController
         Long id = RequestUtil.requirePathId(ctx, "id");
         TaskUpdateDTO dto = ctx.bodyValidator(TaskUpdateDTO.class)
                 .check(Objects::nonNull, "Task payload is required")
-                .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
-                .check(task -> task.estimate() != null, "Task estimate is required")
-                .check(task -> task.competenceIds() != null && !task.competenceIds().isEmpty(),
-                        "At least one competence is required")
                 .get();
         ctx.status(200).json(taskService.update(id, dto));
     }

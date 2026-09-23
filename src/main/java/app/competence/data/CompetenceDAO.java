@@ -211,7 +211,7 @@ public class CompetenceDAO implements ICompetenceDAO
             {
                 Long count = em.createQuery("""
                         SELECT COUNT(t)
-                        FROM Task t JOIN t.requiredCompetences c
+                        FROM Task t JOIN t.competence c
                         WHERE c.id = :id
                         """, Long.class)
                         .setParameter("id", id)

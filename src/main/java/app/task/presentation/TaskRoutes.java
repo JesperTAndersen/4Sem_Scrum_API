@@ -3,18 +3,17 @@ package app.task.presentation;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
-import static io.javalin.apibuilder.ApiBuilder.put;
 import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.apibuilder.ApiBuilder.put;
 
-import app.shared.presentation.ICrudController;
 import app.security.domain.Role;
 import io.javalin.apibuilder.EndpointGroup;
 
 public class TaskRoutes
 {
-    private final ICrudController taskController;
+    private final TaskController taskController;
 
-    public TaskRoutes(ICrudController taskController)
+    public TaskRoutes(TaskController taskController)
     {
         this.taskController = taskController;
     }
