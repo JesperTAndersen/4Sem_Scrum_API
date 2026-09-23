@@ -6,11 +6,14 @@ import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
 import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
+import app.stage.presentation.dto.StageDTO;
 import app.user.data.UserMapper;
 import app.user.domain.User;
 import app.stage.data.StageMapper;
 import app.task.presentation.dto.TaskCountDTO;
 import app.task.domain.Task;
+
+import java.util.List;
 
 public class ProjectMapper
 {
@@ -20,6 +23,14 @@ public class ProjectMapper
 
     public static ProjectDTO toDTO(Project project)
     {
+        List<StageDTO> stageDTOs = project.getStages().stream()
+                .map(StageMapper::toDTO)
+                .toList();
+
+        int numOfTasks = stageDTOs.stream()
+                .mapToInt(StageDTO -> StageDTO.tasks().size())
+                .sum();
+
         return new ProjectDTO(
                 project.getId(),
                 project.getTitle(),
@@ -32,7 +43,8 @@ public class ProjectMapper
                 UserMapper.toReferenceDTO(project.getUpdatedBy()),
                 project.getUpdatedAt(),
                 project.getTotalEstimatedHours(),
-                project.getStages().stream().map(StageMapper::toDTO).toList()
+                stageDTOs,
+                numOfTasks
         );
     }
 
