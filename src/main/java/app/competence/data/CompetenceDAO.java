@@ -179,14 +179,14 @@ public class CompetenceDAO implements ICompetenceDAO
         {
             try
             {
-                String query = "SELECT COUNT(c) FROM Competence c WHERE c.name = :name";
+                String query = "SELECT COUNT(c) FROM Competence c WHERE LOWER(c.name) = LOWER(:name)";
                 if (excludedId != null)
                 {
                     query += " AND c.id <> :excludedId";
                 }
 
                 var typedQuery = em.createQuery(query, Long.class)
-                        .setParameter("name", name.trim().toLowerCase()); // TODO Compare on lowercase, persist as-is
+                        .setParameter("name", name.trim());
                 if (excludedId != null)
                 {
                     typedQuery.setParameter("excludedId", excludedId);
