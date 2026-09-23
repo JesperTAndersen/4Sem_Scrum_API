@@ -97,7 +97,7 @@ public class CompetenceService implements ICompetenceService
         }
     }
 
-    private void validateNameIsUnique(String name, Long excludedId)
+    private void validateNameIsUnique(String name, Long excludedId) // TODO Compare on lowercase, persist as-is
     {
         if (competenceDAO.existsByName(name, excludedId))
         {

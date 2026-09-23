@@ -186,7 +186,7 @@ public class CompetenceDAO implements ICompetenceDAO
                 }
 
                 var typedQuery = em.createQuery(query, Long.class)
-                        .setParameter("name", name.trim().toLowerCase());
+                        .setParameter("name", name.trim().toLowerCase()); // TODO Compare on lowercase, persist as-is
                 if (excludedId != null)
                 {
                     typedQuery.setParameter("excludedId", excludedId);

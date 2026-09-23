@@ -39,13 +39,13 @@ public class Competence implements IEntity
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public Competence(String name, BigDecimal rate)
+    public Competence(String name, BigDecimal rate) // TODO Compare on lowercase, persist as-is
     {
         this.name = name.trim().toLowerCase();
         this.rate = rate;
     }
 
-    public void update(String name, BigDecimal rate)
+    public void update(String name, BigDecimal rate) // TODO Compare on lowercase, persist as-is
     {
         this.name = name.trim().toLowerCase();
         this.rate = rate;
@@ -57,7 +57,7 @@ public class Competence implements IEntity
     }
 
     @PrePersist
-    protected void onCreate()
+    protected void onCreate() // TODO Compare on lowercase, persist as-is
     {
         this.name = name.trim().toLowerCase();
         LocalDateTime now = LocalDateTime.now();
@@ -66,7 +66,7 @@ public class Competence implements IEntity
     }
 
     @PreUpdate
-    protected void onUpdate()
+    protected void onUpdate() // TODO Compare on lowercase, persist as-is
     {
         this.name = name.trim().toLowerCase();
         this.updatedAt = LocalDateTime.now();
