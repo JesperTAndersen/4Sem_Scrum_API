@@ -60,7 +60,7 @@ class ProjectMapperTest
         SlimProjectDTO result = ProjectMapper.toSlimProjectDTO(project);
 
         assertThat(result.taskCountDTO().totalTaskCount(), is(2));
-        assertThat(result.taskCountDTO().taskFinished(), is(1));
+        assertThat(result.taskCountDTO().taskDone(), is(1));
     }
 
     private Project project()

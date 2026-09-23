@@ -1,16 +1,15 @@
 package app.task.presentation.dto;
 
-import java.math.BigDecimal;
-
 import app.task.domain.Task.TaskStatus;
 
 public record TaskDTO(
         Long id,
         String name,
-        Double minDuration,
+        int minimumDurationInDays,
         Long competenceId,
-        Double estimate,
-        BigDecimal cost,
+        double estimate,
+        double laborDurationInDays,
+        double scheduledDurationInDays,
         TaskStatus status)
 {
 }

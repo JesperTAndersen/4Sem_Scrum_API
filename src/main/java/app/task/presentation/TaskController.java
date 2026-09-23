@@ -1,14 +1,13 @@
 package app.task.presentation;
 
-import java.util.List;
-import java.util.Objects;
-
-import app.shared.presentation.ICrudController;
-import app.task.domain.ITaskService;
 import app.task.presentation.dto.TaskCreateDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
+import app.task.domain.ITaskService;
+import app.shared.presentation.ICrudController;
 import app.utils.RequestUtil;
 import io.javalin.http.Context;
+
+import java.util.Objects;
 
 public class TaskController implements ICrudController
 {
@@ -26,6 +25,9 @@ public class TaskController implements ICrudController
                 .check(Objects::nonNull, "Task payload is required")
                 .check(task -> task.stageId() != null, "Stage id is required")
                 .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
+                .check(task -> task.minimumDurationInDays() != null, "Task minimum duration is required")
+                .check(task -> task.competenceId() != null, "Competence is required")
+                .check(task -> task.estimate() != null, "Task estimate is required")
                 .get();
         ctx.status(201).json(taskService.create(dto));
     }
