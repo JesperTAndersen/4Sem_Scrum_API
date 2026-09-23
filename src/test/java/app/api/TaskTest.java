@@ -2,15 +2,18 @@ package app.api;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import app.security.domain.Role;
-import app.utils.JWTUtil;
-import com.fasterxml.jackson.databind.JsonNode;
-import io.restassured.response.ResponseBodyExtractionOptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import app.security.domain.Role;
+import app.utils.JWTUtil;
+import io.restassured.response.ResponseBodyExtractionOptions;
 
 @ExtendWith(ApiTest.class)
 class TaskTest
@@ -77,6 +80,7 @@ class TaskTest
         assertEquals(taskId, updatedTask.get("id").asLong());
         assertEquals("Updated requirements", updatedTask.get("name").asText());
         assertEquals(16.0, updatedTask.get("minDuration").asDouble());
+        assertEquals(0, updatedTask.get("cost").asDouble());
 
         String competenceJSON = """
         {
@@ -98,6 +102,7 @@ class TaskTest
         assertEquals(16.0, fetchedTask.get("minDuration").asDouble());
         assertEquals(backendCompetenceId, fetchedTask.get("competenceId").asLong());
         assertEquals(32.0, fetchedTask.get("estimate").asDouble());
+        assertEquals(27200, fetchedTask.get("cost").asDouble());
 
         JsonNode stage = getJson("/stages/" + stageId);
         JsonNode taskInStage = findById(stage.get("tasks"), taskId);
@@ -129,6 +134,7 @@ class TaskTest
         assertEquals(16.0, fetchedTask.get("minDuration").asDouble());
         assertEquals(0, fetchedTask.get("competenceId").asLong());
         assertEquals(0.0, fetchedTask.get("estimate").asDouble());
+        assertEquals(0, fetchedTask.get("cost").asDouble());
     }
 
     @Test

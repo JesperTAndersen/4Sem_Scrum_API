@@ -23,7 +23,8 @@ class CompetenceTest
         assertTrue(created.hasNonNull("createdAt"));
         assertTrue(created.hasNonNull("updatedAt"));
 
-        createCompetence("Electrician", 900.00);
+        JsonNode node = createCompetence("Electrician", 900.00);
+        assertEquals(900.0, node.get("rate").asDouble());
 
         givenAuthenticated()
                 .body("{\"name\":\"C\",\"rate\":850.00}")

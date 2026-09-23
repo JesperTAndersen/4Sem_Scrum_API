@@ -2,7 +2,7 @@
 
 Tasks belong to a stage and define an estimate plus the competences needed to perform the work. A task cannot be moved to a different stage after creation.
 
-**Base path:** `/api/v1/tasks`  
+**Base path:** `/api/v1/tasks`
 **Access:** `PROJECT_MANAGER`
 
 | Method | Path | Summary |
@@ -22,6 +22,7 @@ Tasks belong to a stage and define an estimate plus the competences needed to pe
 | `minDuration` | number | Non-negative minimum duration hours |
 | `competenceId` | number | [competence](competences.md) ID, 0 == not set |
 | `estimate` | number | Non-negative estimated hours for competence |
+| `cost` | number | calculated cost (estimate * competenceRate) |
 | `status` | enum | `NOT_STARTED`, `IN_PROGESS`, or `DONE` |
 
 ## GET /tasks
@@ -44,13 +45,13 @@ Creates a task in the supplied stage. Inactive competences cannot be assigned to
 { "stageId": 10, "name": "Requirements", "minDuration": 8.0, "competenceId" : 0, "estimate" : 0.0 }
 ```
 
-**Success response:** `201 Created` with a Task object.  
+**Success response:** `201 Created` with a Task object.
 **Errors:** `400` for invalid input or inactive competence; `404` when a referenced stage or competence does not exist.
 
 ## GET /tasks/{id}
 
-**Path parameters:** `id` — task ID.  
-**Success response:** `200 OK` with a Task object.  
+**Path parameters:** `id` — task ID.
+**Success response:** `200 OK` with a Task object.
 **Errors:** `400` for an invalid ID; `404` when the task does not exist.
 
 ## PUT /tasks/{id}
@@ -72,11 +73,11 @@ Updates task-owned fields; it does not change the task's stage. An existing task
 { "name": "Update Requirements", "minDuration": 16.0, "competenceId" : 1, "estimate" : 6.0 }
 ```
 
-**Success response:** `200 OK` with a Task object.  
+**Success response:** `200 OK` with a Task object.
 **Errors:** `400` for invalid input; `404` when the task or a competence does not exist.
 
 ## DELETE /tasks/{id}
 
-**Path parameters:** `id` — task ID.  
-**Success response:** `204 No Content`.  
+**Path parameters:** `id` — task ID.
+**Success response:** `204 No Content`.
 **Errors:** `400` for an invalid ID; `404` when the task does not exist.

@@ -39,10 +39,10 @@ The application returns errors in one standard shape:
 ```json
 {
     "status": 404,
-        "message": "Project not found with id: 42",
-        "path": "/api/v1/projects/42",
-        "errorId": "3f6c1a52-0000-0000-0000-000000000000",
-        "timestamp": "2026-09-21T10:15:30Z"
+    "message": "Project not found with id: 42",
+    "path": "/api/v1/projects/42",
+    "errorId": "3f6c1a52-0000-0000-0000-000000000000",
+    "timestamp": "2026-09-21T10:15:30Z"
 }
 ```
 
