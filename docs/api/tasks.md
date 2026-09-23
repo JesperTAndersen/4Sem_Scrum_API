@@ -22,7 +22,7 @@ Tasks belong to a stage and define an estimate plus the competences needed to pe
 | `minDuration` | number | Non-negative minimum duration hours |
 | `competenceId` | number | [competence](competences.md) ID, 0 == not set |
 | `estimate` | number | Non-negative estimated hours for competence |
-| `status` | enum | `NOT_STARTED`, `IN_PROGESS`, or `DONE` |
+| `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
 
 ## GET /tasks
 
