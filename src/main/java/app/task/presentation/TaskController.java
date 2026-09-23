@@ -26,8 +26,7 @@ public class TaskController implements ICrudController
                 .check(task -> task.stageId() != null, "Stage id is required")
                 .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
                 .check(task -> task.minimumDurationInDays() != null, "Task minimum duration is required")
-                .check(task -> task.competenceIds() != null && !task.competenceIds().isEmpty(),
-                        "At least one competence is required")
+                .check(task -> task.competenceId() != null, "Competence is required")
                 .get();
         ctx.status(201).json(taskService.create(dto));
     }
@@ -53,8 +52,7 @@ public class TaskController implements ICrudController
                 .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
                 .check(task -> task.estimate() != null, "Task estimate is required")
                 .check(task -> task.minimumDurationInDays() != null, "Task minimum duration is required")
-                .check(task -> task.competenceIds() != null && !task.competenceIds().isEmpty(),
-                        "At least one competence is required")
+                .check(task -> task.competenceId() != null,"At least one competence is required")
                 .get();
         ctx.status(200).json(taskService.update(id, dto));
     }

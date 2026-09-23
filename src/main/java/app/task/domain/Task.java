@@ -1,158 +1,87 @@
 package app.task.domain;
 
-import app.shared.domain.IEntity;
 import app.competence.domain.Competence;
+import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
-
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Entity
 public class Task implements IEntity
 {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private static final double WORKING_HOURS_PER_DAY = 7.5;
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private double estimate;
     private int minimumDurationInDays;
-    public enum TaskStatus
-    {
-        NOT_STARTED,
-        IN_PROGRESS,
-        DONE,
-        ;
-    }
+    private double estimate;
 
+    public enum TaskStatus { NOT_STARTED, IN_PROGRESS, DONE }
     private TaskStatus status;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Competence competence;
-    private double estimate;
 
-    // TODO: dependencies
     @ManyToOne(fetch = FetchType.LAZY)
     private Stage stage;
-    // TODO: employees
-    //@OneToMany(fetch = FetchType.LAZY)
-    //private Set<Employee> assigned = new HashSet<>();
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    public Task()
-    {
-    }
+    public Task() {}
 
-    public Task(Stage stage, String name, double estimate)
-    {
-        this(stage, name, estimate, 0, Set.of());
-    }
-
-    public Task(Stage stage, String name, double estimate, Set<Competence> requiredCompetences)
-    {
-        this(stage, name, estimate, 0, requiredCompetences);
-    }
-
-    public Task(Stage stage, String name, double estimate, int minimumDurationInDays,
-                Set<Competence> requiredCompetences)
+    public Task(Stage stage, String name, int minimumDurationInDays)
     {
         this.stage = stage;
         this.name = name;
-        this.estimate = estimate;
         this.minimumDurationInDays = minimumDurationInDays;
-        this.requiredCompetences = new HashSet<>(requiredCompetences);
         this.status = TaskStatus.NOT_STARTED;
-        if (stage != null) {
-            if (stage != null) {
-                stage.addTask(this);
-            }
-        }
+        if (stage != null) stage.addTask(this);
     }
 
-    public void changeStatus(TaskStatus status)
+    public void changeStatus(TaskStatus status) { this.status = status; }
+
+    public void update(String name, Integer minimumDurationInDays)
     {
-        this.status = status;
+        if (name != null) this.name = name.trim();
+        if (minimumDurationInDays != null) this.minimumDurationInDays = minimumDurationInDays;
     }
 
-    public void update(String name, double estimate, int minimumDurationInDays,
-                       Set<Competence> requiredCompetences)
-    public void setCompetence(Competence competence, float estimate)
+    public void setCompetence(Competence competence, double estimate)
     {
         this.competence = competence;
         this.estimate = estimate;
-        this.minimumDurationInDays = minimumDurationInDays;
-        this.requiredCompetences = new HashSet<>(requiredCompetences);
     }
 
-    public void update(String name, Double minDuration)
-    {
-        if (name != null)
-            this.name = name.trim();
-        if (minDuration != null)
-            this.minDuration = minDuration;
-    }
-
-    public double getLaborDurationInDays()
-    {
-        return estimate / 7.5;
-    }
+    public double getLaborDurationInDays() { return estimate / WORKING_HOURS_PER_DAY; }
 
     public double getScheduledDurationInDays()
     {
         return Math.max(getLaborDurationInDays(), minimumDurationInDays);
     }
 
-    // TODO: employees
-    //public void assign(Employee employee)
-    //{
-    //    this.assigned.add(employee);
-    //}
-
-    //public void unassign(Employee employee)
-    //{
-    //    this.assigned.remove(employee);
-    //}
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate()
+    @PrePersist protected void onCreate()
     {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    @PreUpdate
-    protected void onUpdate()
+    @PreUpdate protected void onUpdate() { updatedAt = LocalDateTime.now(); }
+
+    @Override public final boolean equals(Object o)
     {
-        this.updatedAt = LocalDateTime.now();
+        return this == o || (o instanceof Task && id != null && id.equals(((Task) o).getId()));
     }
 
-    @Override
-    public final boolean equals(Object o)
-    {
-        if (this == o) return true;
-        if (o == null) return false;
-        if (!(o instanceof Task)) return false;
-        return id != null && id.equals(((Task) o).getId());
-    }
-
-    @Override
-    public final int hashCode()
-    {
-        return getClass().hashCode();
-    }
+    @Override public final int hashCode() { return getClass().hashCode(); }
 }
