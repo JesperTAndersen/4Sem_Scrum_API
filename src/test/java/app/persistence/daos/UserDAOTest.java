@@ -1,23 +1,33 @@
 package app.persistence.daos;
 
-import app.config.HibernateTestConfig;
-import app.user.domain.User;
-import app.security.domain.Role;
-import app.user.data.UserDAO;
-import app.persistence.testutils.TestPopulator;
-import app.utils.PasswordUtil;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
+import app.config.HibernateTestConfig;
+import app.exceptions.NotFoundException;
+import app.persistence.testutils.TestPopulator;
+import app.security.domain.Role;
+import app.user.data.UserDAO;
+import app.user.domain.User;
+import app.utils.PasswordUtil;
+import jakarta.persistence.EntityManagerFactory;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserDAOTest
@@ -103,7 +113,7 @@ class UserDAOTest
         Long id = seeded.get("user3").getId();
 
         assertTrue(userDAO.delete(id));
-        assertThrows(EntityNotFoundException.class, () -> userDAO.get(id));
+        assertThrows(NotFoundException.class, () -> userDAO.get(id));
     }
 
     @Test
@@ -115,7 +125,7 @@ class UserDAOTest
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> userDAO.get(null)),
                 () -> assertThrows(IllegalArgumentException.class, () -> userDAO.delete(0L)),
-                () -> assertThrows(EntityNotFoundException.class, () -> userDAO.get(999L)),
+                () -> assertThrows(NotFoundException.class, () -> userDAO.get(999L)),
                 () -> assertThrows(IllegalArgumentException.class, () -> userDAO.create(null)),
                 () -> assertThrows(IllegalArgumentException.class, () -> userDAO.update(withoutId)),
                 () -> assertThrows(IllegalArgumentException.class, () -> userDAO.findByEmail(null)),
