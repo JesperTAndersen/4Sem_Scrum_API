@@ -53,7 +53,14 @@ public class TaskService implements ITaskService
     @Override public TaskDTO update(TaskDTO dto)
     {
         ValidationUtil.validateNotNull(dto, "Task");
-        return update(dto.id(), new TaskUpdateDTO(dto.name(), dto.minimumDurationInDays(), dto.competenceId(), dto.estimate()));
+        return update(dto.id(),
+                new TaskUpdateDTO(dto.name(),
+                        dto.minimumDurationInDays(),
+                        dto.competenceId(),
+                        dto.estimate(),
+                        dto.status()
+                )
+        );
     }
 
     @Override public TaskDTO update(Long id, TaskUpdateDTO dto)
@@ -65,6 +72,10 @@ public class TaskService implements ITaskService
 
         Task task = getExistingTask(id);
         task.update(dto.name(), dto.minimumDurationInDays());
+        if (dto.status() != null)
+        {
+            task.changeStatus(dto.status());
+        }
         if (dto.competenceId() != null)
         {
             if (dto.competenceId() == 0)
