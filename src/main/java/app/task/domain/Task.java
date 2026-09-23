@@ -1,13 +1,10 @@
 package app.task.domain;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 import app.competence.domain.Competence;
 import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -34,7 +31,7 @@ public class Task implements IEntity
     public enum TaskStatus
     {
         NOT_STARTED,
-        IN_PROGESS,
+        IN_PROGRESS,
         DONE,
         ;
     }
