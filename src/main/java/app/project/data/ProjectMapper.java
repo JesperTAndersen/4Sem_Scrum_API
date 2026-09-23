@@ -6,11 +6,14 @@ import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
 import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
+import app.stage.presentation.dto.StageDTO;
 import app.user.data.UserMapper;
 import app.user.domain.User;
 import app.stage.data.StageMapper;
 import app.task.presentation.dto.TaskCountDTO;
 import app.task.domain.Task;
+
+import java.util.List;
 
 public class ProjectMapper
 {
@@ -20,6 +23,8 @@ public class ProjectMapper
 
     public static ProjectDTO toDTO(Project project)
     {
+        TaskCountDTO tasks = new TaskCountDTO(totalNumOfTasks(project), numOfFinishedTasks(project));
+
         return new ProjectDTO(
                 project.getId(),
                 project.getTitle(),
@@ -32,21 +37,17 @@ public class ProjectMapper
                 UserMapper.toReferenceDTO(project.getUpdatedBy()),
                 project.getUpdatedAt(),
                 project.getTotalEstimatedHours(),
-                project.getStages().stream().map(StageMapper::toDTO).toList()
+                project.getStages().stream()
+                        .map(StageMapper::toDTO)
+                        .toList(),
+                tasks
         );
     }
 
     public static SlimProjectDTO toSlimProjectDTO(Project project)
     {
-        int total = project.getStages().stream()
-                .mapToInt(stage -> stage.getTasks().size())
-                .sum();
-        int finished = project.getStages().stream()
-                .flatMap(stage -> stage.getTasks().stream())
-                .map(Task::getStatus)
-                .filter(Task.TaskStatus.DONE::equals)
-                .toList()
-                .size();
+        int total = totalNumOfTasks(project);
+        int finished = numOfFinishedTasks(project);
 
         return new SlimProjectDTO(
                 project.getId(),
@@ -88,5 +89,22 @@ public class ProjectMapper
                 .updatedBy(updatedBy)
                 .updatedAt(existingProject.getUpdatedAt())
                 .build();
+    }
+
+    private static int totalNumOfTasks(Project project)
+    {
+        return project.getStages().stream()
+                .mapToInt(stage -> stage.getTasks().size())
+                .sum();
+    }
+
+    private static int numOfFinishedTasks(Project project)
+    {
+        return project.getStages().stream()
+                .flatMap(stage -> stage.getTasks().stream())
+                .map(Task::getStatus)
+                .filter(Task.TaskStatus.DONE::equals)
+                .toList()
+                .size();
     }
 }
