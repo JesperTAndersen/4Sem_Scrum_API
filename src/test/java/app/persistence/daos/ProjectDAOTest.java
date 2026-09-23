@@ -1,21 +1,32 @@
 package app.persistence.daos;
 
-import app.config.HibernateTestConfig;
-import app.project.domain.Project;
-import app.project.domain.ProjectStatus;
-import app.project.data.ProjectDAO;
-import app.persistence.testutils.TestPopulator;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
+import app.config.HibernateTestConfig;
+import app.exceptions.NotFoundException;
+import app.persistence.testutils.TestPopulator;
+import app.project.data.ProjectDAO;
+import app.project.domain.Project;
+import app.project.domain.ProjectStatus;
+import jakarta.persistence.EntityManagerFactory;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ProjectDAOTest
@@ -74,8 +85,8 @@ class ProjectDAOTest
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> projectDAO.get(null)),
                 () -> assertThrows(IllegalArgumentException.class, () -> projectDAO.delete(0L)),
-                () -> assertThrows(EntityNotFoundException.class, () -> projectDAO.get(999L)),
-                () -> assertThrows(EntityNotFoundException.class, () -> projectDAO.delete(999L))
+                () -> assertThrows(NotFoundException.class, () -> projectDAO.get(999L)),
+                () -> assertThrows(NotFoundException.class, () -> projectDAO.delete(999L))
         );
     }
 
@@ -114,7 +125,7 @@ class ProjectDAOTest
         Long id = seeded.get("project2").getId();
 
         assertTrue(projectDAO.delete(id));
-        assertThrows(EntityNotFoundException.class, () -> projectDAO.get(id));
+        assertThrows(NotFoundException.class, () -> projectDAO.get(id));
     }
 
     @Test

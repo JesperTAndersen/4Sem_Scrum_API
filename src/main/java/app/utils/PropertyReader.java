@@ -1,6 +1,7 @@
 package app.utils;
 
 import app.exceptions.ApiException;
+import app.exceptions.ConfigurationException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +21,7 @@ public class PropertyReader
         {
             if (is == null)
             {
-                throw new ApiException(500, String.format(
+                throw new ConfigurationException(String.format(
                         "Property file %s was not found on the classpath and environment variable %s is not set",
                         resourceName,
                         propName
@@ -33,16 +34,16 @@ public class PropertyReader
             String value = prop.getProperty(propName);
             if (value != null)
             {
-                return value.trim();  // Trim whitespace
+                return value.trim();
             }
             else
             {
-                throw new ApiException(500, String.format("Property %s not found in %s", propName, resourceName));
+                throw new ConfigurationException(String.format("Property %s not found in %s", propName, resourceName));
             }
         }
-        catch (IOException ex)
+        catch (IOException e)
         {
-            throw new ApiException(500, String.format("Could not read property %s.", propName));
+            throw new ConfigurationException(String.format("Could not read property %s.", propName), e);
         }
     }
 }

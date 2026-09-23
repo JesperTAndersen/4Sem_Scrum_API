@@ -1,15 +1,12 @@
 package app.user.domain;
 
+import app.exceptions.ForbiddenException;
 import app.security.presentation.dto.AuthenticatedUser;
 import app.user.presentation.dto.*;
-import app.security.domain.Role;
 import app.exceptions.ConflictException;
-import app.exceptions.UnauthorizedActionException;
-import app.exceptions.ValidationException;
+import app.exceptions.BadRequestException;
 import app.user.data.UserMapper;
 import app.user.data.IUserDAO;
-import app.user.domain.User;
-import app.user.domain.IUserService;
 import app.utils.PasswordUtil;
 import app.utils.ValidationUtil;
 
@@ -117,7 +114,7 @@ public class UserService implements IUserService
 
         if (!user.verifyPassword(dto.currentPassword()))
         {
-            throw new ValidationException("Current password is incorrect");
+            throw new BadRequestException("Current password is incorrect");
         }
 
         String hashed = PasswordUtil.hashPassword(dto.newPassword(), BCRYPT_COST);
@@ -148,7 +145,7 @@ public class UserService implements IUserService
 
         if (!isOwner)
         {
-            throw new UnauthorizedActionException("You can only modify your own data");
+            throw new ForbiddenException("You can only modify your own data");
         }
     }
 
@@ -176,7 +173,7 @@ public class UserService implements IUserService
 
         if (!authUser.id().equals(targetUserId))
         {
-            throw new UnauthorizedActionException("You can only update your own profile");
+            throw new ForbiddenException("You can only update your own profile");
         }
     }
 
@@ -194,17 +191,17 @@ public class UserService implements IUserService
     {
         if (password == null || password.length() < 8)
         {
-            throw new ValidationException("Password must be at least 8 characters");
+            throw new BadRequestException("Password must be at least 8 characters");
         }
 
         if (!password.matches(".*[A-Z].*"))
         {
-            throw new ValidationException("Password must contain at least one uppercase letter");
+            throw new BadRequestException("Password must contain at least one uppercase letter");
         }
 
         if (!password.matches(".*[0-9].*"))
         {
-            throw new ValidationException("Password must contain at least one number");
+            throw new BadRequestException("Password must contain at least one number");
         }
     }
 
@@ -217,7 +214,7 @@ public class UserService implements IUserService
 
         if (name.length() < 2)
         {
-            throw new ValidationException(field + " must be at least 2 characters");
+            throw new BadRequestException(field + " must be at least 2 characters");
         }
     }
 }

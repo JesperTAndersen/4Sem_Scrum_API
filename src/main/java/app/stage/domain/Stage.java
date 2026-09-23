@@ -53,6 +53,13 @@ public class Stage implements IEntity
         }
     }
 
+    public double getTotalEstimatedHours()
+    {
+        return tasks.stream()
+                .mapToDouble(Task::getEstimate)
+                .sum();
+    }
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

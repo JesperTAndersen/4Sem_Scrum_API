@@ -27,7 +27,7 @@ public final class TaskMapper
     public static TaskCompetenceDTO toDTO(TaskCompetence task)
     {
         return new TaskCompetenceDTO(
-                task.getId(),
+                task.getCompetence().getId(),
                 task.getEstimate()
         );
     }

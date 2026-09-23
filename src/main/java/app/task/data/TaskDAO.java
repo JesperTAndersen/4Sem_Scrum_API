@@ -3,6 +3,7 @@ package app.task.data;
 import java.util.List;
 
 import app.exceptions.DatabaseException;
+import app.exceptions.NotFoundException;
 import app.shared.data.ICrudDAO;
 import app.task.domain.Task;
 import app.task.domain.TaskCompetence;
@@ -71,7 +72,7 @@ public class TaskDAO implements ICrudDAO<Task>
             }
             catch (EntityNotFoundException e)
             {
-                throw e;
+                throw new NotFoundException("No task found with id: " + id);
             }
             catch (PersistenceException e)
             {
@@ -120,7 +121,7 @@ public class TaskDAO implements ICrudDAO<Task>
             }
             catch (EntityNotFoundException e)
             {
-                throw e;
+                throw new NotFoundException("No competencies for task found with id: " + id);
             }
             catch (PersistenceException e)
             {
@@ -172,7 +173,7 @@ public class TaskDAO implements ICrudDAO<Task>
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("Task#"+id+" not found with Competence#" + competenceId);
             }
             catch (PersistenceException e)
             {
@@ -201,7 +202,7 @@ public class TaskDAO implements ICrudDAO<Task>
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No task found with id: " + task.getId());
             }
             catch (PersistenceException e)
             {
@@ -229,7 +230,7 @@ public class TaskDAO implements ICrudDAO<Task>
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No task found with id: " + id);
             }
             catch (PersistenceException e)
             {

@@ -1,5 +1,7 @@
 package app.services;
 
+import app.exceptions.BadRequestException;
+import app.exceptions.UnauthorizedException;
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
@@ -72,7 +74,7 @@ class ProjectServiceTest
                 LocalDate.of(2026, 1, 1)
         );
 
-        ApiException exception = assertThrows(ApiException.class,
+        ApiException exception = assertThrows(BadRequestException.class,
                 () -> projectService.create(MANAGER, request));
 
         assertThat(exception.getCode(), is(400));
@@ -150,8 +152,8 @@ class ProjectServiceTest
         );
 
         assertAll(
-                () -> assertThrows(ApiException.class, () -> projectService.create(null, createRequest)),
-                () -> assertThrows(ApiException.class, () -> projectService.update(null, 1L, updateRequest))
+                () -> assertThrows(UnauthorizedException.class, () -> projectService.create(null, createRequest)),
+                () -> assertThrows(UnauthorizedException.class, () -> projectService.update(null, 1L, updateRequest))
         );
     }
 

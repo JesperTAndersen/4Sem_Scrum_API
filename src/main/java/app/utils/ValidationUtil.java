@@ -1,6 +1,6 @@
 package app.utils;
 
-import app.exceptions.ValidationException;
+import app.exceptions.BadRequestException;
 
 import java.time.LocalDate;
 
@@ -38,17 +38,17 @@ public class ValidationUtil
 
         if (trimmed.length() < min)
         {
-            throw new ValidationException(String.format("%s must be at least %d characters", fieldName, min));
+            throw new BadRequestException(String.format("%s must be at least %d characters", fieldName, min));
         }
 
         if (trimmed.length() > max)
         {
-            throw new ValidationException(String.format("%s must be at most %d characters",fieldName, max));
+            throw new BadRequestException(String.format("%s must be at most %d characters",fieldName, max));
         }
 
         if (!trimmed.matches(SAFE_TEXT_PATTERN)) {
 
-            throw new ValidationException(String.format("%s can only contain letters, numbers, and common symbols like '&', '-', or '.'.", fieldName));
+            throw new BadRequestException(String.format("%s can only contain letters, numbers, and common symbols like '&', '-', or '.'.", fieldName));
         }
     }
 
@@ -107,7 +107,7 @@ public class ValidationUtil
 
         if (!trimmed.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"))
         {
-            throw new ValidationException("Invalid email format");
+            throw new BadRequestException("Invalid email format");
         }
 
         return trimmed.toLowerCase();
@@ -117,12 +117,12 @@ public class ValidationUtil
     {
         if (password == null || password.isBlank())
         {
-            throw new ValidationException("Password cannot be blank");
+            throw new BadRequestException("Password cannot be blank");
         }
 
         if (!password.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[\\p{Punct}]).{8,}$"))
         {
-            throw new ValidationException("Password must contain uppercase, lowercase, digit and special character");
+            throw new BadRequestException("Password must contain uppercase, lowercase, digit and special character");
         }
     }
 

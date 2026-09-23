@@ -11,6 +11,9 @@ import app.stage.domain.Stage;
 import app.task.data.TaskDAO;
 import app.task.data.TaskMapper;
 import app.task.presentation.dto.TaskCompetenceDTO;
+import app.competence.presentation.dto.CompetenceDTO;
+import app.exceptions.BadRequestException;
+import app.exceptions.NotFoundException;
 import app.task.presentation.dto.TaskCreateDTO;
 import app.task.presentation.dto.TaskDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
@@ -36,6 +39,7 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         ValidationUtil.validateId(dto.stageId());
         validateName(dto.name());
+        validateEstimate(dto.estimate());
 
         Stage stage = stageReader.get(dto.stageId());
         Task created = taskDAO.create(new Task(stage,
@@ -72,7 +76,6 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         validateName(dto.name());
         validateEstimate(dto.estimate());
-
         Task task = getExistingTask(id);
         task.update(dto.name().trim(), dto.estimate());
         taskDAO.update(task);
@@ -95,19 +98,17 @@ public class TaskService implements ITaskService
 
     public void addCompetence(Long id, TaskCompetenceDTO dto)
     {
+        validateEstimate((double)dto.estimate());
         Task task = getExistingTask(id);
         Competence competence = getExistingCompetence(dto.competenceId());
+        validateCanBeAssigned(competence);
         task.assignCompetence(competence, dto.estimate());
         taskDAO.update(task);
     }
 
     public void remCompetence(Long id, Long competenceId)
     {
-        try {
-            taskDAO.remCompetence(id, competenceId);
-        } catch (EntityNotFoundException e) {
-            throw new ApiException(404, "Task#"+id+" not found with Competence#" + competenceId);
-        }
+        taskDAO.remCompetence(id, competenceId);
     }
 
     private void validateName(String name)
@@ -119,20 +120,21 @@ public class TaskService implements ITaskService
     {
         if (estimate == null)
         {
-            throw new ApiException(400, "Task estimate is required");
+            throw new BadRequestException("Task estimate is required");
+        }
+
+        if (!Double.isFinite(estimate) || estimate < 0)
+        {
+            throw new BadRequestException("Task estimate must be a non-negative number of hours");
         }
     }
 
-    private Set<Competence> getRequiredCompetences(Set<Long> competenceIds)
+    private void validateCanBeAssigned(Competence competence)
     {
-        if (competenceIds == null || competenceIds.isEmpty())
+        if (!competence.isActive())
         {
-            throw new ApiException(400, "At least one competence is required");
+            throw new BadRequestException("Inactive competence cannot be assigned to a task: " + competence.getId());
         }
-
-        return competenceIds.stream()
-                .map(this::getExistingCompetence)
-                .collect(Collectors.toSet());
     }
 
     private Competence getExistingCompetence(Long id)
@@ -143,7 +145,7 @@ public class TaskService implements ITaskService
         }
         catch (EntityNotFoundException e)
         {
-            throw new ApiException(404, "Competence not found with id: " + id);
+            throw new NotFoundException("Competence not found with id: " + id);
         }
     }
 
@@ -155,7 +157,7 @@ public class TaskService implements ITaskService
         }
         catch (EntityNotFoundException e)
         {
-            throw new ApiException(404, "Task not found with id: " + id);
+            throw new NotFoundException("Task not found with id: " + id);
         }
     }
 

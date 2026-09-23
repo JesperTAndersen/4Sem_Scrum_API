@@ -31,6 +31,7 @@ public class ProjectMapper
                 project.getCreatedAt(),
                 UserMapper.toReferenceDTO(project.getUpdatedBy()),
                 project.getUpdatedAt(),
+                project.getTotalEstimatedHours(),
                 project.getStages().stream().map(StageMapper::toDTO).toList()
         );
     }

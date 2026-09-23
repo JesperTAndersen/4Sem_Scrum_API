@@ -2,6 +2,7 @@ package app.task.domain;
 
 import app.competence.domain.Competence;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,10 +17,10 @@ public class TaskCompetence
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private Task task;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private Competence competence;
 
     private float estimate;

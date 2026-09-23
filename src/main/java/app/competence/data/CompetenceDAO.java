@@ -1,8 +1,8 @@
 package app.competence.data;
 
-import app.competence.data.ICompetenceDAO;
 import app.competence.domain.Competence;
 import app.exceptions.DatabaseException;
+import app.exceptions.NotFoundException;
 import app.utils.DBValidator;
 import app.utils.TransactionUtil;
 import app.utils.ValidationUtil;
@@ -58,7 +58,7 @@ public class CompetenceDAO implements ICompetenceDAO
             }
             catch (EntityNotFoundException e)
             {
-                throw e;
+                throw new NotFoundException("No competence found with id: " + id);
             }
             catch (PersistenceException e)
             {
@@ -95,15 +95,16 @@ public class CompetenceDAO implements ICompetenceDAO
             try
             {
                 em.getTransaction().begin();
-                DBValidator.validateExists(em.find(Competence.class, competence.getId()), competence.getId(), Competence.class);
-                Competence updatedCompetence = em.merge(competence);
+                Competence updatedCompetence = DBValidator.validateExists(
+                        em.find(Competence.class, competence.getId()), competence.getId(), Competence.class);
+                updatedCompetence.update(competence.getName(), competence.getRate());
                 em.getTransaction().commit();
                 return updatedCompetence;
             }
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No competence found with id: " + competence.getId());
             }
             catch (PersistenceException e)
             {
@@ -132,12 +133,94 @@ public class CompetenceDAO implements ICompetenceDAO
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No competence found with id: " + id);
             }
             catch (PersistenceException e)
             {
                 TransactionUtil.rollback(em);
                 throw new DatabaseException("Failed to delete competence: " + id, e);
+            }
+        }
+    }
+
+    @Override
+    public void setActive(Long id, boolean active)
+    {
+        ValidationUtil.validateId(id);
+
+        try (EntityManager em = emf.createEntityManager())
+        {
+            try
+            {
+                em.getTransaction().begin();
+                Competence competence = DBValidator.validateExists(em.find(Competence.class, id), id, Competence.class);
+                competence.setActive(active);
+                em.getTransaction().commit();
+            }
+            catch (EntityNotFoundException e)
+            {
+                TransactionUtil.rollback(em);
+                throw new NotFoundException("No competence found with id: " + id);
+            }
+            catch (PersistenceException e)
+            {
+                TransactionUtil.rollback(em);
+                throw new DatabaseException("Failed to change competence active state: " + id, e);
+            }
+        }
+    }
+
+    @Override
+    public boolean existsByName(String name, Long excludedId)
+    {
+        ValidationUtil.validateNotBlank(name, "Competence name");
+
+        try (EntityManager em = emf.createEntityManager())
+        {
+            try
+            {
+                String query = "SELECT COUNT(c) FROM Competence c WHERE c.name = :name";
+                if (excludedId != null)
+                {
+                    query += " AND c.id <> :excludedId";
+                }
+
+                var typedQuery = em.createQuery(query, Long.class)
+                        .setParameter("name", name.trim().toLowerCase());
+                if (excludedId != null)
+                {
+                    typedQuery.setParameter("excludedId", excludedId);
+                }
+                return typedQuery.getSingleResult() > 0;
+            }
+            catch (PersistenceException e)
+            {
+                throw new DatabaseException("Failed to check competence name", e);
+            }
+        }
+    }
+
+    @Override
+    public boolean isInUse(Long id)
+    {
+        ValidationUtil.validateId(id);
+
+        try (EntityManager em = emf.createEntityManager())
+        {
+            try
+            {
+                Long count = em.createQuery("""
+                        SELECT COUNT(t)
+                        FROM Task t JOIN t.requiredCompetences c
+                        WHERE c.id = :id
+                        """, Long.class)
+                        .setParameter("id", id)
+                        .getSingleResult();
+                return count > 0;
+            }
+            catch (PersistenceException e)
+            {
+                throw new DatabaseException("Failed to check competence usage: " + id, e);
             }
         }
     }

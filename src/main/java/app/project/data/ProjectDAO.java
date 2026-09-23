@@ -1,5 +1,6 @@
 package app.project.data;
 
+import app.exceptions.NotFoundException;
 import app.project.domain.Project;
 import app.exceptions.DatabaseException;
 import app.project.data.IProjectDAO;
@@ -53,7 +54,7 @@ public class ProjectDAO implements IProjectDAO
             }
             catch (EntityNotFoundException e)
             {
-                throw e;
+                throw new NotFoundException("No project found with id: " + id);
             }
             catch (PersistenceException e)
             {
@@ -136,7 +137,7 @@ public class ProjectDAO implements IProjectDAO
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No project found with id: " + id);
             }
             catch (PersistenceException e)
             {
@@ -171,7 +172,7 @@ public class ProjectDAO implements IProjectDAO
             catch (EntityNotFoundException e)
             {
                 TransactionUtil.rollback(em);
-                throw e;
+                throw new NotFoundException("No project found with id: " + project.getId());
             }
             catch (PersistenceException e)
             {
