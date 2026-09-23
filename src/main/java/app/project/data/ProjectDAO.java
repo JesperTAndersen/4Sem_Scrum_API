@@ -40,7 +40,7 @@ public class ProjectDAO implements IProjectDAO
                                         LEFT JOIN FETCH p.updatedBy
                                         LEFT JOIN FETCH p.stages s
                                         LEFT JOIN FETCH s.tasks t
-                                        LEFT JOIN FETCH t.requiredCompetences
+                                        LEFT JOIN FETCH t.competence
                                         WHERE p.id = :id""",
 
                                 Project.class
@@ -77,7 +77,7 @@ public class ProjectDAO implements IProjectDAO
                                 LEFT JOIN FETCH p.updatedBy
                                 LEFT JOIN FETCH p.stages s
                                 LEFT JOIN FETCH s.tasks t
-                                LEFT JOIN FETCH t.requiredCompetences
+                                LEFT JOIN FETCH t.competence
                                 ORDER BY p.id""",
                         Project.class
                 );
