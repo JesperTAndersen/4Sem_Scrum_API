@@ -24,7 +24,7 @@ public class CompetenceService implements ICompetenceService
     public CompetenceDTO create(CompetenceCreateDTO dto)
     {
         validate(dto);
-        validateNameIsUnique(dto.name().trim().toLowerCase(), null);
+        validateNameIsUnique(dto.name().trim(), null);
         Competence created = competenceDAO.create(CompetenceMapper.toEntity(dto));
         return CompetenceMapper.toDTO(created);
     }
@@ -48,7 +48,7 @@ public class CompetenceService implements ICompetenceService
     {
         validate(dto);
         ValidationUtil.validateId(id);
-        String name = dto.name().trim().toLowerCase();
+        String name = dto.name().trim();
         validateNameIsUnique(name, id);
         Competence updated = competenceDAO.get(id);
         updated.update(name, dto.rate());
@@ -97,7 +97,7 @@ public class CompetenceService implements ICompetenceService
         }
     }
 
-    private void validateNameIsUnique(String name, Long excludedId) // TODO Compare on lowercase, persist as-is
+    private void validateNameIsUnique(String name, Long excludedId)
     {
         if (competenceDAO.existsByName(name, excludedId))
         {
