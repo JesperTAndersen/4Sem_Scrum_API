@@ -92,7 +92,7 @@ class CompetenceTest
     }
 
     @Test
-    void inactiveCompetenceCannotBeAssignedToANewTask() throws Exception
+    void inactiveCompetenceCannotBeAssignedToATask() throws Exception
     {
         JsonNode competence = createCompetence("Inactive task competence", 850.00);
         long competenceId = competence.get("id").asLong();
@@ -113,20 +113,11 @@ class CompetenceTest
                 .body();
         long stageId = ApiTest.objectMapper.readTree(stageResponse.asString()).get("id").asLong();
 
-        givenAuthenticated()
+        ResponseBodyExtractionOptions taskResponse = givenAuthenticated()
                 .body("""
-                        {
-                          "stageId": %d,
-                          "name": "Task with inactive competence",
-                          "estimate": 8.0,
-                          "minimumDurationInDays": 0,
-                          "competenceIds": [%d]
-                        }
+                        { "stageId": %d, "name": "Task with inactive competence", "competenceId": %d, "estimate": 8.0, "minimumDurationInDays": 0 }
                         """.formatted(stageId, competenceId))
-                .when()
-                .post("/tasks")
-                .then()
-                .statusCode(400);
+                .when().post("/tasks").then().statusCode(400).extract().body();
 
         givenAuthenticated()
                 .when()
@@ -134,20 +125,11 @@ class CompetenceTest
                 .then()
                 .statusCode(204);
 
-        givenAuthenticated()
+        taskResponse = givenAuthenticated()
                 .body("""
-                        {
-                          "stageId": %d,
-                          "name": "Task with active competence",
-                          "estimate": 8.0,
-                          "minimumDurationInDays": 0,
-                          "competenceIds": [%d]
-                        }
+                        { "stageId": %d, "name": "Task with active competence", "competenceId": %d, "estimate": 8.0, "minimumDurationInDays": 0 }
                         """.formatted(stageId, competenceId))
-                .when()
-                .post("/tasks")
-                .then()
-                .statusCode(201);
+                .when().post("/tasks").then().statusCode(201).extract().body();
 
         givenAuthenticated()
                 .when()

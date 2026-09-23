@@ -1,17 +1,17 @@
 # Tasks
 
-Tasks belong to a stage and define an estimate plus the competences needed to perform the work. A task cannot be moved to a different stage after creation.
+Tasks belong to a stage and have one required competence plus an estimated number of labor hours.
 
 **Base path:** `/api/v1/tasks`  
 **Access:** `PROJECT_MANAGER`
 
 | Method | Path | Summary |
 |---|---|---|
-| [`GET`](#get-tasks) | `/tasks` | List tasks |
-| [`POST`](#post-tasks) | `/tasks` | Create a task |
-| [`GET`](#get-tasksid) | `/tasks/{id}` | Get a task |
-| [`PUT`](#put-tasksid) | `/tasks/{id}` | Update a task |
-| [`DELETE`](#delete-tasksid) | `/tasks/{id}` | Delete a task |
+| GET | `/tasks` | List tasks |
+| POST | `/tasks` | Create a task |
+| GET | `/tasks/{id}` | Get a task |
+| PUT | `/tasks/{id}` | Update a task |
+| DELETE | `/tasks/{id}` | Delete a task |
 
 ## Task object
 
@@ -19,68 +19,29 @@ Tasks belong to a stage and define an estimate plus the competences needed to pe
 |---|---|---|
 | `id` | number | Unique identifier |
 | `name` | string | Task name |
-| `estimate` | number | Non-negative estimated hours |
 | `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days |
-| `laborDurationInDays` | number | Calculated labor duration (`estimate / 8`) in working days |
+| `competenceId` | number | Assigned competence ID; `0` means none after an update |
+| `estimate` | number | Estimated labor hours |
+| `laborDurationInDays` | number | Estimated labor duration (`estimate / 7.5`) |
 | `scheduledDurationInDays` | number | Greater of labor duration and minimum duration |
-| `status` | enum | `NOT_STARTED`, `IN_PROGESS`, or `DONE` |
-| `competences` | [Competence](competences.md#competence-object)[] | Required competences |
-
-## GET /tasks
-
-**Success response:** `200 OK` with `Task[]`.
+| `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
 
 ## POST /tasks
 
-Creates a task in the supplied stage. Inactive competences cannot be assigned to a new task.
-
-**Request body**
-
-| Field | Type | Required | Rules |
-|---|---|---|---|
-| `stageId` | number | yes | Existing stage ID |
-| `name` | string | yes | Not blank |
-| `estimate` | number | yes | Zero or greater |
-| `minimumDurationInDays` | integer | yes | Zero or greater |
-| `competenceIds` | number[] | yes | At least one existing, active competence |
+Creates a task. All fields are required; `estimate` must be a non-negative number of hours and `minimumDurationInDays` must be a non-negative whole number.
 
 ```json
-{ "stageId": 10, "name": "Requirements", "estimate": 8.0, "minimumDurationInDays": 1, "competenceIds": [1, 2] }
+{ "stageId": 10, "name": "Requirements", "competenceId": 1, "estimate": 16.0, "minimumDurationInDays": 2 }
 ```
-
-**Success response:** `201 Created` with a Task object.  
-**Errors:** `400` for invalid input or inactive competence; `404` when a referenced stage or competence does not exist.
-
-## GET /tasks/{id}
-
-**Path parameters:** `id` — task ID.  
-**Success response:** `200 OK` with a Task object.  
-**Errors:** `400` for an invalid ID; `404` when the task does not exist.
 
 ## PUT /tasks/{id}
 
-Updates task-owned fields; it does not change the task's stage. An existing task can retain a competence that was later deactivated.
-
-**Path parameters:** `id` — task ID.
-
-**Request body**
-
-| Field | Type | Required | Rules |
-|---|---|---|---|
-| `name` | string | yes | Not blank |
-| `estimate` | number | yes | Zero or greater |
-| `minimumDurationInDays` | integer | yes | Zero or greater |
-| `competenceIds` | number[] | yes | At least one existing competence |
+Updates any supplied task-owned fields. To assign a competence, provide both `competenceId` and `estimate`; use `competenceId: 0` to remove it.
 
 ```json
-{ "name": "Updated requirements", "estimate": 16.0, "minimumDurationInDays": 2, "competenceIds": [1, 2] }
+{ "competenceId": 1, "estimate": 16.0 }
 ```
-
-**Success response:** `200 OK` with a Task object.  
-**Errors:** `400` for invalid input; `404` when the task or a competence does not exist.
 
 ## DELETE /tasks/{id}
 
-**Path parameters:** `id` — task ID.  
-**Success response:** `204 No Content`.  
-**Errors:** `400` for an invalid ID; `404` when the task does not exist.
+Deletes a task and returns `204 No Content`.

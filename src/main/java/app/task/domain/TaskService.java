@@ -31,10 +31,16 @@ public class TaskService implements ITaskService
     {
         ValidationUtil.validateNotNull(dto, "Task");
         ValidationUtil.validateId(dto.stageId());
+        ValidationUtil.validateId(dto.competenceId());
         validateName(dto.name());
+        validateEstimate(dto.estimate());
         validateMinimumDuration(dto.minimumDurationInDays());
         Stage stage = stageReader.get(dto.stageId());
-        return TaskMapper.toDTO(taskDAO.create(new Task(stage, dto.name().trim(), dto.minimumDurationInDays())));
+        Competence competence = getExistingCompetence(dto.competenceId());
+        validateCanBeAssigned(competence);
+        Task task = new Task(stage, dto.name().trim(), dto.minimumDurationInDays());
+        task.setCompetence(competence, dto.estimate());
+        return TaskMapper.toDTO(taskDAO.create(task));
     }
 
     @Override public TaskDTO get(Long id) { return TaskMapper.toDTO(getExistingTask(id)); }
@@ -69,7 +75,7 @@ public class TaskService implements ITaskService
             {
                 validateEstimate(dto.estimate());
                 Competence competence = getExistingCompetence(dto.competenceId());
-                if (!competence.isActive()) throw new BadRequestException("Inactive competence cannot be assigned to a task: " + competence.getId());
+                validateCanBeAssigned(competence);
                 task.setCompetence(competence, dto.estimate());
             }
         }
@@ -93,6 +99,14 @@ public class TaskService implements ITaskService
     private void validateEstimate(Double estimate)
     {
         if (estimate == null || !Double.isFinite(estimate) || estimate < 0) throw new BadRequestException("Task estimate must be a non-negative number of hours");
+    }
+
+    private void validateCanBeAssigned(Competence competence)
+    {
+        if (!competence.isActive())
+        {
+            throw new BadRequestException("Inactive competence cannot be assigned to a task: " + competence.getId());
+        }
     }
 
     private Competence getExistingCompetence(Long id)

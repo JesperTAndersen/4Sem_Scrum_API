@@ -27,6 +27,7 @@ public class TaskController implements ICrudController
                 .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
                 .check(task -> task.minimumDurationInDays() != null, "Task minimum duration is required")
                 .check(task -> task.competenceId() != null, "Competence is required")
+                .check(task -> task.estimate() != null, "Task estimate is required")
                 .get();
         ctx.status(201).json(taskService.create(dto));
     }
@@ -49,10 +50,6 @@ public class TaskController implements ICrudController
         Long id = RequestUtil.requirePathId(ctx, "id");
         TaskUpdateDTO dto = ctx.bodyValidator(TaskUpdateDTO.class)
                 .check(Objects::nonNull, "Task payload is required")
-                .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
-                .check(task -> task.estimate() != null, "Task estimate is required")
-                .check(task -> task.minimumDurationInDays() != null, "Task minimum duration is required")
-                .check(task -> task.competenceId() != null,"At least one competence is required")
                 .get();
         ctx.status(200).json(taskService.update(id, dto));
     }
