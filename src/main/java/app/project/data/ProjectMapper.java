@@ -101,7 +101,7 @@ public class ProjectMapper
 
     private static int numOfInProgressTasks(Project project)
     {
-        return numOfTasksByStatus(project, Task.TaskStatus.IN_PROGESS);
+        return numOfTasksByStatus(project, Task.TaskStatus.IN_PROGRESS);
     }
 
     private static int numOfDoneTasks(Project project){
