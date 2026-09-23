@@ -23,14 +23,6 @@ public class ProjectMapper
 
     public static ProjectDTO toDTO(Project project)
     {
-        List<StageDTO> stageDTOs = project.getStages().stream()
-                .map(StageMapper::toDTO)
-                .toList();
-
-        int numOfTasks = stageDTOs.stream()
-                .mapToInt(StageDTO -> StageDTO.tasks().size())
-                .sum();
-
         return new ProjectDTO(
                 project.getId(),
                 project.getTitle(),
@@ -43,16 +35,16 @@ public class ProjectMapper
                 UserMapper.toReferenceDTO(project.getUpdatedBy()),
                 project.getUpdatedAt(),
                 project.getTotalEstimatedHours(),
-                stageDTOs,
-                numOfTasks
+                project.getStages().stream()
+                        .map(StageMapper::toDTO)
+                        .toList(),
+                totalNumOfTasks(project)
         );
     }
 
     public static SlimProjectDTO toSlimProjectDTO(Project project)
     {
-        int total = project.getStages().stream()
-                .mapToInt(stage -> stage.getTasks().size())
-                .sum();
+        int total = totalNumOfTasks(project);
         int finished = project.getStages().stream()
                 .flatMap(stage -> stage.getTasks().stream())
                 .map(Task::getStatus)
@@ -100,5 +92,12 @@ public class ProjectMapper
                 .updatedBy(updatedBy)
                 .updatedAt(existingProject.getUpdatedAt())
                 .build();
+    }
+
+    private static int totalNumOfTasks(Project project)
+    {
+        return project.getStages().stream()
+                .mapToInt(stage -> stage.getTasks().size())
+                .sum();
     }
 }
