@@ -78,7 +78,7 @@ public final class DependencyContainer
     @Getter
     private final ITaskService taskService;
     @Getter
-    private final ICrudController taskController;
+    private final TaskController taskController;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {

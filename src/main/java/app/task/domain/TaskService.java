@@ -1,23 +1,17 @@
 package app.task.domain;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import app.competence.domain.Competence;
-import app.competence.presentation.dto.CompetenceDTO;
+import app.shared.data.IReadDAO;
+import app.stage.domain.Stage;
+import app.task.data.TaskDAO;
+import app.task.data.TaskMapper;
 import app.exceptions.BadRequestException;
 import app.exceptions.NotFoundException;
 import app.task.presentation.dto.TaskCreateDTO;
 import app.task.presentation.dto.TaskDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
-import app.stage.domain.Stage;
-import app.task.domain.Task;
-import app.task.data.TaskDAO;
-import app.task.data.TaskMapper;
-import app.task.domain.ITaskService;
-import app.exceptions.ApiException;
-import app.shared.data.IReadDAO;
 import app.utils.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -40,6 +34,7 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         ValidationUtil.validateId(dto.stageId());
         validateName(dto.name());
+        validateEstimate(dto.minDuration());
         validateEstimate(dto.estimate());
         validateMinimumDuration(dto.minimumDurationInDays());
         Set<Competence> competences = getRequiredCompetences(dto.competenceIds(), Set.of());
@@ -47,6 +42,7 @@ public class TaskService implements ITaskService
         Stage stage = stageReader.get(dto.stageId());
         Task created = taskDAO.create(new Task(stage,
                     dto.name().trim(),
+                    dto.minDuration()));
                     dto.estimate(),
                     dto.minimumDurationInDays(),
                     competences));
@@ -73,6 +69,7 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         return update(dto.id(), new TaskUpdateDTO(dto.name(), dto.estimate(), dto.minimumDurationInDays(),
                 dto.competences().stream().map(CompetenceDTO::id).collect(Collectors.toSet())));
+        return update(dto.id(), new TaskUpdateDTO(dto.name(), dto.minDuration(), dto.competenceId(), dto.estimate()));
     }
 
     @Override
@@ -89,6 +86,18 @@ public class TaskService implements ITaskService
                 .collect(Collectors.toSet());
         Set<Competence> competences = getRequiredCompetences(dto.competenceIds(), existingCompetenceIds);
         task.update(dto.name().trim(), dto.estimate(), dto.minimumDurationInDays(), competences);
+        Task task = getExistingTask(id);
+        task.update(dto.name(), dto.minDuration());
+        if (dto.competenceId() != null) {
+            if (dto.competenceId() == 0) {
+                task.setCompetence(null, 0.0f);
+            } else {
+                validateEstimate(dto.estimate());
+                Competence competence = getExistingCompetence(dto.competenceId());
+                validateCanBeAssigned(competence);
+                task.setCompetence(competence, dto.estimate().floatValue());
+            }
+        }
         taskDAO.update(task);
         return get(id);
     }
@@ -132,25 +141,9 @@ public class TaskService implements ITaskService
     }
 
     private Set<Competence> getRequiredCompetences(Set<Long> competenceIds, Set<Long> allowedInactiveIds)
+    private void validateCanBeAssigned(Competence competence)
     {
-        if (competenceIds == null || competenceIds.isEmpty())
-        {
-            throw new BadRequestException("At least one competence is required");
-        }
-
-        return competenceIds.stream()
-                .map(this::getExistingCompetence)
-                .map(competence ->
-                {
-                    validateCanBeAssigned(competence, allowedInactiveIds);
-                    return competence;
-                })
-                .collect(Collectors.toSet());
-    }
-
-    private void validateCanBeAssigned(Competence competence, Set<Long> allowedInactiveIds)
-    {
-        if (!competence.isActive() && !allowedInactiveIds.contains(competence.getId()))
+        if (!competence.isActive())
         {
             throw new BadRequestException("Inactive competence cannot be assigned to a task: " + competence.getId());
         }

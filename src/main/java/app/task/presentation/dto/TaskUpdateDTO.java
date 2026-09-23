@@ -4,8 +4,8 @@ import java.util.Set;
 
 public record TaskUpdateDTO(
         String name,
+        Long competenceId,
         Double estimate,
-        Integer minimumDurationInDays,
-        Set<Long> competenceIds)
+        int minimumDurationInDays)
 {
 }

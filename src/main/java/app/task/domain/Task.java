@@ -34,19 +34,17 @@ public class Task implements IEntity
     public enum TaskStatus
     {
         NOT_STARTED,
-        IN_PROGESS,
+        IN_PROGRESS,
         DONE,
         ;
     }
 
     private TaskStatus status;
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "task_competences",
-            joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "competence_id")
-    )
-    private Set<Competence> requiredCompetences = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Competence competence;
+    private double estimate;
+
     // TODO: dependencies
     @ManyToOne(fetch = FetchType.LAZY)
     private Stage stage;
@@ -77,9 +75,10 @@ public class Task implements IEntity
         this.minimumDurationInDays = minimumDurationInDays;
         this.requiredCompetences = new HashSet<>(requiredCompetences);
         this.status = TaskStatus.NOT_STARTED;
-        if (stage != null)
-        {
-            stage.addTask(this);
+        if (stage != null) {
+            if (stage != null) {
+                stage.addTask(this);
+            }
         }
     }
 
@@ -90,11 +89,20 @@ public class Task implements IEntity
 
     public void update(String name, double estimate, int minimumDurationInDays,
                        Set<Competence> requiredCompetences)
+    public void setCompetence(Competence competence, float estimate)
     {
-        this.name = name;
+        this.competence = competence;
         this.estimate = estimate;
         this.minimumDurationInDays = minimumDurationInDays;
         this.requiredCompetences = new HashSet<>(requiredCompetences);
+    }
+
+    public void update(String name, Double minDuration)
+    {
+        if (name != null)
+            this.name = name.trim();
+        if (minDuration != null)
+            this.minDuration = minDuration;
     }
 
     public double getLaborDurationInDays()

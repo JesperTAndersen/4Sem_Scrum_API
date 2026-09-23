@@ -8,11 +8,12 @@ import java.util.List;
 public record TaskDTO(
         Long id,
         String name,
+        Long competenceId,
         double estimate,
         int minimumDurationInDays,
         double laborDurationInDays,
         double scheduledDurationInDays,
-        TaskStatus status,
-        List<CompetenceDTO> competences)
+        TaskStatus status
+        )
 {
 }

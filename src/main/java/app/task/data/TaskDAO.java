@@ -1,9 +1,11 @@
 package app.task.data;
 
+import java.util.List;
+
+import app.exceptions.DatabaseException;
 import app.exceptions.NotFoundException;
 import app.shared.data.ICrudDAO;
 import app.task.domain.Task;
-import app.exceptions.DatabaseException;
 import app.utils.DBValidator;
 import app.utils.TransactionUtil;
 import app.utils.ValidationUtil;
@@ -12,8 +14,6 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TypedQuery;
-
-import java.util.List;
 
 public class TaskDAO implements ICrudDAO<Task>
 {
@@ -58,7 +58,6 @@ public class TaskDAO implements ICrudDAO<Task>
                 Task task = em.createQuery(
                                 """
                                 SELECT DISTINCT t FROM Task t
-                                LEFT JOIN FETCH t.requiredCompetences
                                 WHERE t.id = :id
                                 """,
                                 Task.class)
@@ -89,7 +88,6 @@ public class TaskDAO implements ICrudDAO<Task>
                 TypedQuery<Task> query = em.createQuery(
                         """
                         SELECT DISTINCT t FROM Task t
-                        LEFT JOIN FETCH t.requiredCompetences
                         ORDER BY t.id
                         """,
                         Task.class);

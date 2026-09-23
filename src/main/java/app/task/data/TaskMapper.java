@@ -1,11 +1,7 @@
 package app.task.data;
 
-import app.competence.data.CompetenceMapper;
-import app.competence.presentation.dto.CompetenceDTO;
 import app.task.domain.Task;
 import app.task.presentation.dto.TaskDTO;
-
-import java.util.Comparator;
 
 public final class TaskMapper
 {
@@ -13,9 +9,12 @@ public final class TaskMapper
 
     public static TaskDTO toDTO(Task task)
     {
+        Long competenceId = task.getCompetence() != null ? task.getCompetence().getId() : 0L;
         return new TaskDTO(
                 task.getId(),
                 task.getName(),
+                task.getMinDuration(),
+                competenceId,
                 task.getEstimate(),
                 task.getMinimumDurationInDays(),
                 task.getLaborDurationInDays(),
@@ -25,6 +24,7 @@ public final class TaskMapper
                         .map(CompetenceMapper::toDTO)
                         .sorted(Comparator.comparing(CompetenceDTO::id))
                         .toList()
+                task.getStatus()
         );
     }
 }
