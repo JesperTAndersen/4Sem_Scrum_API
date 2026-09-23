@@ -23,6 +23,8 @@ public class ProjectMapper
 
     public static ProjectDTO toDTO(Project project)
     {
+        TaskCountDTO tasks = new TaskCountDTO(totalNumOfTasks(project), numOfFinishedTasks(project));
+
         return new ProjectDTO(
                 project.getId(),
                 project.getTitle(),
@@ -38,19 +40,14 @@ public class ProjectMapper
                 project.getStages().stream()
                         .map(StageMapper::toDTO)
                         .toList(),
-                totalNumOfTasks(project)
+                tasks
         );
     }
 
     public static SlimProjectDTO toSlimProjectDTO(Project project)
     {
         int total = totalNumOfTasks(project);
-        int finished = project.getStages().stream()
-                .flatMap(stage -> stage.getTasks().stream())
-                .map(Task::getStatus)
-                .filter(Task.TaskStatus.DONE::equals)
-                .toList()
-                .size();
+        int finished = numOfFinishedTasks(project);
 
         return new SlimProjectDTO(
                 project.getId(),
@@ -99,5 +96,15 @@ public class ProjectMapper
         return project.getStages().stream()
                 .mapToInt(stage -> stage.getTasks().size())
                 .sum();
+    }
+
+    private static int numOfFinishedTasks(Project project)
+    {
+        return project.getStages().stream()
+                .flatMap(stage -> stage.getTasks().stream())
+                .map(Task::getStatus)
+                .filter(Task.TaskStatus.DONE::equals)
+                .toList()
+                .size();
     }
 }
