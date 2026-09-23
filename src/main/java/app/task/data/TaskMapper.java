@@ -17,6 +17,9 @@ public final class TaskMapper
                 task.getId(),
                 task.getName(),
                 task.getEstimate(),
+                task.getMinimumDurationInDays(),
+                task.getLaborDurationInDays(),
+                task.getScheduledDurationInDays(),
                 task.getStatus(),
                 task.getRequiredCompetences().stream()
                         .map(CompetenceMapper::toDTO)

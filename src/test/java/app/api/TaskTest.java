@@ -38,6 +38,7 @@ class TaskTest
             "stageId": %d,
             "name": "Define requirements",
             "estimate": 8.0,
+            "minimumDurationInDays": 2,
             "competenceIds": [%d, %d]
         }
         """.formatted(stageId, backendCompetenceId, testingCompetenceId);
@@ -56,12 +57,15 @@ class TaskTest
         long taskId = createdTask.get("id").asLong();
         assertEquals("Define requirements", createdTask.get("name").asText());
         assertEquals("NOT_STARTED", createdTask.get("status").asText());
+        assertEquals(2, createdTask.get("minimumDurationInDays").asInt());
+        assertEquals(2.0, createdTask.get("scheduledDurationInDays").asDouble());
         assertCompetences(createdTask, backendCompetenceId, testingCompetenceId);
 
         String updateJSON = """
         {
             "name": "Updated requirements",
             "estimate": 16.0,
+            "minimumDurationInDays": 1,
             "competenceIds": [%d, %d]
         }
         """.formatted(backendCompetenceId, testingCompetenceId);
@@ -80,6 +84,7 @@ class TaskTest
         assertEquals(taskId, updatedTask.get("id").asLong());
         assertEquals("Updated requirements", updatedTask.get("name").asText());
         assertEquals(16.0, updatedTask.get("estimate").asDouble());
+        assertEquals(2.0, updatedTask.get("scheduledDurationInDays").asDouble());
         assertCompetences(updatedTask, backendCompetenceId, testingCompetenceId);
 
         JsonNode fetchedTask = getJson("/tasks/" + taskId);
@@ -116,6 +121,7 @@ class TaskTest
             "stageId": %d,
             "name": "First estimated task",
             "estimate": 8.0,
+            "minimumDurationInDays": 0,
             "competenceIds": [%d]
         }
         """.formatted(stageId, competenceId);
@@ -139,6 +145,7 @@ class TaskTest
             "stageId": %d,
             "name": "Second estimated task",
             "estimate": 4.0,
+            "minimumDurationInDays": 0,
             "competenceIds": [%d]
         }
         """.formatted(stageId, competenceId);
@@ -163,6 +170,7 @@ class TaskTest
         {
             "name": "First estimated task",
             "estimate": 16.0,
+            "minimumDurationInDays": 0,
             "competenceIds": [%d]
         }
         """.formatted(competenceId);
@@ -195,6 +203,7 @@ class TaskTest
             "stageId": %d,
             "name": "Invalid estimate",
             "estimate": -1.0,
+            "minimumDurationInDays": 0,
             "competenceIds": [%d]
         }
         """.formatted(stageId, competenceId);
@@ -203,6 +212,32 @@ class TaskTest
             .header("Content-Type", "application/json")
             .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
             .body(JSON)
+            .when()
+            .post("/tasks")
+            .then()
+            .statusCode(400);
+    }
+
+    @Test
+    void negativeMinimumDurationIsRejected() throws Exception
+    {
+        Long stageId = createStage("US12 invalid minimum duration");
+        Long competenceId = createCompetence("US12 validation");
+
+        String json = """
+        {
+            "stageId": %d,
+            "name": "Invalid minimum duration",
+            "estimate": 8.0,
+            "minimumDurationInDays": -1,
+            "competenceIds": [%d]
+        }
+        """.formatted(stageId, competenceId);
+
+        given()
+            .header("Content-Type", "application/json")
+            .header("Authorization", "Bearer " + ApiTest.JWT_TOKEN)
+            .body(json)
             .when()
             .post("/tasks")
             .then()
@@ -233,6 +268,53 @@ class TaskTest
             .get("/tasks")
             .then()
             .statusCode(403);
+    }
+
+    @Test
+    void minimumDurationControlsTheScheduleDuration() throws Exception
+    {
+        Long stageId = createStage("US12 minimum duration");
+        Long competenceId = createCompetence("US12 planning");
+
+        String createJson = """
+        {
+            "stageId": %d,
+            "name": "Cannot be accelerated",
+            "estimate": 8.0,
+            "minimumDurationInDays": 3,
+            "competenceIds": [%d]
+        }
+        """.formatted(stageId, competenceId);
+
+        JsonNode created = ApiTest.objectMapper.readTree(given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + ApiTest.JWT_TOKEN)
+                .body(createJson)
+                .when().post("/tasks")
+                .then().statusCode(201)
+                .extract().asString());
+        long taskId = created.get("id").asLong();
+        assertEquals(1.0, created.get("laborDurationInDays").asDouble());
+        assertEquals(3.0, created.get("scheduledDurationInDays").asDouble());
+
+        String updateJson = """
+        {
+            "name": "Cannot be accelerated",
+            "estimate": 4.0,
+            "minimumDurationInDays": 3,
+            "competenceIds": [%d]
+        }
+        """.formatted(competenceId);
+
+        JsonNode updated = ApiTest.objectMapper.readTree(given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + ApiTest.JWT_TOKEN)
+                .body(updateJson)
+                .when().put("/tasks/" + taskId)
+                .then().statusCode(200)
+                .extract().asString());
+        assertEquals(0.5, updated.get("laborDurationInDays").asDouble());
+        assertEquals(3.0, updated.get("scheduledDurationInDays").asDouble());
     }
 
     private Long createStage(String name) throws Exception

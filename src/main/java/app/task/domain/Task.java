@@ -30,10 +30,7 @@ public class Task implements IEntity
     private Long id;
     private String name;
     private double estimate;
-
-    // Sprint-later fields:
-    // private double duration;
-    // private int crewSize;
+    private int minimumDurationInDays;
     public enum TaskStatus
     {
         NOT_STARTED,
@@ -63,14 +60,21 @@ public class Task implements IEntity
 
     public Task(Stage stage, String name, double estimate)
     {
-        this(stage, name, estimate, Set.of());
+        this(stage, name, estimate, 0, Set.of());
     }
 
     public Task(Stage stage, String name, double estimate, Set<Competence> requiredCompetences)
     {
+        this(stage, name, estimate, 0, requiredCompetences);
+    }
+
+    public Task(Stage stage, String name, double estimate, int minimumDurationInDays,
+                Set<Competence> requiredCompetences)
+    {
         this.stage = stage;
         this.name = name;
         this.estimate = estimate;
+        this.minimumDurationInDays = minimumDurationInDays;
         this.requiredCompetences = new HashSet<>(requiredCompetences);
         this.status = TaskStatus.NOT_STARTED;
         if (stage != null)
@@ -84,11 +88,23 @@ public class Task implements IEntity
         this.status = status;
     }
 
-    public void update(String name, double estimate, Set<Competence> requiredCompetences)
+    public void update(String name, double estimate, int minimumDurationInDays,
+                       Set<Competence> requiredCompetences)
     {
         this.name = name;
         this.estimate = estimate;
+        this.minimumDurationInDays = minimumDurationInDays;
         this.requiredCompetences = new HashSet<>(requiredCompetences);
+    }
+
+    public double getLaborDurationInDays()
+    {
+        return estimate / 7.5;
+    }
+
+    public double getScheduledDurationInDays()
+    {
+        return Math.max(getLaborDurationInDays(), minimumDurationInDays);
     }
 
     // TODO: employees

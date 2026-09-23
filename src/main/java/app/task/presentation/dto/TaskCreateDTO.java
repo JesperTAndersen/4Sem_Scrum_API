@@ -6,6 +6,7 @@ public record TaskCreateDTO(
         Long stageId,
         String name,
         double estimate,
+        Integer minimumDurationInDays,
         Set<Long> competenceIds)
 {
 }

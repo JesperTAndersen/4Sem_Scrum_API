@@ -41,12 +41,14 @@ public class TaskService implements ITaskService
         ValidationUtil.validateId(dto.stageId());
         validateName(dto.name());
         validateEstimate(dto.estimate());
+        validateMinimumDuration(dto.minimumDurationInDays());
         Set<Competence> competences = getRequiredCompetences(dto.competenceIds(), Set.of());
 
         Stage stage = stageReader.get(dto.stageId());
         Task created = taskDAO.create(new Task(stage,
                     dto.name().trim(),
                     dto.estimate(),
+                    dto.minimumDurationInDays(),
                     competences));
         return TaskMapper.toDTO(created);
     }
@@ -69,7 +71,7 @@ public class TaskService implements ITaskService
     public TaskDTO update(TaskDTO dto)
     {
         ValidationUtil.validateNotNull(dto, "Task");
-        return update(dto.id(), new TaskUpdateDTO(dto.name(), dto.estimate(),
+        return update(dto.id(), new TaskUpdateDTO(dto.name(), dto.estimate(), dto.minimumDurationInDays(),
                 dto.competences().stream().map(CompetenceDTO::id).collect(Collectors.toSet())));
     }
 
@@ -80,12 +82,13 @@ public class TaskService implements ITaskService
         ValidationUtil.validateNotNull(dto, "Task");
         validateName(dto.name());
         validateEstimate(dto.estimate());
+        validateMinimumDuration(dto.minimumDurationInDays());
         Task task = getExistingTask(id);
         Set<Long> existingCompetenceIds = task.getRequiredCompetences().stream()
                 .map(Competence::getId)
                 .collect(Collectors.toSet());
         Set<Competence> competences = getRequiredCompetences(dto.competenceIds(), existingCompetenceIds);
-        task.update(dto.name().trim(), dto.estimate(), competences);
+        task.update(dto.name().trim(), dto.estimate(), dto.minimumDurationInDays(), competences);
         taskDAO.update(task);
         return get(id);
     }
@@ -112,6 +115,19 @@ public class TaskService implements ITaskService
         if (!Double.isFinite(estimate) || estimate < 0)
         {
             throw new BadRequestException("Task estimate must be a non-negative number of hours");
+        }
+    }
+
+    private void validateMinimumDuration(Integer minimumDurationInDays)
+    {
+        if (minimumDurationInDays == null)
+        {
+            throw new BadRequestException("Task minimum duration is required");
+        }
+
+        if (minimumDurationInDays < 0)
+        {
+            throw new BadRequestException("Task minimum duration must be a non-negative number of days");
         }
     }
 

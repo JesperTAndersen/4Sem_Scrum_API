@@ -119,6 +119,7 @@ class CompetenceTest
                           "stageId": %d,
                           "name": "Task with inactive competence",
                           "estimate": 8.0,
+                          "minimumDurationInDays": 0,
                           "competenceIds": [%d]
                         }
                         """.formatted(stageId, competenceId))
@@ -139,6 +140,7 @@ class CompetenceTest
                           "stageId": %d,
                           "name": "Task with active competence",
                           "estimate": 8.0,
+                          "minimumDurationInDays": 0,
                           "competenceIds": [%d]
                         }
                         """.formatted(stageId, competenceId))

@@ -25,6 +25,7 @@ public class TaskController implements ICrudController
                 .check(Objects::nonNull, "Task payload is required")
                 .check(task -> task.stageId() != null, "Stage id is required")
                 .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
+                .check(task -> task.minimumDurationInDays() != null, "Task minimum duration is required")
                 .check(task -> task.competenceIds() != null && !task.competenceIds().isEmpty(),
                         "At least one competence is required")
                 .get();
@@ -51,6 +52,7 @@ public class TaskController implements ICrudController
                 .check(Objects::nonNull, "Task payload is required")
                 .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
                 .check(task -> task.estimate() != null, "Task estimate is required")
+                .check(task -> task.minimumDurationInDays() != null, "Task minimum duration is required")
                 .check(task -> task.competenceIds() != null && !task.competenceIds().isEmpty(),
                         "At least one competence is required")
                 .get();

@@ -20,6 +20,9 @@ Tasks belong to a stage and define an estimate plus the competences needed to pe
 | `id` | number | Unique identifier |
 | `name` | string | Task name |
 | `estimate` | number | Non-negative estimated hours |
+| `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days |
+| `laborDurationInDays` | number | Calculated labor duration (`estimate / 8`) in working days |
+| `scheduledDurationInDays` | number | Greater of labor duration and minimum duration |
 | `status` | enum | `NOT_STARTED`, `IN_PROGESS`, or `DONE` |
 | `competences` | [Competence](competences.md#competence-object)[] | Required competences |
 
@@ -38,10 +41,11 @@ Creates a task in the supplied stage. Inactive competences cannot be assigned to
 | `stageId` | number | yes | Existing stage ID |
 | `name` | string | yes | Not blank |
 | `estimate` | number | yes | Zero or greater |
+| `minimumDurationInDays` | integer | yes | Zero or greater |
 | `competenceIds` | number[] | yes | At least one existing, active competence |
 
 ```json
-{ "stageId": 10, "name": "Requirements", "estimate": 8.0, "competenceIds": [1, 2] }
+{ "stageId": 10, "name": "Requirements", "estimate": 8.0, "minimumDurationInDays": 1, "competenceIds": [1, 2] }
 ```
 
 **Success response:** `201 Created` with a Task object.  
@@ -65,10 +69,11 @@ Updates task-owned fields; it does not change the task's stage. An existing task
 |---|---|---|---|
 | `name` | string | yes | Not blank |
 | `estimate` | number | yes | Zero or greater |
+| `minimumDurationInDays` | integer | yes | Zero or greater |
 | `competenceIds` | number[] | yes | At least one existing competence |
 
 ```json
-{ "name": "Updated requirements", "estimate": 16.0, "competenceIds": [1, 2] }
+{ "name": "Updated requirements", "estimate": 16.0, "minimumDurationInDays": 2, "competenceIds": [1, 2] }
 ```
 
 **Success response:** `200 OK` with a Task object.  
