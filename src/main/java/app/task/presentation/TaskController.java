@@ -5,7 +5,6 @@ import java.util.Objects;
 
 import app.shared.presentation.ICrudController;
 import app.task.domain.ITaskService;
-import app.task.presentation.dto.TaskCompetenceDTO;
 import app.task.presentation.dto.TaskCreateDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
 import app.utils.RequestUtil;
@@ -49,8 +48,6 @@ public class TaskController implements ICrudController
         Long id = RequestUtil.requirePathId(ctx, "id");
         TaskUpdateDTO dto = ctx.bodyValidator(TaskUpdateDTO.class)
                 .check(Objects::nonNull, "Task payload is required")
-                .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
-                .check(task -> task.estimate() != null, "Task estimate is required")
                 .get();
         ctx.status(200).json(taskService.update(id, dto));
     }
@@ -59,29 +56,6 @@ public class TaskController implements ICrudController
     public void delete(Context ctx)
     {
         taskService.delete(RequestUtil.requirePathId(ctx, "id"));
-        ctx.status(204);
-    }
-
-    public void getAllCompetence(Context ctx)
-    {
-        Long id = RequestUtil.requirePathId(ctx, "id");
-        List<TaskCompetenceDTO> list = taskService.getAllCompetence(id);
-        ctx.status(200).json(list);
-    }
-
-    public void addCompetence(Context ctx)
-    {
-        Long id = RequestUtil.requirePathId(ctx, "id");
-        TaskCompetenceDTO dto = ctx.bodyAsClass(TaskCompetenceDTO.class);
-        taskService.addCompetence(id, dto);
-        ctx.status(204);
-    }
-
-    public void remCompetence(Context ctx)
-    {
-        Long id = RequestUtil.requirePathId(ctx, "id");
-        Long competenceId = RequestUtil.requirePathId(ctx, "competenceId");
-        taskService.remCompetence(id, competenceId);
         ctx.status(204);
     }
 }

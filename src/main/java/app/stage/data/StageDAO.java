@@ -59,7 +59,7 @@ public class StageDAO implements IStageDAO
                                 """
                                 SELECT DISTINCT s FROM Stage s
                                 LEFT JOIN FETCH s.tasks t
-                                LEFT JOIN FETCH t.requiredCompetences
+                                LEFT JOIN FETCH t.competence
                                 WHERE s.id = :id
                                 """,
                                 Stage.class)
@@ -92,7 +92,7 @@ public class StageDAO implements IStageDAO
                         """
                         SELECT DISTINCT s FROM Stage s
                         LEFT JOIN FETCH s.tasks t
-                        LEFT JOIN FETCH t.requiredCompetences
+                        LEFT JOIN FETCH t.competence
                         ORDER BY s.id
                         """,
                         Stage.class);

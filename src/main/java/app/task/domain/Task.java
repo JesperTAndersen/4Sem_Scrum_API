@@ -14,7 +14,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Getter;
@@ -27,7 +26,7 @@ public class Task implements IEntity
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private double estimate;
+    private double minDuration;
 
     // Sprint-later fields:
     // private double duration;
@@ -42,8 +41,9 @@ public class Task implements IEntity
 
     private TaskStatus status;
 
-    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<TaskCompetence> requiredCompetences = new HashSet<>();
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Competence competence;
+    private double estimate;
 
     // TODO: dependencies
     @ManyToOne(fetch = FetchType.LAZY)
@@ -56,11 +56,11 @@ public class Task implements IEntity
     {
     }
 
-    public Task(Stage stage, String name, double estimate)
+    public Task(Stage stage, String name, double minDuration)
     {
         this.stage = stage;
         this.name = name;
-        this.estimate = estimate;
+        this.minDuration = minDuration;
         this.status = TaskStatus.NOT_STARTED;
         if (stage != null) {
             if (stage != null) {
@@ -74,21 +74,18 @@ public class Task implements IEntity
         this.status = status;
     }
 
-    public void assignCompetence(Competence competence, float estimate)
+    public void setCompetence(Competence competence, float estimate)
     {
-        TaskCompetence tc = new TaskCompetence(this, competence, estimate);
-        this.requiredCompetences.add(tc);
-    }
-
-    public void unassignCompetence(TaskCompetence competence)
-    {
-        this.requiredCompetences.remove(competence);
-    }
-
-    public void update(String name, double estimate)
-    {
-        this.name = name;
+        this.competence = competence;
         this.estimate = estimate;
+    }
+
+    public void update(String name, Double minDuration)
+    {
+        if (name != null)
+            this.name = name.trim();
+        if (minDuration != null)
+            this.minDuration = minDuration;
     }
 
     // TODO: employees

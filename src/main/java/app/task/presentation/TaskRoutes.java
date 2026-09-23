@@ -28,9 +28,6 @@ public class TaskRoutes
                 post(taskController::create, Role.PROJECT_MANAGER);
                 put("/{id}", taskController::update, Role.PROJECT_MANAGER);
                 delete("/{id}", taskController::delete, Role.PROJECT_MANAGER);
-                get("/{id}/competences", taskController::getAllCompetence, Role.PROJECT_MANAGER);
-                post("/{id}/competences", taskController::addCompetence, Role.PROJECT_MANAGER);
-                delete("/{id}/competences/{competenceId}", taskController::remCompetence, Role.PROJECT_MANAGER);
             });
     }
 }

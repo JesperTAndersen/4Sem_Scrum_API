@@ -5,8 +5,9 @@ import app.task.domain.Task.TaskStatus;
 public record TaskDTO(
         Long id,
         String name,
-        double estimate,
-        double totalEstimate,
+        Double minDuration,
+        Long competenceId,
+        Double estimate,
         TaskStatus status)
 {
 }

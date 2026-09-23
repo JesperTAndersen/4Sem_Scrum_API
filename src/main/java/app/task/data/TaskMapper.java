@@ -1,8 +1,6 @@
 package app.task.data;
 
 import app.task.domain.Task;
-import app.task.domain.TaskCompetence;
-import app.task.presentation.dto.TaskCompetenceDTO;
 import app.task.presentation.dto.TaskDTO;
 
 public final class TaskMapper
@@ -11,24 +9,14 @@ public final class TaskMapper
 
     public static TaskDTO toDTO(Task task)
     {
-        double totalEstimate = task.getEstimate();
-        for (TaskCompetence tc : task.getRequiredCompetences()) {
-            totalEstimate += tc.getEstimate();
-        }
+        Long competenceId = task.getCompetence() != null ? task.getCompetence().getId() : 0L;
         return new TaskDTO(
                 task.getId(),
                 task.getName(),
+                task.getMinDuration(),
+                competenceId,
                 task.getEstimate(),
-                totalEstimate,
                 task.getStatus()
-        );
-    }
-
-    public static TaskCompetenceDTO toDTO(TaskCompetence task)
-    {
-        return new TaskCompetenceDTO(
-                task.getCompetence().getId(),
-                task.getEstimate()
         );
     }
 }

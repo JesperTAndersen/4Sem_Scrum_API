@@ -6,7 +6,6 @@ import app.exceptions.DatabaseException;
 import app.exceptions.NotFoundException;
 import app.shared.data.ICrudDAO;
 import app.task.domain.Task;
-import app.task.domain.TaskCompetence;
 import app.utils.DBValidator;
 import app.utils.TransactionUtil;
 import app.utils.ValidationUtil;
@@ -14,7 +13,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
-import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 
 public class TaskDAO implements ICrudDAO<Task>
@@ -60,7 +58,6 @@ public class TaskDAO implements ICrudDAO<Task>
                 Task task = em.createQuery(
                                 """
                                 SELECT DISTINCT t FROM Task t
-                                LEFT JOIN FETCH t.requiredCompetences
                                 WHERE t.id = :id
                                 """,
                                 Task.class)
@@ -91,7 +88,6 @@ public class TaskDAO implements ICrudDAO<Task>
                 TypedQuery<Task> query = em.createQuery(
                         """
                         SELECT DISTINCT t FROM Task t
-                        LEFT JOIN FETCH t.requiredCompetences
                         ORDER BY t.id
                         """,
                         Task.class);
@@ -100,85 +96,6 @@ public class TaskDAO implements ICrudDAO<Task>
             catch (PersistenceException e)
             {
                 throw new DatabaseException("Failed to fetch all tasks", e);
-            }
-        }
-    }
-
-    public List<TaskCompetence> getAllCompetence(Long id)
-    {
-        try (EntityManager em = emf.createEntityManager())
-        {
-            try
-            {
-                TypedQuery<TaskCompetence> query = em.createQuery(
-                        """
-                        SELECT DISTINCT tc FROM TaskCompetence tc
-                        WHERE tc.task.id = :id
-                        """,
-                        TaskCompetence.class);
-                query.setParameter("id", id);
-                return query.getResultList();
-            }
-            catch (EntityNotFoundException e)
-            {
-                throw new NotFoundException("No competencies for task found with id: " + id);
-            }
-            catch (PersistenceException e)
-            {
-                throw new DatabaseException("Failed to fetch all competence tasks", e);
-            }
-        }
-    }
-
-    public TaskCompetence getCompetence(Long id, Long competenceId)
-    {
-        try (EntityManager em = emf.createEntityManager())
-        {
-            try
-            {
-                TypedQuery<TaskCompetence> query = em.createQuery(
-                        """
-                        SELECT DISTINCT tc FROM TaskCompetence tc
-                        WHERE tc.task.id = :id AND tc.competence.id = :competenceId
-                        """,
-                        TaskCompetence.class);
-                query.setParameter("id", id);
-                query.setParameter("competenceId", competenceId);
-                return query.getSingleResultOrNull();
-            }
-            catch (PersistenceException e)
-            {
-                throw new DatabaseException("Failed to fetch all competence tasks", e);
-            }
-        }
-    }
-
-    public void remCompetence(Long id, Long competenceId)
-    {
-        try (EntityManager em = emf.createEntityManager())
-        {
-            try
-            {
-                em.getTransaction().begin();
-                Query query = em.createQuery(
-                        """
-                        DELETE FROM TaskCompetence tc
-                        WHERE tc.task.id = :id AND tc.competence.id = :competenceId
-                        """);
-                query.setParameter("id", id);
-                query.setParameter("competenceId", competenceId);
-                query.executeUpdate();
-                em.getTransaction().commit();
-            }
-            catch (EntityNotFoundException e)
-            {
-                TransactionUtil.rollback(em);
-                throw new NotFoundException("Task#"+id+" not found with Competence#" + competenceId);
-            }
-            catch (PersistenceException e)
-            {
-                TransactionUtil.rollback(em);
-                throw new DatabaseException("Failed to fetch all competence tasks", e);
             }
         }
     }
