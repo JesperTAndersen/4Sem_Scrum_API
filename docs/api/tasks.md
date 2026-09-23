@@ -91,7 +91,7 @@ Creates a task in an existing stage. The assigned competence must be active. New
 
 ## PUT /tasks/{id}
 
-Updates supplied task fields. To assign or change a competence, provide both `competenceId` and `estimate`. Set `competenceId` to `0` to remove the current competence; this also sets the estimate to `0`.
+Updates supplied task fields. To assign or change a competence, provide both `competenceId` and `estimate`. Set `competenceId` to `0` to remove the current competence; this also sets the estimate to `0`. The task status can be changed to `NOT_STARTED`, `IN_PROGRESS`, or `DONE`.
 
 **Path parameters**
 
@@ -107,9 +107,10 @@ Updates supplied task fields. To assign or change a competence, provide both `co
 | `minimumDurationInDays` | integer | no | Non-negative whole number when supplied |
 | `competenceId` | number | no | Existing active competence ID, or `0` to remove the assignment |
 | `estimate` | number | no | Must accompany a non-zero `competenceId`; non-negative, finite number of labor hours |
+| `status` | enum | no | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
 
 ```json
-{ "competenceId": 1, "estimate": 16.0 }
+{ "status": "IN_PROGRESS" }
 ```
 
 **Success response:** `200 OK` with the updated Task object.
