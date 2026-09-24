@@ -2,6 +2,8 @@ package app.config;
 
 import app.competence.presentation.CompetenceController;
 import app.competence.presentation.ICompetenceController;
+import app.project.domain.IScheduleService;
+import app.project.domain.ScheduleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -79,6 +81,8 @@ public final class DependencyContainer
     private final ITaskService taskService;
     @Getter
     private final TaskController taskController;
+    @Getter
+    private final IScheduleService scheduleService;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {
@@ -100,7 +104,8 @@ public final class DependencyContainer
         this.projectDAO = new ProjectDAO(entityManagerFactory);
         this.stageService = new StageService(stageDAO, projectDAO);
         this.stageController = new StageController(stageService);
-        this.projectService = new ProjectService(projectDAO, userDAO);
+        this.scheduleService = new ScheduleService();
+        this.projectService = new ProjectService(projectDAO, userDAO, scheduleService);
         this.projectController = new ProjectController(projectService);
         this.securityService = new SecurityService(userDAO);
         this.securityController = new SecurityController(securityService);

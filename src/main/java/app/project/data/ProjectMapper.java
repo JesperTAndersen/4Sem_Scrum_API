@@ -1,9 +1,6 @@
 package app.project.data;
 
-import app.project.presentation.dto.CreateProjectDTO;
-import app.project.presentation.dto.ProjectDTO;
-import app.project.presentation.dto.SlimProjectDTO;
-import app.project.presentation.dto.UpdateProjectDTO;
+import app.project.presentation.dto.*;
 import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
 import app.user.data.UserMapper;
@@ -18,7 +15,7 @@ public class ProjectMapper
     {
     }
 
-    public static ProjectDTO toDTO(Project project)
+    public static ProjectDTO toDTO(Project project, ScheduleDTO schedule)
     {
         TaskCountDTO taskCount = buildTaskCountDTO(project);
 
@@ -38,11 +35,12 @@ public class ProjectMapper
                 project.getStages().stream()
                         .map(StageMapper::toDTO)
                         .toList(),
-                taskCount
+                taskCount,
+                schedule
         );
     }
 
-    public static SlimProjectDTO toSlimProjectDTO(Project project)
+    public static SlimProjectDTO toSlimProjectDTO(Project project, ScheduleDTO schedule)
     {
         TaskCountDTO taskCount = buildTaskCountDTO(project);
 
@@ -54,7 +52,8 @@ public class ProjectMapper
                 project.getStartDate(),
                 project.getDeadline(),
                 taskCount,
-                project.getStatus()
+                project.getStatus(),
+                schedule
 
         );
     }

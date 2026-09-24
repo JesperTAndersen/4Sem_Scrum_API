@@ -3,6 +3,7 @@ package app.project.data;
 import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
 import app.project.presentation.dto.ProjectDTO;
+import app.project.presentation.dto.ScheduleDTO;
 import app.project.presentation.dto.SlimProjectDTO;
 import app.stage.domain.Stage;
 import app.task.domain.Task;
@@ -35,7 +36,7 @@ class ProjectMapperTest
         completedTask.changeStatus(Task.TaskStatus.DONE);
         new Task(delivery, "Implementation", 16);
 
-        ProjectDTO result = ProjectMapper.toDTO(project);
+        ProjectDTO result = ProjectMapper.toDTO(project, schedule());
 
         assertThat(result.stages(), hasSize(2));
         assertThat(result.stages().stream().map(stage -> stage.tasks().size()).sorted().toList(), contains(1, 2));
@@ -57,10 +58,11 @@ class ProjectMapperTest
         Task completedTask = new Task(stage, "Design", 8);
         completedTask.changeStatus(Task.TaskStatus.DONE);
 
-        SlimProjectDTO result = ProjectMapper.toSlimProjectDTO(project);
+        SlimProjectDTO result = ProjectMapper.toSlimProjectDTO(project, schedule());
 
         assertThat(result.taskCountDTO().totalTaskCount(), is(2));
         assertThat(result.taskCountDTO().taskDone(), is(1));
+        assertThat(result.schedule().feasible(), is(true));
     }
 
     private Project project()
@@ -78,5 +80,10 @@ class ProjectMapperTest
                 .updatedBy(user)
                 .stages(new HashSet<>())
                 .build();
+    }
+
+    private ScheduleDTO schedule()
+    {
+        return new ScheduleDTO(LocalDate.of(2026, 1, 31), true);
     }
 }

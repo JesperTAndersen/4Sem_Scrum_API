@@ -14,6 +14,7 @@ public record SlimProjectDTO(
         LocalDate startDate,
         LocalDate deadline,
         TaskCountDTO taskCountDTO,
-        ProjectStatus status
+        ProjectStatus status,
+        ScheduleDTO schedule
 ) {
 }

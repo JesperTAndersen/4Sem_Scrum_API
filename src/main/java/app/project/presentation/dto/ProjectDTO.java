@@ -24,6 +24,7 @@ public record ProjectDTO(
         double totalEstimatedHours,
         BigDecimal totalCost,
         List<StageDTO> stages,
-        TaskCountDTO tasks
+        TaskCountDTO tasks,
+        ScheduleDTO schedule
 ) {
 }
