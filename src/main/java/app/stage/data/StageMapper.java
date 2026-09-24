@@ -14,6 +14,7 @@ public final class StageMapper
                 stage.getId(),
                 stage.getName(),
                 stage.getTotalEstimatedHours(),
+                stage.getTotalCost(),
                 stage.getTasks().stream().map(TaskMapper::toDTO).toList()
         );
     }

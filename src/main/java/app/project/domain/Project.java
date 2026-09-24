@@ -1,17 +1,32 @@
 package app.project.domain;
 
-import app.shared.domain.IEntity;
-
-import app.project.domain.ProjectStatus;
-import app.user.domain.User;
-import app.stage.domain.Stage;
-import jakarta.persistence.*;
-import lombok.*;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
+import app.shared.domain.IEntity;
+import app.stage.domain.Stage;
+import app.user.domain.User;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
@@ -64,6 +79,15 @@ public class Project implements IEntity
         return stages.stream()
                 .mapToDouble(Stage::getTotalEstimatedHours)
                 .sum();
+    }
+
+    public BigDecimal getTotalCost()
+    {
+        BigDecimal total = new BigDecimal(0);
+        for (Stage stage : stages) {
+            total.add(stage.getTotalCost());
+        }
+        return total;
     }
 
     @PrePersist

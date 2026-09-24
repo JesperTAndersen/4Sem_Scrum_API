@@ -24,6 +24,7 @@ Projects are top-level work containers. A project detail includes its stages, ea
 | `createdBy`, `updatedBy` | [user reference](users.md#user-reference) | Audit user |
 | `createdAt`, `updatedAt` | date-time | Audit timestamps |
 | `totalEstimatedHours` | number | Sum of estimates in all stages |
+| `totalCost` | number | Sum of costs in all stages |
 | `stages` | Stage[] | Full nested stage hierarchy |
 
 ## GET /projects

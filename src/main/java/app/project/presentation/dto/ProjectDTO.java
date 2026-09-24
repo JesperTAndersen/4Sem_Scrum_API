@@ -1,13 +1,14 @@
 package app.project.presentation.dto;
 
-import app.project.domain.ProjectStatus;
-import app.task.presentation.dto.TaskCountDTO;
-import app.user.presentation.dto.UserReferenceDTO;
-import app.stage.presentation.dto.StageDTO;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import app.project.domain.ProjectStatus;
+import app.stage.presentation.dto.StageDTO;
+import app.task.presentation.dto.TaskCountDTO;
+import app.user.presentation.dto.UserReferenceDTO;
 
 public record ProjectDTO(
         Long id,
@@ -21,6 +22,7 @@ public record ProjectDTO(
         UserReferenceDTO updatedBy,
         LocalDateTime updatedAt,
         double totalEstimatedHours,
+        BigDecimal totalCost,
         List<StageDTO> stages,
         TaskCountDTO tasks
 ) {

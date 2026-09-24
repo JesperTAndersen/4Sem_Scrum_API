@@ -1,5 +1,8 @@
 package app.task.domain;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import app.competence.domain.Competence;
 import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
@@ -15,19 +18,17 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Entity
 public class Task implements IEntity
 {
     private static final double WORKING_HOURS_PER_DAY = 7.5;
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
     private int minimumDurationInDays;
-    private double estimate;
 
     public enum TaskStatus { NOT_STARTED, IN_PROGRESS, DONE }
 
@@ -36,6 +37,7 @@ public class Task implements IEntity
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Competence competence;
+    private double estimate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Stage stage;
@@ -67,25 +69,45 @@ public class Task implements IEntity
         this.estimate = estimate;
     }
 
-    public double getLaborDurationInDays() { return estimate / WORKING_HOURS_PER_DAY; }
+    public BigDecimal getCost()
+    {
+        if (competence != null) {
+            return competence.getRate().multiply(new BigDecimal(estimate));
+        }
+        return new BigDecimal(0);
+    }
+
+    public double getLaborDurationInDays()
+    {
+        return estimate / WORKING_HOURS_PER_DAY;
+    }
 
     public double getScheduledDurationInDays()
     {
         return Math.max(getLaborDurationInDays(), minimumDurationInDays);
     }
 
-    @PrePersist protected void onCreate()
+    @PrePersist
+    protected void onCreate()
     {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
 
-    @PreUpdate protected void onUpdate() { updatedAt = LocalDateTime.now(); }
+    @PreUpdate
+    protected void onUpdate()
+    {
+        updatedAt = LocalDateTime.now();
+    }
 
     @Override public final boolean equals(Object o)
     {
         return this == o || (o instanceof Task && id != null && id.equals(((Task) o).getId()));
     }
 
-    @Override public final int hashCode() { return getClass().hashCode(); }
+    @Override
+    public final int hashCode()
+    {
+        return getClass().hashCode();
+    }
 }
