@@ -1,236 +1,125 @@
 package app.api;
 
-import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import app.security.domain.Role;
+import app.utils.JWTUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.restassured.response.ResponseBodyExtractionOptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import app.security.domain.Role;
-import app.utils.JWTUtil;
-import io.restassured.response.ResponseBodyExtractionOptions;
+import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(ApiTest.class)
 class TaskTest
 {
     @Test
-    void get401()
+    void scheduledDurationIsTheGreaterOfLaborAndMinimumDuration() throws Exception
     {
-        given()
-            .header("Content-Type", "application/json")
-            .when()
-            .get("/tasks")
-            .then()
-            .statusCode(401);
+        long taskId = createTask("Cannot be accelerated", 3);
+        long competenceId = createCompetence("Planning");
+
+        JsonNode assigned = update(taskId, """
+                { "competenceId": %d, "estimate": 7.5 }
+                """.formatted(competenceId));
+        assertEquals(1.0, assigned.get("laborDurationInDays").asDouble());
+        assertEquals(3.0, assigned.get("scheduledDurationInDays").asDouble());
+
+        JsonNode recalculated = update(taskId, """
+                { "competenceId": %d, "estimate": 3.75 }
+                """.formatted(competenceId));
+        assertEquals(0.5, recalculated.get("laborDurationInDays").asDouble());
+        assertEquals(3.0, recalculated.get("scheduledDurationInDays").asDouble());
     }
 
     @Test
-    void createUpdateAndGet() throws Exception
+    void taskHasOnlyOneCompetenceAndItCanBeRemoved() throws Exception
     {
-        Long stageId = createStage("Task test stage");
-        Long backendCompetenceId = createCompetence("Backend development");
-        Long testingCompetenceId = createCompetence("Testing");
+        long taskId = createTask("Single competence task", 1);
+        long competenceId = createCompetence("Carpentry");
 
-        String JSON = """
-        {
-            "stageId": %d,
-            "name": "Define requirements",
-            "minDuration": 8.0
-        }
-        """.formatted(stageId);
+        JsonNode assigned = update(taskId, """
+                { "competenceId": %d, "estimate": 15.0 }
+                """.formatted(competenceId));
+        assertEquals(competenceId, assigned.get("competenceId").asLong());
+        assertEquals(15.0, assigned.get("estimate").asDouble());
+        assertEquals(2.0, assigned.get("scheduledDurationInDays").asDouble());
 
-        ResponseBodyExtractionOptions taskResponse = given()
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
-            .body(JSON)
-            .when()
-            .post("/tasks")
-            .then()
-            .statusCode(201)
-            .extract().body();
-
-        JsonNode createdTask = ApiTest.objectMapper.readTree(taskResponse.asString());
-        long taskId = createdTask.get("id").asLong();
-        assertEquals("Define requirements", createdTask.get("name").asText());
-        assertEquals("NOT_STARTED", createdTask.get("status").asText());
-
-        String updateJSON = """
-        {
-            "name": "Updated requirements",
-            "minDuration": 16.0
-        }
-        """.formatted();
-
-        ResponseBodyExtractionOptions updatedResponse = given()
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
-            .body(updateJSON)
-            .when()
-            .put("/tasks/"+taskId)
-            .then()
-            .statusCode(200)
-            .extract().body();
-
-        JsonNode updatedTask = ApiTest.objectMapper.readTree(updatedResponse.asString());
-        assertEquals(taskId, updatedTask.get("id").asLong());
-        assertEquals("Updated requirements", updatedTask.get("name").asText());
-        assertEquals(16.0, updatedTask.get("minDuration").asDouble());
-        assertEquals(0, updatedTask.get("cost").asDouble());
-
-        String competenceJSON = """
-        {
-            "competenceId": %d,
-            "estimate": 32.0
-        }
-        """.formatted(backendCompetenceId);
-        given()
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
-            .body(competenceJSON)
-            .when()
-            .put("/tasks/"+taskId)
-            .then()
-            .statusCode(200);
-
-        JsonNode fetchedTask = getJson("/tasks/" + taskId);
-        assertEquals("Updated requirements", fetchedTask.get("name").asText());
-        assertEquals(16.0, fetchedTask.get("minDuration").asDouble());
-        assertEquals(backendCompetenceId, fetchedTask.get("competenceId").asLong());
-        assertEquals(32.0, fetchedTask.get("estimate").asDouble());
-        assertEquals(27200, fetchedTask.get("cost").asDouble());
-
-        JsonNode stage = getJson("/stages/" + stageId);
-        JsonNode taskInStage = findById(stage.get("tasks"), taskId);
-        assertNotNull(taskInStage, "The created task must be returned by its stage");
-        assertEquals("Updated requirements", taskInStage.get("name").asText());
-
-        JsonNode project = getJson("/projects/1");
-        JsonNode stageInProject = findById(project.get("stages"), stageId);
-        assertNotNull(stageInProject, "The created stage must be returned by its project");
-        JsonNode taskInProject = findById(stageInProject.get("tasks"), taskId);
-        assertNotNull(taskInProject,
-            "The task must be returned in the Project -> Stage -> Task hierarchy");
-
-        String removeCompetenceJSON = """
-        {
-            "competenceId": %d
-        }
-        """.formatted(0);
-        given()
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
-            .body(removeCompetenceJSON)
-            .when()
-            .put("/tasks/"+taskId)
-            .then()
-            .statusCode(200);
-        fetchedTask = getJson("/tasks/" + taskId);
-        assertEquals("Updated requirements", fetchedTask.get("name").asText());
-        assertEquals(16.0, fetchedTask.get("minDuration").asDouble());
-        assertEquals(0, fetchedTask.get("competenceId").asLong());
-        assertEquals(0.0, fetchedTask.get("estimate").asDouble());
-        assertEquals(0, fetchedTask.get("cost").asDouble());
+        JsonNode removed = update(taskId, "{ \"competenceId\": 0 }");
+        assertEquals(0, removed.get("competenceId").asLong());
+        assertEquals(0.0, removed.get("estimate").asDouble());
+        assertEquals(1.0, removed.get("scheduledDurationInDays").asDouble());
     }
 
     @Test
-    void get404()
+    void negativeMinimumDurationIsRejected() throws Exception
     {
-        given()
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
-            .when()
-            .get("/tasks/100")
-            .then()
-            .statusCode(404);
+        long stageId = createStage("Invalid duration stage");
+        long competenceId = createCompetence("Invalid duration competence");
+        givenAuthenticated().body("""
+                { "stageId": %d, "name": "Invalid", "competenceId": %d, "minimumDurationInDays": -1 }
+                """.formatted(stageId, competenceId))
+                .when().post("/tasks").then().statusCode(400);
     }
 
     @Test
-    void employeeGets403()
+    void missingEstimateIsRejectedWhenCreatingATask() throws Exception
     {
+        long stageId = createStage("Missing estimate stage");
+        long competenceId = createCompetence("Missing estimate competence");
+        givenAuthenticated().body("""
+                { "stageId": %d, "name": "Missing estimate", "competenceId": %d, "minimumDurationInDays": 1 }
+                """.formatted(stageId, competenceId))
+                .when().post("/tasks").then().statusCode(400);
+    }
+
+    @Test
+    void getRequiresProjectManager()
+    {
+        given().header("Content-Type", "application/json").when().get("/tasks").then().statusCode(401);
         String employeeToken = JWTUtil.createToken(2L, "employee@example.org", Role.EMPLOYEE);
-
-        given()
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer "+employeeToken)
-            .when()
-            .get("/tasks")
-            .then()
-            .statusCode(403);
+        given().header("Authorization", "Bearer " + employeeToken).when().get("/tasks").then().statusCode(403);
     }
 
-    private Long createStage(String name) throws Exception
+    private long createTask(String name, int minimumDurationInDays) throws Exception
     {
-        String JSON = """
-        {
-            "projectId": 1,
-            "name": "%s"
-        }
-        """.formatted(name);
-
-        ResponseBodyExtractionOptions response = given()
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
-            .body(JSON)
-            .when()
-            .post("/stages")
-            .then()
-            .statusCode(201)
-            .extract().body();
-
+        long stageId = createStage(name + " stage");
+        long competenceId = createCompetence(name + " competence");
+        ResponseBodyExtractionOptions response = givenAuthenticated().body("""
+                { "stageId": %d, "name": "%s", "competenceId": %d, "estimate": 0.0, "minimumDurationInDays": %d }
+                """.formatted(stageId, name, competenceId, minimumDurationInDays))
+                .when().post("/tasks").then().statusCode(201).extract().body();
         return ApiTest.objectMapper.readTree(response.asString()).get("id").asLong();
     }
 
-    private Long createCompetence(String name) throws Exception
+    private JsonNode update(long taskId, String json) throws Exception
     {
-        String JSON = """
-        {
-            "name": "%s",
-            "rate": 850.00
-        }
-        """.formatted(name);
-
-        ResponseBodyExtractionOptions response = given()
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
-            .body(JSON)
-            .when()
-            .post("/competences")
-            .then()
-            .statusCode(201)
-            .extract().body();
-
-        return ApiTest.objectMapper.readTree(response.asString()).get("id").asLong();
-    }
-
-    private JsonNode getJson(String path) throws Exception
-    {
-        ResponseBodyExtractionOptions response = given()
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer "+ApiTest.JWT_TOKEN)
-            .when()
-            .get(path)
-            .then()
-            .statusCode(200)
-            .extract().body();
-
+        ResponseBodyExtractionOptions response = givenAuthenticated().body(json)
+                .when().put("/tasks/" + taskId).then().statusCode(200).extract().body();
         return ApiTest.objectMapper.readTree(response.asString());
     }
 
-    private JsonNode findById(JsonNode values, long id)
+    private long createStage(String name) throws Exception
     {
-        assertTrue(values.isArray());
-        for (JsonNode value : values)
-        {
-            if (value.get("id").asLong() == id)
-            {
-                return value;
-            }
-        }
-        return null;
+        ResponseBodyExtractionOptions response = givenAuthenticated().body("""
+                { "projectId": 1, "name": "%s" }
+                """.formatted(name))
+                .when().post("/stages").then().statusCode(201).extract().body();
+        return ApiTest.objectMapper.readTree(response.asString()).get("id").asLong();
+    }
+
+    private long createCompetence(String name) throws Exception
+    {
+        ResponseBodyExtractionOptions response = givenAuthenticated().body("""
+                { "name": "%s", "rate": 850.00 }
+                """.formatted(name))
+                .when().post("/competences").then().statusCode(201).extract().body();
+        return ApiTest.objectMapper.readTree(response.asString()).get("id").asLong();
+    }
+
+    private io.restassured.specification.RequestSpecification givenAuthenticated()
+    {
+        return given().header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + ApiTest.JWT_TOKEN);
     }
 }

@@ -1,7 +1,5 @@
 package app.task.data;
 
-import java.math.BigDecimal;
-
 import app.competence.domain.Competence;
 import app.task.domain.Task;
 import app.task.presentation.dto.TaskDTO;
@@ -17,11 +15,12 @@ public final class TaskMapper
         return new TaskDTO(
                 task.getId(),
                 task.getName(),
-                task.getMinDuration(),
+                task.getMinimumDurationInDays(),
                 competenceId,
                 task.getEstimate(),
                 task.getCost(),
-                task.getStatus()
-        );
+                task.getLaborDurationInDays(),
+                task.getScheduledDurationInDays(),
+                task.getStatus());
     }
 }

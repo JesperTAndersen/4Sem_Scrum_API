@@ -20,59 +20,46 @@ import lombok.Getter;
 @Entity
 public class Task implements IEntity
 {
+    private static final double WORKING_HOURS_PER_DAY = 7.5;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private double minDuration;
+    private int minimumDurationInDays;
 
-    // Sprint-later fields:
-    // private double duration;
-    // private int crewSize;
-    public enum TaskStatus
-    {
-        NOT_STARTED,
-        IN_PROGRESS,
-        DONE,
-        ;
-    }
-
+    public enum TaskStatus { NOT_STARTED, IN_PROGRESS, DONE }
     private TaskStatus status;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Competence competence;
     private double estimate;
 
-    // TODO: dependencies
     @ManyToOne(fetch = FetchType.LAZY)
     private Stage stage;
-    // TODO: employees
-    //@OneToMany(fetch = FetchType.LAZY)
-    //private Set<Employee> assigned = new HashSet<>();
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    public Task()
-    {
-    }
+    public Task() {}
 
-    public Task(Stage stage, String name, double minDuration)
+    public Task(Stage stage, String name, int minimumDurationInDays)
     {
         this.stage = stage;
         this.name = name;
-        this.minDuration = minDuration;
+        this.minimumDurationInDays = minimumDurationInDays;
         this.status = TaskStatus.NOT_STARTED;
-        if (stage != null) {
-            if (stage != null) {
-                stage.addTask(this);
-            }
-        }
+        if (stage != null) stage.addTask(this);
     }
 
-    public void changeStatus(TaskStatus status)
+    public void changeStatus(TaskStatus status) { this.status = status; }
+
+    public void update(String name, Integer minimumDurationInDays)
     {
-        this.status = status;
+        if (name != null) this.name = name.trim();
+        if (minimumDurationInDays != null) this.minimumDurationInDays = minimumDurationInDays;
     }
 
-    public void setCompetence(Competence competence, float estimate)
+    public void setCompetence(Competence competence, double estimate)
     {
         this.competence = competence;
         this.estimate = estimate;
@@ -86,47 +73,32 @@ public class Task implements IEntity
         return new BigDecimal(0);
     }
 
-    public void update(String name, Double minDuration)
+    public double getLaborDurationInDays()
     {
-        if (name != null)
-            this.name = name.trim();
-        if (minDuration != null)
-            this.minDuration = minDuration;
+        return estimate / WORKING_HOURS_PER_DAY;
     }
 
-    // TODO: employees
-    //public void assign(Employee employee)
-    //{
-    //    this.assigned.add(employee);
-    //}
-
-    //public void unassign(Employee employee)
-    //{
-    //    this.assigned.remove(employee);
-    //}
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    public double getScheduledDurationInDays()
+    {
+        return Math.max(getLaborDurationInDays(), minimumDurationInDays);
+    }
 
     @PrePersist
     protected void onCreate()
     {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate()
     {
-        this.updatedAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    @Override
-    public final boolean equals(Object o)
+    @Override public final boolean equals(Object o)
     {
-        if (this == o) return true;
-        if (o == null) return false;
-        if (!(o instanceof Task)) return false;
-        return id != null && id.equals(((Task) o).getId());
+        return this == o || (o instanceof Task && id != null && id.equals(((Task) o).getId()));
     }
 
     @Override

@@ -7,10 +7,12 @@ import app.task.domain.Task.TaskStatus;
 public record TaskDTO(
         Long id,
         String name,
-        Double minDuration,
+        int minimumDurationInDays,
         Long competenceId,
-        Double estimate,
+        double estimate,
         BigDecimal cost,
+        double laborDurationInDays,
+        double scheduledDurationInDays,
         TaskStatus status)
 {
 }
