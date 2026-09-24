@@ -119,6 +119,126 @@ class TaskTest
         assertEquals("DONE", findTask(tasks, doneTaskId).get("status").asText());
     }
 
+
+    @Test
+    void predecessorCanBeAddedAndIsReturnedOnTask() throws Exception
+    {
+        long predecessorId = createTask("Dependency predecessor", 2);
+        long taskId = createTask("Dependency task", 1);
+
+        addPredecessor(taskId, predecessorId, 204);
+
+        JsonNode task = getTask(taskId);
+        assertEquals(1, task.get("predecessorIds").size());
+        assertEquals(predecessorId, task.get("predecessorIds").get(0).asLong());
+        assertEquals(2.0, task.get("dependencyStartOffsetInDays").asDouble());
+        assertEquals(3.0, task.get("dependencyFinishOffsetInDays").asDouble());
+    }
+
+    @Test
+    void predecessorCanBeRemoved() throws Exception
+    {
+        long predecessorId = createTask("Removed predecessor", 2);
+        long taskId = createTask("Task without predecessor", 1);
+
+        addPredecessor(taskId, predecessorId, 204);
+
+        givenAuthenticated()
+                .when().delete("/tasks/" + taskId + "/predecessors/" + predecessorId)
+                .then().statusCode(204);
+
+        JsonNode task = getTask(taskId);
+        assertEquals(0, task.get("predecessorIds").size());
+        assertEquals(0.0, task.get("dependencyStartOffsetInDays").asDouble());
+    }
+
+    @Test
+    void taskCannotDependOnItself() throws Exception
+    {
+        long taskId = createTask("Self dependency", 1);
+        addPredecessor(taskId, taskId, 400);
+    }
+
+    @Test
+    void circularDependencyIsRejected() throws Exception
+    {
+        long firstTaskId = createTask("First circular task", 1);
+        long secondTaskId = createTask("Second circular task", 1);
+
+        addPredecessor(secondTaskId, firstTaskId, 204);
+        addPredecessor(firstTaskId, secondTaskId, 400);
+    }
+
+
+    @Test
+    void duplicateDependencyIsRejected() throws Exception
+    {
+        long predecessorId = createTask("Duplicate predecessor", 1);
+        long taskId = createTask("Duplicate dependency task", 1);
+
+        addPredecessor(taskId, predecessorId, 204);
+        addPredecessor(taskId, predecessorId, 400);
+    }
+
+    @Test
+    void tasksFromDifferentProjectsCannotBeLinked() throws Exception
+    {
+        long firstProjectTaskId = createTask("Project one task", 1);
+        long secondProjectTaskId = createTaskInProject("Project two task", 1, 2);
+
+        addPredecessor(firstProjectTaskId, secondProjectTaskId, 400);
+    }
+
+    @Test
+    void deletingAPredecessorRemovesTheDependencyReference() throws Exception
+    {
+        long predecessorId = createTask("Deleted predecessor", 1);
+        long taskId = createTask("Dependent task survives", 1);
+        addPredecessor(taskId, predecessorId, 204);
+
+        givenAuthenticated()
+                .when().delete("/tasks/" + predecessorId)
+                .then().statusCode(204);
+
+        JsonNode task = getTask(taskId);
+        assertEquals(0, task.get("predecessorIds").size());
+    }
+
+
+    @Test
+    void projectViewIncludesDependencyAwareTaskData() throws Exception
+    {
+        long predecessorId = createTask("Project view predecessor", 2);
+        long taskId = createTask("Project view dependent", 1);
+        addPredecessor(taskId, predecessorId, 204);
+
+        ResponseBodyExtractionOptions response = givenAuthenticated()
+                .when().get("/projects/1")
+                .then().statusCode(200).extract().body();
+
+        JsonNode project = ApiTest.objectMapper.readTree(response.asString());
+        JsonNode task = findTaskInProject(project, taskId);
+        assertEquals(predecessorId, task.get("predecessorIds").get(0).asLong());
+        assertEquals(2.0, task.get("dependencyStartOffsetInDays").asDouble());
+    }
+
+    @Test
+    void tasksWithSharedPredecessorCanStartAtTheSameOffset() throws Exception
+    {
+        long predecessorId = createTask("Shared predecessor", 2);
+        long firstTaskId = createTask("Parallel task one", 1);
+        long secondTaskId = createTask("Parallel task two", 3);
+
+        addPredecessor(firstTaskId, predecessorId, 204);
+        addPredecessor(secondTaskId, predecessorId, 204);
+
+        JsonNode firstTask = getTask(firstTaskId);
+        JsonNode secondTask = getTask(secondTaskId);
+
+        assertEquals(2.0, firstTask.get("dependencyStartOffsetInDays").asDouble());
+        assertEquals(2.0, secondTask.get("dependencyStartOffsetInDays").asDouble());
+    }
+
     @Test
     void getRequiresProjectManager()
     {
@@ -127,6 +247,35 @@ class TaskTest
         given().header("Authorization", "Bearer " + employeeToken).when().get("/tasks").then().statusCode(403);
     }
 
+
+
+    private JsonNode getTask(long taskId) throws Exception
+    {
+        ResponseBodyExtractionOptions response = givenAuthenticated()
+                .when().get("/tasks/" + taskId)
+                .then().statusCode(200).extract().body();
+        return ApiTest.objectMapper.readTree(response.asString());
+    }
+
+    private void addPredecessor(long taskId, long predecessorId, int expectedStatus)
+    {
+        givenAuthenticated()
+                .when().post("/tasks/" + taskId + "/predecessors/" + predecessorId)
+                .then().statusCode(expectedStatus);
+    }
+
+
+    private JsonNode findTaskInProject(JsonNode project, long taskId)
+    {
+        for (JsonNode stage : project.get("stages"))
+        {
+            for (JsonNode task : stage.get("tasks"))
+            {
+                if (task.get("id").asLong() == taskId) return task;
+            }
+        }
+        throw new AssertionError("Task not found in project: " + taskId);
+    }
 
     private JsonNode findTask(JsonNode tasks, long taskId)
     {
@@ -139,7 +288,12 @@ class TaskTest
 
     private long createTask(String name, int minimumDurationInDays) throws Exception
     {
-        long stageId = createStage(name + " stage");
+        return createTaskInProject(name, minimumDurationInDays, 1);
+    }
+
+    private long createTaskInProject(String name, int minimumDurationInDays, long projectId) throws Exception
+    {
+        long stageId = createStage(name + " stage", projectId);
         long competenceId = createCompetence(name + " competence");
         ResponseBodyExtractionOptions response = givenAuthenticated().body("""
                 { "stageId": %d, "name": "%s", "competenceId": %d, "estimate": 0.0, "minimumDurationInDays": %d }
@@ -157,9 +311,14 @@ class TaskTest
 
     private long createStage(String name) throws Exception
     {
+        return createStage(name, 1);
+    }
+
+    private long createStage(String name, long projectId) throws Exception
+    {
         ResponseBodyExtractionOptions response = givenAuthenticated().body("""
-                { "projectId": 1, "name": "%s" }
-                """.formatted(name))
+                { "projectId": %d, "name": "%s" }
+                """.formatted(projectId, name))
                 .when().post("/stages").then().statusCode(201).extract().body();
         return ApiTest.objectMapper.readTree(response.asString()).get("id").asLong();
     }
