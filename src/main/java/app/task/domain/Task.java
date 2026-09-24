@@ -1,5 +1,6 @@
 package app.task.domain;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import app.competence.domain.Competence;
@@ -75,6 +76,14 @@ public class Task implements IEntity
     {
         this.competence = competence;
         this.estimate = estimate;
+    }
+
+    public BigDecimal getCost()
+    {
+        if (competence != null) {
+            return competence.getRate().multiply(new BigDecimal(estimate));
+        }
+        return new BigDecimal(0);
     }
 
     public void update(String name, Double minDuration)

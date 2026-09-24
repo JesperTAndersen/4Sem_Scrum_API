@@ -20,6 +20,7 @@ Stages divide a project into named phases. A stage response always contains its 
 | `id` | number | Unique identifier |
 | `name` | string | Stage name |
 | `totalEstimatedHours` | number | Sum of its task estimates |
+| `totalCost` | number | Sum of its task costs |
 | `tasks` | [Task](tasks.md#task-object)[] | Tasks in the stage |
 
 ## GET /stages

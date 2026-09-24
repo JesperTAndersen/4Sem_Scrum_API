@@ -1,13 +1,13 @@
 package app.stage.domain;
 
-import app.shared.domain.IEntity;
-import app.project.domain.Project;
-import app.task.domain.Task;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import app.project.domain.Project;
+import app.shared.domain.IEntity;
+import app.task.domain.Task;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -58,6 +58,15 @@ public class Stage implements IEntity
         return tasks.stream()
                 .mapToDouble(Task::getEstimate)
                 .sum();
+    }
+
+    public BigDecimal getTotalCost()
+    {
+        BigDecimal total = new BigDecimal(0);
+        for (Task task : tasks) {
+            total.add(task.getCost());
+        }
+        return total;
     }
 
     private LocalDateTime createdAt;

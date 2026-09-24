@@ -34,6 +34,7 @@ public class ProjectMapper
                 UserMapper.toReferenceDTO(project.getUpdatedBy()),
                 project.getUpdatedAt(),
                 project.getTotalEstimatedHours(),
+                project.getTotalCost(),
                 project.getStages().stream()
                         .map(StageMapper::toDTO)
                         .toList(),

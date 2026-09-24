@@ -12,20 +12,15 @@ public final class TaskMapper
 
     public static TaskDTO toDTO(Task task)
     {
-        Long competenceId = 0L;
-        BigDecimal cost = new BigDecimal(0.0);
         Competence competence = task.getCompetence();
-        if (competence != null) {
-            competenceId = competence.getId();
-            cost = competence.getRate().multiply(new BigDecimal(task.getEstimate()));
-        }
+        Long competenceId = competence != null ? competence.getId() : 0L;
         return new TaskDTO(
                 task.getId(),
                 task.getName(),
                 task.getMinDuration(),
                 competenceId,
                 task.getEstimate(),
-                cost,
+                task.getCost(),
                 task.getStatus()
         );
     }
