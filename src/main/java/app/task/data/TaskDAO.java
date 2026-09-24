@@ -58,6 +58,8 @@ public class TaskDAO implements ICrudDAO<Task>
                 Task task = em.createQuery(
                                 """
                                 SELECT DISTINCT t FROM Task t
+                                LEFT JOIN FETCH t.stage s
+                                LEFT JOIN FETCH s.project
                                 WHERE t.id = :id
                                 """,
                                 Task.class)
@@ -140,6 +142,9 @@ public class TaskDAO implements ICrudDAO<Task>
             {
                 em.getTransaction().begin();
                 Task managed = DBValidator.validateExists(em.find(Task.class, id), id, Task.class);
+                em.createNativeQuery("DELETE FROM task_predecessors WHERE task_id = :id OR predecessor_id = :id")
+                        .setParameter("id", id)
+                        .executeUpdate();
                 em.remove(managed);
                 em.getTransaction().commit();
                 return true;
