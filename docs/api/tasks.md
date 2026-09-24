@@ -12,6 +12,8 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | [`GET`](#get-tasksid) | `/tasks/{id}` | Get a task |
 | [`PUT`](#put-tasksid) | `/tasks/{id}` | Update a task |
 | [`DELETE`](#delete-tasksid) | `/tasks/{id}` | Delete a task |
+| [`POST`](#post-taskstaskidpredecessorspredecessorid) | `/tasks/{taskId}/predecessors/{predecessorId}` | Add a predecessor dependency |
+| [`DELETE`](#delete-taskstaskidpredecessorspredecessorid) | `/tasks/{taskId}/predecessors/{predecessorId}` | Remove a predecessor dependency |
 
 ## Task object
 
@@ -25,6 +27,9 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | `laborDurationInDays` | number | Estimated labor duration (`estimate / 7.5`) |
 | `scheduledDurationInDays` | number | Greater of labor duration and minimum duration |
 | `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
+| `predecessorIds` | number[] | IDs of tasks that must finish before this task can start |
+| `dependencyStartOffsetInDays` | number | Earliest start offset based on predecessor durations; `0` when there are no predecessors |
+| `dependencyFinishOffsetInDays` | number | Start offset plus the task scheduled duration |
 
 ```json
 {
@@ -35,7 +40,10 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
   "estimate": 16.0,
   "laborDurationInDays": 2.1333333333333333,
   "scheduledDurationInDays": 2.1333333333333333,
-  "status": "NOT_STARTED"
+  "status": "NOT_STARTED",
+  "predecessorIds": [],
+  "dependencyStartOffsetInDays": 0.0,
+  "dependencyFinishOffsetInDays": 2.1333333333333333
 }
 ```
 
@@ -138,3 +146,42 @@ Updates supplied task fields. To assign or change a competence, provide both `co
 |---|---|
 | `400` | `id` is invalid |
 | `404` | The task does not exist |
+
+## POST /tasks/{taskId}/predecessors/{predecessorId}
+
+Adds a predecessor to a task. Both tasks must belong to the same project. A task cannot depend on itself, duplicate dependencies are rejected, and a dependency that would create a circular chain is rejected.
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `taskId` | number | Task that will depend on another task |
+| `predecessorId` | number | Task that must be completed first |
+
+**Success response:** `204 No Content`.
+
+**Errors**
+
+| Status | When |
+|---|---|
+| `400` | IDs are invalid, tasks are from different projects, dependency already exists, task depends on itself, or the dependency would create a cycle |
+| `404` | Either task does not exist |
+
+## DELETE /tasks/{taskId}/predecessors/{predecessorId}
+
+Removes an existing predecessor dependency.
+
+**Success response:** `204 No Content`.
+
+**Errors**
+
+| Status | When |
+|---|---|
+| `400` | IDs are invalid or the dependency does not exist |
+| `404` | Either task does not exist |
+
+## Dependency scheduling
+
+Dependency offsets are calculated from the task graph. A task without predecessors starts at offset `0`. A dependent task starts after the predecessor with the latest calculated finish, so multiple tasks with the same predecessor can still run in parallel.
+
+The offsets are relative planning values. Converting them into actual Monday-Friday calendar dates is handled by the working-day scheduling story (US-14).
