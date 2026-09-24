@@ -20,7 +20,7 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | `id` | number | Unique identifier |
 | `name` | string | Task name |
 | `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days |
-| `competenceId` | number | Assigned competence ID; `0` when no competence is assigned |
+| `competence` | object\|null | Assigned competence with only `id` and `name`; `null` when none is assigned |
 | `estimate` | number | Estimated labor hours |
 | `laborDurationInDays` | number | Estimated labor duration (`estimate / 7.5`) |
 | `scheduledDurationInDays` | number | Greater of labor duration and minimum duration |
@@ -31,7 +31,7 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
   "id": 1,
   "name": "Requirements",
   "minimumDurationInDays": 2,
-  "competenceId": 1,
+  "competence": { "id": 1, "name": "carpenter" },
   "estimate": 16.0,
   "laborDurationInDays": 2.1333333333333333,
   "scheduledDurationInDays": 2.1333333333333333,

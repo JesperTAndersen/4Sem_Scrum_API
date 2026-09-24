@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(ApiTest.class)
 class TaskTest
@@ -41,12 +42,13 @@ class TaskTest
         JsonNode assigned = update(taskId, """
                 { "competenceId": %d, "estimate": 15.0 }
                 """.formatted(competenceId));
-        assertEquals(competenceId, assigned.get("competenceId").asLong());
+        assertEquals(competenceId, assigned.get("competence").get("id").asLong());
+        assertEquals("carpentry", assigned.get("competence").get("name").asText());
         assertEquals(15.0, assigned.get("estimate").asDouble());
         assertEquals(2.0, assigned.get("scheduledDurationInDays").asDouble());
 
         JsonNode removed = update(taskId, "{ \"competenceId\": 0 }");
-        assertEquals(0, removed.get("competenceId").asLong());
+        assertTrue(removed.get("competence").isNull());
         assertEquals(0.0, removed.get("estimate").asDouble());
         assertEquals(1.0, removed.get("scheduledDurationInDays").asDouble());
     }
