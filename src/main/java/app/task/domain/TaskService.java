@@ -56,7 +56,7 @@ public class TaskService implements ITaskService
         return update(dto.id(),
                 new TaskUpdateDTO(dto.name(),
                         dto.minimumDurationInDays(),
-                        dto.competenceId(),
+                        dto.competence() == null ? 0L : dto.competence().id(),
                         dto.estimate(),
                         dto.status()
                 )
