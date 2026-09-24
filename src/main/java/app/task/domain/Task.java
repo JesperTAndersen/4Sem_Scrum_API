@@ -8,6 +8,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -28,6 +30,8 @@ public class Task implements IEntity
     private double estimate;
 
     public enum TaskStatus { NOT_STARTED, IN_PROGRESS, DONE }
+
+    @Enumerated(EnumType.STRING)
     private TaskStatus status;
 
     @ManyToOne(fetch = FetchType.EAGER)

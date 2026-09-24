@@ -73,12 +73,68 @@ class TaskTest
                 .when().post("/tasks").then().statusCode(400);
     }
 
+
+    @Test
+    void newlyCreatedTaskHasNotStartedStatus() throws Exception
+    {
+        long taskId = createTask("New task", 1);
+
+        ResponseBodyExtractionOptions response = givenAuthenticated()
+                .when().get("/tasks/" + taskId)
+                .then().statusCode(200).extract().body();
+
+        JsonNode task = ApiTest.objectMapper.readTree(response.asString());
+        assertEquals("NOT_STARTED", task.get("status").asText());
+    }
+
+    @Test
+    void taskStatusCanBeChangedAndIsStored() throws Exception
+    {
+        long taskId = createTask("Status task", 1);
+
+        JsonNode updated = update(taskId, "{ \"status\": \"IN_PROGRESS\" }");
+        assertEquals("IN_PROGRESS", updated.get("status").asText());
+
+        ResponseBodyExtractionOptions response = givenAuthenticated()
+                .when().get("/tasks/" + taskId)
+                .then().statusCode(200).extract().body();
+
+        JsonNode storedTask = ApiTest.objectMapper.readTree(response.asString());
+        assertEquals("IN_PROGRESS", storedTask.get("status").asText());
+    }
+
+    @Test
+    void taskListShowsCurrentStatusForEachTask() throws Exception
+    {
+        long notStartedTaskId = createTask("Not started task", 1);
+        long doneTaskId = createTask("Done task", 1);
+        update(doneTaskId, "{ \"status\": \"DONE\" }");
+
+        ResponseBodyExtractionOptions response = givenAuthenticated()
+                .when().get("/tasks")
+                .then().statusCode(200).extract().body();
+
+        JsonNode tasks = ApiTest.objectMapper.readTree(response.asString());
+        assertEquals("NOT_STARTED", findTask(tasks, notStartedTaskId).get("status").asText());
+        assertEquals("DONE", findTask(tasks, doneTaskId).get("status").asText());
+    }
+
     @Test
     void getRequiresProjectManager()
     {
         given().header("Content-Type", "application/json").when().get("/tasks").then().statusCode(401);
         String employeeToken = JWTUtil.createToken(2L, "employee@example.org", Role.EMPLOYEE);
         given().header("Authorization", "Bearer " + employeeToken).when().get("/tasks").then().statusCode(403);
+    }
+
+
+    private JsonNode findTask(JsonNode tasks, long taskId)
+    {
+        for (JsonNode task : tasks)
+        {
+            if (task.get("id").asLong() == taskId) return task;
+        }
+        throw new AssertionError("Task not found: " + taskId);
     }
 
     private long createTask(String name, int minimumDurationInDays) throws Exception
