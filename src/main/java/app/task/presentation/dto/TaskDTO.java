@@ -15,7 +15,9 @@ public record TaskDTO(
         double laborDurationInDays,
         double scheduledDurationInDays,
         TaskStatus status,
-        List<Long> predecessorIds // TODO added in feat/task-dependencies
+        List<Long> predecessorIds,
+        double dependencyStartOffsetInDays,
+        double dependencyFinishOffsetInDays
 )
 {
 }

@@ -2,7 +2,6 @@ package app.task.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,14 +37,13 @@ public class Task implements IEntity
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // TODO added in feat/task-dependencies
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "task_predecessors",
             joinColumns = @JoinColumn(name = "task_id"),
             inverseJoinColumns = @JoinColumn(name = "predecessor_id")
     )
-    private Set<Task> predecessors;
+    private Set<Task> predecessors = new HashSet<>();
 
     public Task() {}
 
@@ -56,7 +54,6 @@ public class Task implements IEntity
         this.minimumDurationInDays = minimumDurationInDays;
         this.status = TaskStatus.NOT_STARTED;
         if (stage != null) stage.addTask(this);
-        predecessors = new HashSet<>();
     }
 
     public void changeStatus(TaskStatus status) { this.status = status; }
@@ -91,40 +88,64 @@ public class Task implements IEntity
         return Math.max(getLaborDurationInDays(), minimumDurationInDays);
     }
 
-    // TODO added in feat/task-dependencies
-    public void addPredecessor(Task predecessor) {
-        if (predecessor != null) {
-            this.predecessors.add(predecessor);
+    public void addPredecessor(Task predecessor)
+    {
+        if (predecessor != null)
+        {
+            predecessors.add(predecessor);
         }
     }
 
-    // TODO added in feat/task-dependencies
-    public Set<Task> getPredecessors() {
-        return Collections.unmodifiableSet(predecessors); // TODO Is unmodifiable set overengineering?
+    public void removePredecessor(Task predecessor)
+    {
+        predecessors.remove(predecessor);
     }
 
-    // TODO added in feat/task-dependencies
-    public boolean wouldCreateCycleWith(Task potentialPredecessor) {
+    public boolean wouldCreateCycleWith(Task potentialPredecessor)
+    {
         Set<Task> visited = new HashSet<>();
-        return this.canReach(potentialPredecessor, visited);
+        return potentialPredecessor.canReach(this, visited);
     }
 
-    // TODO added in feat/task-dependencies
-    // TODO Had to do some research here to make this work - please validate! (Depth-first Search)
-    private boolean canReach(Task target, Set<Task> visited) {
-        if (this.equals(target)) {
+    private boolean canReach(Task target, Set<Task> visited)
+    {
+        if (this.equals(target))
+        {
             return true;
         }
-        if (visited.contains(this)) {
+        if (visited.contains(this))
+        {
             return false;
         }
+
         visited.add(this);
-        for (Task predecessor : this.predecessors) {
-            if (predecessor.canReach(target, visited)) {
+        for (Task predecessor : predecessors)
+        {
+            if (predecessor.canReach(target, visited))
+            {
                 return true;
             }
         }
         return false;
+    }
+
+    public double getDependencyStartOffsetInDays()
+    {
+        double latestPredecessorFinish = 0;
+        for (Task predecessor : predecessors)
+        {
+            double predecessorFinish = predecessor.getDependencyFinishOffsetInDays();
+            if (predecessorFinish > latestPredecessorFinish)
+            {
+                latestPredecessorFinish = predecessorFinish;
+            }
+        }
+        return latestPredecessorFinish;
+    }
+
+    public double getDependencyFinishOffsetInDays()
+    {
+        return getDependencyStartOffsetInDays() + getScheduledDurationInDays();
     }
 
     @PrePersist
