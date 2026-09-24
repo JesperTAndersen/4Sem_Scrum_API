@@ -4,6 +4,8 @@ import app.competence.domain.Competence;
 import app.task.domain.Task;
 import app.task.presentation.dto.TaskDTO;
 
+import java.util.stream.Collectors;
+
 public final class TaskMapper
 {
     private TaskMapper() {}
@@ -21,6 +23,9 @@ public final class TaskMapper
                 task.getCost(),
                 task.getLaborDurationInDays(),
                 task.getScheduledDurationInDays(),
-                task.getStatus());
+                task.getStatus(),
+                task.getPredecessors().stream().map(Task::getId).collect(Collectors.toList()) // TODO added in feat/task-dependencies
+
+        );
     }
 }

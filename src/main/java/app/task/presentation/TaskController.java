@@ -60,4 +60,12 @@ public class TaskController implements ICrudController
         taskService.delete(RequestUtil.requirePathId(ctx, "id"));
         ctx.status(204);
     }
+
+    // TODO added in feat/task-dependencies
+    public void addPredecessor(Context ctx) {
+        Long taskId = RequestUtil.requirePathId(ctx, "taskId");
+        Long predecessorId = RequestUtil.requirePathId(ctx, "predecessorId");
+        taskService.addPredecessor(taskId, predecessorId);
+        ctx.status(204);
+    }
 }

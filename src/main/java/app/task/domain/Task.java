@@ -2,20 +2,14 @@ package app.task.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import app.competence.domain.Competence;
 import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import jakarta.persistence.*;
 import lombok.Getter;
 
 @Getter
@@ -44,6 +38,15 @@ public class Task implements IEntity
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // TODO added in feat/task-dependencies
+    @ManyToMany
+    @JoinTable(
+            name = "task_predecessors",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "predecessor_id")
+    )
+    private Set<Task> predecessors;
+
     public Task() {}
 
     public Task(Stage stage, String name, int minimumDurationInDays)
@@ -53,6 +56,7 @@ public class Task implements IEntity
         this.minimumDurationInDays = minimumDurationInDays;
         this.status = TaskStatus.NOT_STARTED;
         if (stage != null) stage.addTask(this);
+        predecessors = new HashSet<>();
     }
 
     public void changeStatus(TaskStatus status) { this.status = status; }
@@ -85,6 +89,42 @@ public class Task implements IEntity
     public double getScheduledDurationInDays()
     {
         return Math.max(getLaborDurationInDays(), minimumDurationInDays);
+    }
+
+    // TODO added in feat/task-dependencies
+    public void addPredecessor(Task predecessor) {
+        if (predecessor != null) {
+            this.predecessors.add(predecessor);
+        }
+    }
+
+    // TODO added in feat/task-dependencies
+    public Set<Task> getPredecessors() {
+        return Collections.unmodifiableSet(predecessors); // TODO Is unmodifiable set overengineering?
+    }
+
+    // TODO added in feat/task-dependencies
+    public boolean wouldCreateCycleWith(Task potentialPredecessor) {
+        Set<Task> visited = new HashSet<>();
+        return this.canReach(potentialPredecessor, visited);
+    }
+
+    // TODO added in feat/task-dependencies
+    // TODO Had to do some research here to make this work - please validate! (Depth-first Search)
+    private boolean canReach(Task target, Set<Task> visited) {
+        if (this.equals(target)) {
+            return true;
+        }
+        if (visited.contains(this)) {
+            return false;
+        }
+        visited.add(this);
+        for (Task predecessor : this.predecessors) {
+            if (predecessor.canReach(target, visited)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @PrePersist
