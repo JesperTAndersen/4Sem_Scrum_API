@@ -28,6 +28,8 @@ public class TaskRoutes
                 post(taskController::create, Role.PROJECT_MANAGER);
                 put("/{id}", taskController::update, Role.PROJECT_MANAGER);
                 delete("/{id}", taskController::delete, Role.PROJECT_MANAGER);
+                post("/{taskId}/predecessors/{predecessorId}", taskController::addPredecessor, Role.PROJECT_MANAGER);
+                delete("/{taskId}/predecessors/{predecessorId}", taskController::removePredecessor, Role.PROJECT_MANAGER);
             });
     }
 }

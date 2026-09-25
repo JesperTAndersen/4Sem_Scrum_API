@@ -100,6 +100,62 @@ public class TaskService implements ITaskService
 
     @Override public void delete(Long id) { getExistingTask(id); taskDAO.delete(id); }
 
+    @Override
+    public void addPredecessor(Long taskId, Long predecessorId)
+    {
+        ValidationUtil.validateId(taskId);
+        ValidationUtil.validateId(predecessorId);
+
+        Task task = getExistingTask(taskId);
+        Task predecessor = getExistingTask(predecessorId);
+
+        validateDependency(task, predecessor);
+
+        if (task.getPredecessors().contains(predecessor))
+        {
+            throw new BadRequestException("Dependency already exists");
+        }
+
+        task.addPredecessor(predecessor);
+        taskDAO.update(task);
+    }
+
+    @Override
+    public void removePredecessor(Long taskId, Long predecessorId)
+    {
+        ValidationUtil.validateId(taskId);
+        ValidationUtil.validateId(predecessorId);
+
+        Task task = getExistingTask(taskId);
+        Task predecessor = getExistingTask(predecessorId);
+
+        if (!task.getPredecessors().contains(predecessor))
+        {
+            throw new BadRequestException("Dependency does not exist");
+        }
+
+        task.removePredecessor(predecessor);
+        taskDAO.update(task);
+    }
+
+    private void validateDependency(Task task, Task predecessor)
+    {
+        if (!task.getStage().getProject().getId().equals(predecessor.getStage().getProject().getId()))
+        {
+            throw new BadRequestException("Tasks must be in the same project");
+        }
+
+        if (task.equals(predecessor))
+        {
+            throw new BadRequestException("Task cannot depend on itself");
+        }
+
+        if (task.wouldCreateCycleWith(predecessor))
+        {
+            throw new BadRequestException("Circular dependency detected");
+        }
+    }
+
     private void validateName(String name) { ValidationUtil.validateNotBlank(name, "Task name"); }
 
     private void validateMinimumDuration(Integer duration)

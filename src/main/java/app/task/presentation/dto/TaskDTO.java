@@ -1,6 +1,7 @@
 package app.task.presentation.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import app.competence.presentation.dto.SlimCompetenceDTO;
 import app.task.domain.Task.TaskStatus;
@@ -14,6 +15,10 @@ public record TaskDTO(
         BigDecimal cost,
         double laborDurationInDays,
         double scheduledDurationInDays,
-        TaskStatus status)
+        TaskStatus status,
+        List<Long> predecessorIds,
+        double dependencyStartOffsetInDays,
+        double dependencyFinishOffsetInDays
+)
 {
 }
