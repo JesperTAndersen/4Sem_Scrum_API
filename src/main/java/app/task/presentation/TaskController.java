@@ -6,6 +6,7 @@ import app.task.domain.ITaskService;
 import app.shared.presentation.ICrudController;
 import app.utils.RequestUtil;
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 
 import java.util.Objects;
 
@@ -35,13 +36,13 @@ public class TaskController implements ICrudController
     @Override
     public void get(Context ctx)
     {
-        ctx.status(200).json(taskService.get(RequestUtil.requirePathId(ctx, "id")));
+        ctx.status(HttpStatus.OK).json(taskService.get(RequestUtil.requirePathId(ctx, "id")));
     }
 
     @Override
     public void getAll(Context ctx)
     {
-        ctx.status(200).json(taskService.getAll());
+        ctx.status(HttpStatus.OK).json(taskService.getAll());
     }
 
     @Override
@@ -51,14 +52,14 @@ public class TaskController implements ICrudController
         TaskUpdateDTO dto = ctx.bodyValidator(TaskUpdateDTO.class)
                 .check(Objects::nonNull, "Task payload is required")
                 .get();
-        ctx.status(200).json(taskService.update(id, dto));
+        ctx.status(HttpStatus.OK).json(taskService.update(id, dto));
     }
 
     @Override
     public void delete(Context ctx)
     {
         taskService.delete(RequestUtil.requirePathId(ctx, "id"));
-        ctx.status(204);
+        ctx.status(HttpStatus.NO_CONTENT);
     }
 
     public void addPredecessor(Context ctx)
@@ -66,7 +67,7 @@ public class TaskController implements ICrudController
         Long taskId = RequestUtil.requirePathId(ctx, "taskId");
         Long predecessorId = RequestUtil.requirePathId(ctx, "predecessorId");
         taskService.addPredecessor(taskId, predecessorId);
-        ctx.status(204);
+        ctx.status(HttpStatus.NO_CONTENT);
     }
 
     public void removePredecessor(Context ctx)
@@ -74,6 +75,6 @@ public class TaskController implements ICrudController
         Long taskId = RequestUtil.requirePathId(ctx, "taskId");
         Long predecessorId = RequestUtil.requirePathId(ctx, "predecessorId");
         taskService.removePredecessor(taskId, predecessorId);
-        ctx.status(204);
+        ctx.status(HttpStatus.NO_CONTENT);
     }
 }
