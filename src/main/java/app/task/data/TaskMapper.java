@@ -24,6 +24,10 @@ public final class TaskMapper
                 task.getCost(),
                 task.getLaborDurationInDays(),
                 task.getScheduledDurationInDays(),
-                task.getStatus());
+                task.getStatus(),
+                task.getPredecessors().stream().map(Task::getId).sorted().toList(),
+                task.getDependencyStartOffsetInDays(),
+                task.getDependencyFinishOffsetInDays()
+        );
     }
 }

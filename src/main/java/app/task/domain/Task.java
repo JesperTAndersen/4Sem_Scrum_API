@@ -2,20 +2,13 @@ package app.task.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import app.competence.domain.Competence;
 import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import jakarta.persistence.*;
 import lombok.Getter;
 
 @Getter
@@ -43,6 +36,14 @@ public class Task implements IEntity
     private Stage stage;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "task_predecessors",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "predecessor_id")
+    )
+    private Set<Task> predecessors = new HashSet<>();
 
     public Task() {}
 
@@ -85,6 +86,66 @@ public class Task implements IEntity
     public double getScheduledDurationInDays()
     {
         return Math.max(getLaborDurationInDays(), minimumDurationInDays);
+    }
+
+    public void addPredecessor(Task predecessor)
+    {
+        if (predecessor != null)
+        {
+            predecessors.add(predecessor);
+        }
+    }
+
+    public void removePredecessor(Task predecessor)
+    {
+        predecessors.remove(predecessor);
+    }
+
+    public boolean wouldCreateCycleWith(Task potentialPredecessor)
+    {
+        Set<Task> visited = new HashSet<>();
+        return potentialPredecessor.canReach(this, visited);
+    }
+
+    private boolean canReach(Task target, Set<Task> visited)
+    {
+        if (this.equals(target))
+        {
+            return true;
+        }
+        if (visited.contains(this))
+        {
+            return false;
+        }
+
+        visited.add(this);
+        for (Task predecessor : predecessors)
+        {
+            if (predecessor.canReach(target, visited))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public double getDependencyStartOffsetInDays()
+    {
+        double latestPredecessorFinish = 0;
+        for (Task predecessor : predecessors)
+        {
+            double predecessorFinish = predecessor.getDependencyFinishOffsetInDays();
+            if (predecessorFinish > latestPredecessorFinish)
+            {
+                latestPredecessorFinish = predecessorFinish;
+            }
+        }
+        return latestPredecessorFinish;
+    }
+
+    public double getDependencyFinishOffsetInDays()
+    {
+        return getDependencyStartOffsetInDays() + getScheduledDurationInDays();
     }
 
     @PrePersist

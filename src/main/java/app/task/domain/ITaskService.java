@@ -10,4 +10,6 @@ import app.task.presentation.dto.TaskUpdateDTO;
 public interface ITaskService extends ICrudService<TaskCreateDTO, TaskDTO>
 {
     TaskDTO update(Long id, TaskUpdateDTO dto);
+    void addPredecessor(Long taskId, Long predecessorId);
+    void removePredecessor(Long taskId, Long predecessorId);
 }
