@@ -1,16 +1,23 @@
 package app.project.data;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import app.project.domain.Project;
+import app.project.domain.ProjectStatus;
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
 import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
-import app.project.domain.Project;
-import app.project.domain.ProjectStatus;
+import app.stage.data.StageMapper;
+import app.stage.domain.Stage;
+import app.stage.presentation.dto.StageDTO;
+import app.task.domain.Task;
+import app.task.presentation.dto.TaskCountDTO;
 import app.user.data.UserMapper;
 import app.user.domain.User;
-import app.stage.data.StageMapper;
-import app.task.presentation.dto.TaskCountDTO;
-import app.task.domain.Task;
 
 public class ProjectMapper
 {
@@ -21,6 +28,18 @@ public class ProjectMapper
     public static ProjectDTO toDTO(Project project)
     {
         TaskCountDTO taskCount = buildTaskCountDTO(project);
+
+        // TODO: put endDate in projectDTO
+        LocalDate endDate = project.getStartDate();
+        Set<Stage> stages = project.getStages();
+        List<StageDTO> stageDTOs = new ArrayList<>(stages.size());
+        for (Stage stage : stages) {
+            StageDTO dto = StageMapper.toDTO(stage, project.getStartDate());
+            stageDTOs.add(dto);
+            if (dto.endDate().isAfter(endDate)) {
+                endDate = dto.startDate();
+            }
+        }
 
         return new ProjectDTO(
                 project.getId(),
@@ -35,9 +54,7 @@ public class ProjectMapper
                 project.getUpdatedAt(),
                 project.getTotalEstimatedHours(),
                 project.getTotalCost(),
-                project.getStages().stream()
-                        .map(StageMapper::toDTO)
-                        .toList(),
+                stageDTOs,
                 taskCount
         );
     }
