@@ -64,7 +64,7 @@ public class Stage implements IEntity
     {
         BigDecimal total = new BigDecimal(0);
         for (Task task : tasks) {
-            total.add(task.getCost());
+            total = total.add(task.getCost());
         }
         return total;
     }
