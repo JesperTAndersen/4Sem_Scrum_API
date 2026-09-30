@@ -81,7 +81,8 @@ public class ProjectService implements IProjectService
         );
 
         projectDAO.update(project);
-        return ProjectMapper.toDTO(getExistingProject(id), scheduleService.calculateFinishDate(project));
+        Project updatedProject = getExistingProject(id);
+        return ProjectMapper.toDTO(updatedProject, scheduleService.calculateFinishDate(updatedProject));
     }
 
     @Override

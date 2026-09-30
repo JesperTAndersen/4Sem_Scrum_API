@@ -41,6 +41,7 @@ class ProjectServiceTest
     void setUp()
     {
         projectDAO = new InMemoryProjectDAO();
+        scheduleService = new ScheduleService();
         projectService = new ProjectService(projectDAO, new InMemoryUserDAO(MANAGER_USER), scheduleService);
     }
 

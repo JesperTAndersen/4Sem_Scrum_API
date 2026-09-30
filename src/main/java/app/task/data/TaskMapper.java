@@ -1,11 +1,12 @@
 package app.task.data;
 
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 
 import app.competence.domain.Competence;
 import app.competence.presentation.dto.SlimCompetenceDTO;
+import app.project.domain.WorkingDaySchedule;
 import app.task.domain.Task;
+import app.task.presentation.dto.SlimTaskDTO;
 import app.task.presentation.dto.TaskDTO;
 
 public final class TaskMapper
@@ -15,10 +16,16 @@ public final class TaskMapper
     /* FIXME: change to SlimTaskDTO */
     public static TaskDTO toDTO(Task task)
     {
+        return toDTO(task, projectStartDate(task));
+    }
+
+    public static TaskDTO toDTO(Task task, LocalDate projectStartDate)
+    {
         Competence competence = task.getCompetence();
         SlimCompetenceDTO competenceDTO = competence == null
                 ? null
                 : new SlimCompetenceDTO(competence.getId(), competence.getName());
+        WorkingDaySchedule.TaskDates dates = WorkingDaySchedule.calculateTaskDates(task, projectStartDate);
         return new TaskDTO(
                 task.getId(),
                 task.getName(),
@@ -26,8 +33,8 @@ public final class TaskMapper
                 competenceDTO,
                 task.getEstimate(),
                 task.getCost(),
-                LocalDate.ofEpochDay(0),
-                LocalDate.ofEpochDay(0),
+                dates.startDate(),
+                dates.endDate(),
                 task.getLaborDurationInDays(),
                 task.getScheduledDurationInDays(),
                 task.getStatus(),
@@ -37,27 +44,31 @@ public final class TaskMapper
         );
     }
 
-    public static TaskDTO toDTO(Task task, LocalDate startDate)
+    public static SlimTaskDTO toSlimDTO(Task task)
     {
-        Competence competence = task.getCompetence();
-        SlimCompetenceDTO competenceDTO = competence == null
-                ? null
-                : new SlimCompetenceDTO(competence.getId(), competence.getName());
-        return new TaskDTO(
+        return toSlimDTO(task, projectStartDate(task));
+    }
+
+    public static SlimTaskDTO toSlimDTO(Task task, LocalDate projectStartDate)
+    {
+        WorkingDaySchedule.TaskDates dates = WorkingDaySchedule.calculateTaskDates(task, projectStartDate);
+        return new SlimTaskDTO(
                 task.getId(),
                 task.getName(),
-                task.getMinimumDurationInDays(),
-                competenceDTO,
-                task.getEstimate(),
-                task.getCost(),
-                startDate.plusDays((int)task.getDependencyStartOffsetInDays()),
-                startDate.plusDays((int)task.getDependencyFinishOffsetInDays()),
-                task.getLaborDurationInDays(),
-                task.getScheduledDurationInDays(),
+                dates.startDate(),
+                dates.endDate(),
                 task.getStatus(),
                 task.getPredecessors().stream().map(Task::getId).sorted().toList(),
                 task.getDependencyStartOffsetInDays(),
                 task.getDependencyFinishOffsetInDays()
-                );
+        );
     }
+
+    private static LocalDate projectStartDate(Task task)
+    {
+        return task.getStage() == null || task.getStage().getProject() == null
+                ? LocalDate.ofEpochDay(0)
+                : task.getStage().getProject().getStartDate();
+    }
+
 }

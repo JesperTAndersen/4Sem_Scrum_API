@@ -9,8 +9,11 @@ public class ScheduleService implements IScheduleService
     @Override
     public ScheduleDTO calculateFinishDate(Project project)
     {
-        //TODO implement logic etc stream calculated date data from related stages or tasks.
-        LocalDate calculatedDate = LocalDate.now();
+        LocalDate calculatedDate = project.getStages().stream()
+                .flatMap(stage -> stage.getTasks().stream())
+                .map(task -> WorkingDaySchedule.calculateTaskDates(task, project.getStartDate()).endDate())
+                .max(LocalDate::compareTo)
+                .orElse(project.getStartDate());
         boolean feasible = !calculatedDate.isAfter(project.getDeadline());
 
         return new ScheduleDTO(calculatedDate, feasible);

@@ -34,16 +34,11 @@ public class ProjectMapper
     {
         TaskCountDTO taskCount = buildTaskCountDTO(project);
 
-        // TODO: put endDate in projectDTO
-        LocalDate endDate = project.getStartDate();
         Set<Stage> stages = project.getStages();
         List<StageDTO> stageDTOs = new ArrayList<>(stages.size());
         for (Stage stage : stages) {
             StageDTO dto = StageMapper.toDTO(stage, project.getStartDate());
             stageDTOs.add(dto);
-            if (dto.endDate().isAfter(endDate)) {
-                endDate = dto.endDate();
-            }
         }
 
         return new ProjectDTO(
@@ -61,9 +56,6 @@ public class ProjectMapper
                 project.getTotalCost(),
                 stageDTOs,
                 taskCount,
-                project.getStages().stream()
-                        .map(StageMapper::toDTO)
-                        .toList(),
                 schedule
         );
     }

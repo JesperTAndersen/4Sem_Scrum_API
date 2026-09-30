@@ -24,6 +24,7 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days |
 | `competence` | object\|null | Assigned competence with only `id` and `name`; `null` when none is assigned |
 | `estimate` | number | Estimated labor hours |
+| `startDate`, `endDate` | date | Calculated Monday-Friday schedule dates; `endDate` is inclusive |
 | `laborDurationInDays` | number | Estimated labor duration (`estimate / 7.5`) |
 | `scheduledDurationInDays` | number | Greater of labor duration and minimum duration |
 | `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
@@ -46,6 +47,10 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
   "dependencyFinishOffsetInDays": 2.1333333333333333
 }
 ```
+
+## Slim task object
+
+Tasks nested in a stage or project response include only `id`, `name`, calculated `startDate` and `endDate`, `status`, and dependency fields (`predecessorIds`, `dependencyStartOffsetInDays`, and `dependencyFinishOffsetInDays`).
 
 ---
 

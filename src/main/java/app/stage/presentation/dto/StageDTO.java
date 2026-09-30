@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import app.task.presentation.dto.TaskDTO;
+import app.task.presentation.dto.SlimTaskDTO;
 
 public record StageDTO(
         Long id,
@@ -13,6 +13,6 @@ public record StageDTO(
         BigDecimal totalCost,
         LocalDate startDate,
         LocalDate endDate,
-        List<TaskDTO> tasks)
+        List<SlimTaskDTO> tasks)
 {
 }
