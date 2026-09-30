@@ -10,13 +10,12 @@ import app.stage.domain.Stage;
 import app.stage.presentation.dto.StageDTO;
 import app.task.data.TaskMapper;
 import app.task.domain.Task;
-import app.task.presentation.dto.TaskDTO;
+import app.task.presentation.dto.SlimTaskDTO;
 
 public final class StageMapper
 {
     private StageMapper() {}
 
-    /* FIXME: change to SlimStageDTO */
     public static StageDTO toDTO(Stage stage)
     {
         return new StageDTO(
@@ -26,7 +25,7 @@ public final class StageMapper
                 stage.getTotalCost(),
                 LocalDate.ofEpochDay(0),
                 LocalDate.ofEpochDay(0),
-                stage.getTasks().stream().map(TaskMapper::toDTO).toList()
+                stage.getTasks().stream().map(TaskMapper::toSlimDTO).toList()
         );
     }
 
@@ -34,9 +33,9 @@ public final class StageMapper
     {
         LocalDate endDate = startDate;
         Set<Task> tasks = stage.getTasks();
-        List<TaskDTO> taskDTOs = new ArrayList<>(tasks.size());
+        List<SlimTaskDTO> taskDTOs = new ArrayList<>(tasks.size());
         for (Task task : tasks) {
-            TaskDTO dto = TaskMapper.toDTO(task, startDate);
+            SlimTaskDTO dto = TaskMapper.toSlimDTO(task, startDate);
             taskDTOs.add(dto);
             if (dto.endDate().isAfter(endDate))
                     endDate = dto.endDate();

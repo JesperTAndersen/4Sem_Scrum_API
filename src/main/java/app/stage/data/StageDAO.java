@@ -58,6 +58,7 @@ public class StageDAO implements IStageDAO
                 Stage stage = em.createQuery(
                                 """
                                 SELECT DISTINCT s FROM Stage s
+                                LEFT JOIN FETCH s.project
                                 LEFT JOIN FETCH s.tasks t
                                 LEFT JOIN FETCH t.competence
                                 WHERE s.id = :id
@@ -90,8 +91,9 @@ public class StageDAO implements IStageDAO
             {
                 TypedQuery<Stage> query = em.createQuery(
                         """
-                        SELECT DISTINCT s FROM Stage s
-                        LEFT JOIN FETCH s.tasks t
+                                SELECT DISTINCT s FROM Stage s
+                                LEFT JOIN FETCH s.project
+                                LEFT JOIN FETCH s.tasks t
                         LEFT JOIN FETCH t.competence
                         ORDER BY s.id
                         """,

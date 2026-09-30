@@ -1,6 +1,6 @@
 # Projects
 
-Projects are top-level work containers. A project detail includes its stages, each stage's tasks, and each task's competences.
+Projects are top-level work containers. A project detail includes its stages and slim task summaries. Use `/tasks/{id}` for a task's full assignment, estimate, cost, and duration details.
 
 **Base path:** `/api/v1/projects`  
 **Access:** `PROJECT_MANAGER`
@@ -26,6 +26,9 @@ Projects are top-level work containers. A project detail includes its stages, ea
 | `totalEstimatedHours` | number | Sum of estimates in all stages |
 | `totalCost` | number | Sum of costs in all stages |
 | `stages` | Stage[] | Full nested stage hierarchy |
+| `schedule` | object | Calculated schedule: `calculatedFinishDate` and `feasible` |
+
+Task dates are recalculated whenever a project is read. Scheduling starts at the project start date, excludes Saturday and Sunday, respects predecessor dependencies, and does not prevent saving a project whose plan is infeasible.
 
 ## GET /projects
 

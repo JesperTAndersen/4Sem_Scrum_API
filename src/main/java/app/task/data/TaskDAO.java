@@ -90,6 +90,8 @@ public class TaskDAO implements ICrudDAO<Task>
                 TypedQuery<Task> query = em.createQuery(
                         """
                         SELECT DISTINCT t FROM Task t
+                        LEFT JOIN FETCH t.stage s
+                        LEFT JOIN FETCH s.project
                         ORDER BY t.id
                         """,
                         Task.class);

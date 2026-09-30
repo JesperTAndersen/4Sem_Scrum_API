@@ -11,6 +11,11 @@ import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
 import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
+import app.project.presentation.dto.*;
+import app.project.domain.Project;
+import app.project.domain.ProjectStatus;
+import app.user.data.UserMapper;
+import app.user.domain.User;
 import app.stage.data.StageMapper;
 import app.stage.domain.Stage;
 import app.stage.presentation.dto.StageDTO;
@@ -25,20 +30,15 @@ public class ProjectMapper
     {
     }
 
-    public static ProjectDTO toDTO(Project project)
+    public static ProjectDTO toDTO(Project project, ScheduleDTO schedule)
     {
         TaskCountDTO taskCount = buildTaskCountDTO(project);
 
-        // TODO: put endDate in projectDTO
-        LocalDate endDate = project.getStartDate();
         Set<Stage> stages = project.getStages();
         List<StageDTO> stageDTOs = new ArrayList<>(stages.size());
         for (Stage stage : stages) {
             StageDTO dto = StageMapper.toDTO(stage, project.getStartDate());
             stageDTOs.add(dto);
-            if (dto.endDate().isAfter(endDate)) {
-                endDate = dto.startDate();
-            }
         }
 
         return new ProjectDTO(
@@ -55,11 +55,12 @@ public class ProjectMapper
                 project.getTotalEstimatedHours(),
                 project.getTotalCost(),
                 stageDTOs,
-                taskCount
+                taskCount,
+                schedule
         );
     }
 
-    public static SlimProjectDTO toSlimProjectDTO(Project project)
+    public static SlimProjectDTO toSlimProjectDTO(Project project, ScheduleDTO schedule)
     {
         TaskCountDTO taskCount = buildTaskCountDTO(project);
 
@@ -71,7 +72,8 @@ public class ProjectMapper
                 project.getStartDate(),
                 project.getDeadline(),
                 taskCount,
-                project.getStatus()
+                project.getStatus(),
+                schedule
 
         );
     }
