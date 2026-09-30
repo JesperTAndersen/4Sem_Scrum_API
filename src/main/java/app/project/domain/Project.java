@@ -85,7 +85,7 @@ public class Project implements IEntity
     {
         BigDecimal total = new BigDecimal(0);
         for (Stage stage : stages) {
-            total.add(stage.getTotalCost());
+            total = total.add(stage.getTotalCost());
         }
         return total;
     }
