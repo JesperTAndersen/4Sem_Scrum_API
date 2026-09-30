@@ -22,11 +22,13 @@ public class ProjectService implements IProjectService
 {
     private final IProjectDAO projectDAO;
     private final IReadDAO<User> userDAO;
+    private final IScheduleService scheduleService;
 
-    public ProjectService(IProjectDAO projectDAO, IReadDAO<User> userDAO)
+    public ProjectService(IProjectDAO projectDAO, IReadDAO<User> userDAO, IScheduleService scheduleService)
     {
         this.projectDAO = projectDAO;
         this.userDAO = userDAO;
+        this.scheduleService = scheduleService;
     }
 
     @Override
@@ -42,20 +44,24 @@ public class ProjectService implements IProjectService
         );
 
         Project createdProject = projectDAO.create(project);
-        return ProjectMapper.toDTO(createdProject);
+        return ProjectMapper.toDTO(createdProject, scheduleService.calculateFinishDate(project));
     }
 
     @Override
     public ProjectDTO get(Long id)
     {
-        return ProjectMapper.toDTO(getExistingProject(id));
+        Project project = getExistingProject(id);
+        return ProjectMapper.toDTO(project, scheduleService.calculateFinishDate(project));
     }
 
     @Override
     public List<SlimProjectDTO> getAll()
     {
         return projectDAO.getAll().stream()
-                .map(ProjectMapper::toSlimProjectDTO)
+                .map(project -> ProjectMapper.toSlimProjectDTO(
+                        project,
+                        scheduleService.calculateFinishDate(project)
+                ))
                 .toList();
     }
 
@@ -75,7 +81,7 @@ public class ProjectService implements IProjectService
         );
 
         projectDAO.update(project);
-        return ProjectMapper.toDTO(getExistingProject(id));
+        return ProjectMapper.toDTO(getExistingProject(id), scheduleService.calculateFinishDate(project));
     }
 
     @Override

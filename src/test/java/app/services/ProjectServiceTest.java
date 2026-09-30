@@ -2,6 +2,7 @@ package app.services;
 
 import app.exceptions.BadRequestException;
 import app.exceptions.UnauthorizedException;
+import app.project.domain.ScheduleService;
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
@@ -34,12 +35,13 @@ class ProjectServiceTest
 
     private InMemoryProjectDAO projectDAO;
     private ProjectService projectService;
+    private ScheduleService scheduleService;
 
     @BeforeEach
     void setUp()
     {
         projectDAO = new InMemoryProjectDAO();
-        projectService = new ProjectService(projectDAO, new InMemoryUserDAO(MANAGER_USER));
+        projectService = new ProjectService(projectDAO, new InMemoryUserDAO(MANAGER_USER), scheduleService);
     }
 
     @Test
