@@ -37,7 +37,7 @@ public class ProjectMapper
             StageDTO dto = StageMapper.toDTO(stage, project.getStartDate());
             stageDTOs.add(dto);
             if (dto.endDate().isAfter(endDate)) {
-                endDate = dto.startDate();
+                endDate = dto.endDate();
             }
         }
 

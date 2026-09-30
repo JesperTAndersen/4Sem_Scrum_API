@@ -40,7 +40,6 @@ public final class TaskMapper
     public static TaskDTO toDTO(Task task, LocalDate startDate)
     {
         Competence competence = task.getCompetence();
-        double schedDays = task.getScheduledDurationInDays();
         SlimCompetenceDTO competenceDTO = competence == null
                 ? null
                 : new SlimCompetenceDTO(competence.getId(), competence.getName());
@@ -51,10 +50,10 @@ public final class TaskMapper
                 competenceDTO,
                 task.getEstimate(),
                 task.getCost(),
-                startDate,
-                startDate.plusDays((long)schedDays),
+                startDate.plusDays((int)task.getDependencyStartOffsetInDays()),
+                startDate.plusDays((int)task.getDependencyFinishOffsetInDays()),
                 task.getLaborDurationInDays(),
-                schedDays,
+                task.getScheduledDurationInDays(),
                 task.getStatus(),
                 task.getPredecessors().stream().map(Task::getId).sorted().toList(),
                 task.getDependencyStartOffsetInDays(),
