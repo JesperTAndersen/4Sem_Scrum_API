@@ -47,6 +47,7 @@ public class Employee
         this.firstName = firstName;
         this.lastName = lastName;
         this.dailyCapacity = dailyCapacity;
+        this.active = true;
     }
 
     public void update(String firstName, String lastName, double dailyCapacity)
