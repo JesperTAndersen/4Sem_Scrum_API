@@ -1,29 +1,13 @@
 package app.employee.data;
 
+import app.employee.domain.Employee;
+
 import java.util.List;
 
 public class EmployeeDAO implements IEmployeeDAO
 {
     @Override
-    public Object create(Object o)
-    {
-        return null;
-    }
-
-    @Override
-    public Object get(Long id)
-    {
-        return null;
-    }
-
-    @Override
-    public List getAll()
-    {
-        return List.of();
-    }
-
-    @Override
-    public Object update(Object o)
+    public Employee create(Employee employee)
     {
         return null;
     }
@@ -32,6 +16,24 @@ public class EmployeeDAO implements IEmployeeDAO
     public boolean delete(Long id)
     {
         return false;
+    }
+
+    @Override
+    public Employee get(Long id)
+    {
+        return null;
+    }
+
+    @Override
+    public List<Employee> getAll()
+    {
+        return List.of();
+    }
+
+    @Override
+    public Employee update(Employee employee)
+    {
+        return null;
     }
 
     @Override
