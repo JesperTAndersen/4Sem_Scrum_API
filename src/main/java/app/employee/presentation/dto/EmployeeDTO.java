@@ -11,7 +11,7 @@ public record EmployeeDTO(
         String lastName,
         double dailyCapacity,
         List<Competence> competences,
-        LocalDateTime createdaAt,
+        LocalDateTime createdAt,
         LocalDateTime updateAt)
 {
 }
