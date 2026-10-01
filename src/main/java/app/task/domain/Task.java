@@ -6,9 +6,22 @@ import java.util.HashSet;
 import java.util.Set;
 
 import app.competence.domain.Competence;
+import app.employee.domain.Employee;
 import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.Getter;
 
 @Getter
@@ -44,6 +57,9 @@ public class Task implements IEntity
             inverseJoinColumns = @JoinColumn(name = "predecessor_id")
     )
     private Set<Task> predecessors = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    private Set<Employee> employees = new HashSet<>();
 
     public Task() {}
 
@@ -146,6 +162,16 @@ public class Task implements IEntity
     public double getDependencyFinishOffsetInDays()
     {
         return getDependencyStartOffsetInDays() + getScheduledDurationInDays();
+    }
+
+    public void addEmpoyee(Employee employee)
+    {
+        employees.add(employee);
+    }
+
+    public void remEmpoyee(Employee employee)
+    {
+        employees.remove(employee);
     }
 
     @PrePersist
