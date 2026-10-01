@@ -2,12 +2,36 @@ package app.employee.data;
 
 import java.util.List;
 
+import jakarta.persistence.EntityManagerFactory;
+
 public class EmployeeDAO implements IEmployeeDAO
 {
+    private final EntityManagerFactory emf;
+
+    public EmployeeDAO(EntityManagerFactory emf)
+    {
+        this.emf = emf;
+    }
     @Override
     public Object create(Object o)
     {
-        return null;
+        ValidationUtil.validateNotNull(user, "User");
+
+        try(EntityManager em = emf.createEntityManager())
+        {
+            try
+            {
+                em.getTransaction().begin();
+                em.persist(user);
+                em.getTransaction().commit();
+                return user;
+            }
+            catch (PersistenceException e)
+            {
+                TransactionUtil.rollback(em);
+                throw new DatabaseException("Failed to create user", e);
+            }
+        }
     }
 
     @Override
