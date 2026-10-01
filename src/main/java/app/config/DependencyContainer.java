@@ -2,6 +2,12 @@ package app.config;
 
 import app.competence.presentation.CompetenceController;
 import app.competence.presentation.ICompetenceController;
+import app.employee.data.EmployeeDAO;
+import app.employee.data.IEmployeeDAO;
+import app.employee.domain.EmployeeService;
+import app.employee.domain.IEmployeeService;
+import app.employee.presentation.EmployeeController;
+import app.employee.presentation.IEmployeeController;
 import app.project.domain.IScheduleService;
 import app.project.domain.ScheduleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,6 +60,7 @@ public final class DependencyContainer
     private final IStageDAO stageDAO;
     private final TaskDAO taskDAO;
     private final IProjectDAO projectDAO;
+    private final IEmployeeDAO employeeDAO;
 
     @Getter
     private final IUserService userService;
@@ -83,6 +90,10 @@ public final class DependencyContainer
     private final TaskController taskController;
     @Getter
     private final IScheduleService scheduleService;
+    @Getter
+    private final IEmployeeService employeeService;
+    @Getter
+    private final IEmployeeController employeeController;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {
@@ -112,6 +123,10 @@ public final class DependencyContainer
         this.taskDAO = new TaskDAO(entityManagerFactory);
         this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO);
         this.taskController = new TaskController(taskService);
+
+        this.employeeDAO = new EmployeeDAO(entityManagerFactory);
+        this.employeeService = new EmployeeService(employeeDAO);
+        this.employeeController = new EmployeeController(employeeService);
     }
 
     public static DependencyContainer getInstance()

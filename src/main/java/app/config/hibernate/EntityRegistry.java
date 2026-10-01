@@ -3,6 +3,7 @@ package app.config.hibernate;
 import org.hibernate.cfg.Configuration;
 
 import app.competence.domain.Competence;
+import app.employee.domain.Employee;
 import app.project.domain.Project;
 import app.stage.domain.Stage;
 import app.task.domain.Task;
@@ -22,6 +23,7 @@ final class EntityRegistry
         configuration.addAnnotatedClass(Stage.class);
         configuration.addAnnotatedClass(Task.class);
         configuration.addAnnotatedClass(User.class);
+        configuration.addAnnotatedClass(Employee.class);
         // TODO: Add more entities here...
     }
 }
