@@ -6,4 +6,5 @@ package app.employee.domain;
  */
 public class Employee
 {
+    //Implement employyee
 }
