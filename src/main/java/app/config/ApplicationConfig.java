@@ -4,6 +4,7 @@ import java.util.Map;
 
 import app.exceptions.ConfigurationException;
 import app.exceptions.ErrorResponse;
+import app.employee.presentation.EmployeeRoutes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +86,8 @@ public class ApplicationConfig
                 new TaskRoutes(dependencyContainer.getTaskController()),
                 new CompetenceRoutes(dependencyContainer.getCompetenceController()),
                 new ProjectRoutes((dependencyContainer.getProjectController())),
-                new SecurityRoutes(dependencyContainer.getSecurityController())
+                new SecurityRoutes(dependencyContainer.getSecurityController()),
+                new EmployeeRoutes(dependencyContainer.getEmployeeController())
         );
     }
 
