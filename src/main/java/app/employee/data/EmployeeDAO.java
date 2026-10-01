@@ -1,6 +1,6 @@
 package app.employee.data;
 
-import java.util.List;
+import app.employee.domain.Employee;
 
 import app.employee.domain.Employee;
 import app.exceptions.DatabaseException;
@@ -17,11 +17,10 @@ import jakarta.persistence.TypedQuery;
 
 public class EmployeeDAO implements IEmployeeDAO
 {
-    private final EntityManagerFactory emf;
-
-    public EmployeeDAO(EntityManagerFactory emf)
+    @Override
+    public Employee create(Employee employee)
     {
-        this.emf = emf;
+        return null;
     }
 
     @Override

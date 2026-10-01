@@ -1,7 +1,9 @@
 package app.employee.domain;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import app.competence.domain.Competence;
@@ -13,8 +15,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Entity
 public class Employee
@@ -31,7 +37,7 @@ public class Employee
     private boolean active;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    private Set<Competence> competences = new HashSet<>();
+    private List<Competence> competences = new ArrayList<>();
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
