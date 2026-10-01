@@ -1,5 +1,9 @@
 package app.employee.presentation.dto;
 
-public record EmployeeCreateDTO()
+public record EmployeeCreateDTO(
+        String firstName,
+        String lastName,
+        double dailyCapacity
+)
 {
 }

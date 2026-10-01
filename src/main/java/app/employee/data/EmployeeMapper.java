@@ -14,12 +14,21 @@ public class EmployeeMapper
         }
 
         return new EmployeeDTO(
-
+                employee.getId(),
+                employee.getFirstName(),
+                employee.getLastName(),
+                employee.getDailyCapacity(),
+                employee.getCompetences(),
+                employee.getCreatedAt(),
+                employee.getUpdatedAt()
         );
     }
 
     public static Employee toEntity(EmployeeCreateDTO dto)
     {
-        return new Employee();
+        return new Employee(
+                dto.firstName().trim(),
+                dto.lastName().trim(),
+                dto.dailyCapacity());
     }
 }
