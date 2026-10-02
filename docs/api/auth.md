@@ -20,7 +20,7 @@ Creates a user with the default `EMPLOYEE` role.
 |---|---|---|---|
 | `firstName` | string | yes | Not blank |
 | `lastName` | string | yes | Not blank |
-| `email` | string | yes | Valid email format; unique |
+| `email` | string | yes | Valid email format; unique, ignoring case |
 | `password` | string | yes | At least 8 characters with uppercase, lowercase, digit, and special character |
 
 ```json
@@ -37,7 +37,7 @@ Creates a user with the default `EMPLOYEE` role.
 
 ## POST /auth/login
 
-Authenticates an existing user.
+Authenticates an existing user. The email is matched ignoring case.
 
 **Request body**
 
@@ -56,4 +56,4 @@ Authenticates an existing user.
 { "token": "eyJ..." }
 ```
 
-**Errors:** `400` for malformed request data; `401` for invalid credentials.
+**Errors:** `400` for malformed request data, a missing field, or an invalid email format; `401` for invalid credentials.

@@ -64,8 +64,8 @@ Updates the profile of the authenticated user matching `{id}`.
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `firstName` | string | yes | At least 2 characters |
-| `lastName` | string | yes | At least 2 characters |
+| `firstName` | string | yes | At least 2 characters after trimming surrounding whitespace |
+| `lastName` | string | yes | At least 2 characters after trimming surrounding whitespace |
 
 ```json
 { "firstName": "Ada", "lastName": "Byron" }
@@ -86,7 +86,7 @@ Changes the authenticated user's email.
 { "email": "ada.byron@example.com" }
 ```
 
-`email` is required, must be valid, and must be unique.
+`email` is required, must be valid, and must be unique, ignoring case. The user's own current email counts as taken and returns `409`.
 
 **Success response:** `200 OK` with a User object.  
 **Errors:** `400` for invalid input; `403` when changing another user; `404` when the user does not exist; `409` for a duplicate email.
@@ -103,7 +103,7 @@ Changes the authenticated user's password.
 { "currentPassword": "Password1!", "newPassword": "NewPassword1!" }
 ```
 
-Both fields are required. `newPassword` must be at least 8 characters and contain an uppercase letter and a number.
+Both fields are required. `newPassword` must be at least 8 characters with uppercase, lowercase, digit, and special character (the same rule as [registration](auth.md#post-authregister)).
 
 **Success response:** `200 OK` with a User object.  
 **Errors:** `400` for invalid input or a wrong current password; `403` when changing another user; `404` when the user does not exist.
@@ -127,8 +127,8 @@ Changes a user's role.
 
 ## DELETE /users/{id}
 
-Deletes a user other than the authenticated user. The service rejects attempts to delete your own account.
+Deletes a user other than the authenticated user. Deleting your own account is rejected with `403`.
 
 **Path parameters:** `id` — user ID.  
 **Success response:** `204 No Content`.  
-**Errors:** `400` for an invalid ID; `404` when the user does not exist.
+**Errors:** `400` for an invalid ID; `403` when deleting your own account; `404` when the user does not exist.
