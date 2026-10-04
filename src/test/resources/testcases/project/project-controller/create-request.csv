@@ -1,0 +1,5 @@
+body,expected,reason
+NULL,400,"EP: request body is missing"
+"{",400,"EP: request body is malformed JSON"
+"{""title"":""Website redesign"",""startDate"":""2030-13-01"",""deadline"":""2030-04-01""}",400,"EP: startDate is not a valid date"
+"{""title"":""Website redesign"",""startDate"":""2030-01-01"",""deadline"":""2029-12-31""}",400,"EP + BVA: deadline one day before startDate (representative of create-fields)"
