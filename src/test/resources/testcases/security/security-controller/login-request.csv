@@ -1,0 +1,5 @@
+body,expected,reason
+NULL,400,"EP: request body is missing"
+"{",400,"EP: request body is malformed JSON"
+"{""email"":""alice@example.com"",""password"":""WrongPassword1!""}",401,"DT: known email and wrong password (representative of login)"
+"{""email"":""alice@example.com"",""password"":""Password123""}",200,"DT: known email and correct password"
