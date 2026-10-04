@@ -1,0 +1,7 @@
+estimate,minimumDurationInDays,expected,reason
+15.0,2,2.0,"BVA: labor duration equals the minimum duration"
+14.99,2,2.0,"BVA: labor duration just below the minimum, so the minimum applies"
+15.01,2,2.0013333333333333,"BVA: labor duration just above the minimum, so the labor duration applies"
+0.0,0,0.0,"EP: no estimate and no minimum duration"
+7.5,0,1.0,"EP: only a labor duration (estimate / 7.5)"
+0.0,3,3.0,"EP: only a minimum duration"
