@@ -1,0 +1,13 @@
+method,path,expected,reason
+GET,/users/abc,400,"EP: non-numeric user id"
+GET,/users/0,400,"EP + BVA: user id 0"
+PUT,/users/abc,400,"EP: non-numeric user id"
+PUT,/users/0,400,"EP + BVA: user id 0"
+PATCH,/users/abc/email,400,"EP: non-numeric user id"
+PATCH,/users/0/email,400,"EP + BVA: user id 0"
+PATCH,/users/abc/password,400,"EP: non-numeric user id"
+PATCH,/users/0/password,400,"EP + BVA: user id 0"
+PATCH,/users/abc/role,400,"EP: non-numeric user id"
+PATCH,/users/0/role,400,"EP + BVA: user id 0"
+DELETE,/users/abc,400,"EP: non-numeric user id"
+DELETE,/users/0,400,"EP + BVA: user id 0"

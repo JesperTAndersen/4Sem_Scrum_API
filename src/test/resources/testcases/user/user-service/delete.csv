@@ -1,0 +1,4 @@
+authUserId,targetUserId,expected,reason
+1,2,ACCEPT,"DT: another existing user"
+1,99,NotFoundException,"DT: another user that does not exist"
+1,1,ForbiddenException,"DT: own account"

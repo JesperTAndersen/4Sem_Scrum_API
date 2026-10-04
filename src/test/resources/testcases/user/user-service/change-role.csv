@@ -1,0 +1,4 @@
+targetUserId,role,expected,reason
+2,PROJECT_MANAGER,ACCEPT,"EP: existing user and valid role"
+2,NULL,BadRequestException,"EP: role is null"
+99,EMPLOYEE,NotFoundException,"EP: user id is positive but unknown"
