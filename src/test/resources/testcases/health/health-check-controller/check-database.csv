@@ -1,0 +1,3 @@
+databaseAvailable,expected,reason
+true,200,"EP: the database answers, so the status is ok"
+false,503,"EP: the database is unavailable, so the status is unavailable"

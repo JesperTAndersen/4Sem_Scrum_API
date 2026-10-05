@@ -1,0 +1,4 @@
+body,expected,reason
+NULL,400,"EP: request body is missing"
+"{""email"":""not-an-email""}",400,"EP: email is not valid (representative of change-email)"
+"{""email"":""bob@example.com""}",409,"EP: email belongs to another user"

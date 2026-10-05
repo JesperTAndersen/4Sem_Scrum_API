@@ -1,0 +1,5 @@
+body,expected,reason
+NULL,400,"EP: request body is missing"
+"{""name"":""welder"",""rate"":""850""}",400,"EP: rate is a numeric string instead of a JSON number"
+"{""name"":""welder""}",400,"EP: rate is missing"
+"{""name"":""a"",""rate"":850.00}",400,"BVA: name length 1 (representative of create-fields)"

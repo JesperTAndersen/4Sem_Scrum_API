@@ -1,7 +1,7 @@
 # Coding Standards
 
-**Version:** 2.0  
-**Date:** 2026-09-21  
+**Version:** 2.1  
+**Date:** 2026-09-30  
 **Project:** Scrum Project - ***Estimo***
 
 ---
@@ -296,15 +296,176 @@ No other code is needed. `ApplicationConfig.configureExceptions` already handles
 
 ## 8. Testing
 
-Every change ships with tests. The [Definition of Done](definition-of-done.md) sets the scope: **happy path, validation failures, and authorization where applicable**.
+Every change ships with tests. The [Definition of Done](definition-of-done.md) sets the scope: **happy path, validation failures, and authorization where applicable**. Section 8.2 defines *how* the test cases for that scope are chosen.
 
-- Test at the level where the behaviour lives: business rules in service tests, persistence against a real PostgreSQL, and endpoints through HTTP.
+### 8.1 General rules
+
+- Test at the level where the behaviour lives: business rules in service tests, persistence against a real PostgreSQL, and endpoints through HTTP (see [8.4](#84-techniques-per-test-level)).
 - Tests use injected dependencies (in-memory DAOs, a test `EntityManagerFactory`). They never touch a production database.
 - Tests mirror the main package structure under `src/test/java`.
 - Describe behaviour, not implementation: `@DisplayName("Create - should reject a deadline before the project start date")`.
 - Tests are independent of each other and of execution order.
 - All tests pass locally (`mvn test`) before you open a pull request, and in CI.
-- **Frontend:** there is no test framework yet. Until one is adopted, `npm run lint` and `npm run format:check` must pass and the change is verified manually against the running API.
+
+### 8.2 Test case design
+
+Test cases are chosen **systematically** with three black-box techniques. They are derived from the acceptance criteria and the documented API rules (`docs/api`), **not from the implementation**. The expected result of a test case comes from the specification. If the code and the specification disagree, the test follows the specification and the disagreement is raised with the team.
+
+```
+Acceptance criteria → test design (EP, BVA, decision table) → consolidated test cases → CSV test data → automated test
+```
+
+| Technique | Use when | Produces |
+|---|---|---|
+| Equivalence Partitioning (EP) | An input has groups of values that the system treats the same way | One representative per class, both valid and invalid classes |
+| Boundary Value Analysis (BVA) | A class has an edge: a minimum, a maximum, or an ordering between two values | The value on each boundary and the nearest value on each side |
+| Decision table | The outcome depends on a combination of two or more conditions | One test case per rule in the table |
+
+#### Equivalence Partitioning
+
+- Split every input into classes where all values should give the same result. Always include the **invalid** classes.
+- Pick one representative per class from the **middle** of the class. Boundaries are covered by BVA.
+- Start from these standard classes and add the ones the domain rules introduce:
+
+| Input type | Classes to consider |
+|---|---|
+| Required string | `null`, empty (`""`), whitespace only, valid. Too long, if a maximum length exists |
+| Number with a range | Below minimum, within range, above maximum |
+| Date pair (e.g. `startDate`, `deadline`) | Second date before the first, second date not before the first |
+| Enum | Each value that a rule treats differently. An unknown value at endpoint level |
+| Path ID | Non-numeric, zero or negative, positive but unknown, existing |
+| Boolean or binary state | Both values |
+
+#### Boundary Value Analysis
+
+- For every boundary, test the value **on** the boundary and the nearest value **on each side**, using the smallest step of the type:
+
+| Type | Step | Example |
+|---|---|---|
+| Integer | `1` | Range 1–8: `0, 1, 2, 7, 8, 9` |
+| Decimal (hours, rates) | Smallest meaningful unit, e.g. `0.01` | Minimum 0 exclusive: `0.00, 0.01` |
+| Date | 1 day | `deadline` not before `startDate`: `startDate − 1`, `startDate`, `startDate + 1` |
+| String length | 1 character | Max 100: lengths `99, 100, 101` |
+
+- A range open at one end has one boundary. `>= 0` gives `-1, 0, 1`.
+- A point **inside** the valid range where a rule changes behaviour is also a boundary. Test both sides of it.
+
+#### Decision tables
+
+- Use a decision table when **two or more conditions together** decide the outcome. Typical cases in Estimo are access control (token, role, ownership) and rules that combine state and input (for example, which changes are allowed in a given status).
+- Conditions are columns, the result is the last column, and `-` means *don't care*: the condition does not affect the result in that rule. Combine rules with the same result where a condition does not matter.
+- Each rule becomes at least one test case.
+
+Example: `GET /projects/{id}`, restricted to `PROJECT_MANAGER`:
+
+| Rule | Valid token? | `PROJECT_MANAGER`? | Project exists? | Result |
+|---|---|---|---|---|
+| R1 | No | - | - | `401` |
+| R2 | Yes | No | - | `403` |
+| R3 | Yes | Yes | No | `404` |
+| R4 | Yes | Yes | Yes | `200` |
+
+### 8.3 Consolidation and implementation
+
+The techniques overlap. For example, `0` is both an invalid EP class and a boundary value. The techniques are used to **find** test cases, not to create three separate test suites.
+
+- Merge the test cases from all techniques into **one consolidated set per rule set**, such as the date rules of `create` in `ProjectService`.
+- Every EP class, every boundary value and every decision table rule appears in **at least one** row. Remove rows that cover nothing new.
+- Each row has a `reason` that names every technique it represents and what it tests.
+- Implement the set as a data-driven `@ParameterizedTest` with `@CsvFileSource`.
+
+#### Test data files
+
+Test cases are stored in CSV files, not inline in the test class. This keeps the test design readable and reviewable as a table, separate from the code that runs it. Use a CSV file even for small sets, so all test data is found in the same way.
+
+**Storage**
+
+```
+src/test/resources/
+└── testcases/
+    └── <feature>/                     project, stage, task, competence, user, security, ...
+        └── <class-under-test>/        kebab-case, e.g. project-service, project-controller
+            └── <rule-set>.csv         kebab-case, e.g. create-dates.csv
+```
+
+Example: the test `createValidatesTitleAndDates` in `ProjectServiceTest` reads
+`src/test/resources/testcases/project/project-service/create-dates.csv`.
+
+- **One file per parameterized test method, and one method per file.** A file is never shared between methods.
+- The rule-set name says what is tested, starting with the method or endpoint action: `create-dates`, `update-status-transitions`, `get-by-id-access`.
+- Reference the file with an absolute classpath path, starting with `/` and without `src/test/resources`: `/testcases/project/project-service/create-dates.csv`.
+- CSV files are committed, reviewed and changed in the same pull request as the tests that use them.
+- Encoding (UTF-8) and line endings follow `.editorconfig`.
+
+**Format**
+
+| Item | Convention |
+|---|---|
+| Header | First line, camelCase names matching the method parameters, skipped with `numLinesToSkip = 1` |
+| Column order | Inputs, then `expected`, then `reason` |
+| `expected` | Service tests: `ACCEPT` or the exception's simple class name (`BadRequestException`). Endpoint tests: the HTTP status code (`201`, `400`) |
+| `reason` | `<techniques>: <what the row tests>`, in English, e.g. `"EP + BVA: deadline one day before startDate"` |
+| Quoting | Quote values that contain a comma, or leading or trailing spaces. Always quote `reason` |
+| `null` / empty | `NULL` with `nullValues = "NULL"`. Empty string is `""` |
+| Dates | `YYYY-MM-DD`, fixed values. Never relative to today |
+| Display name | `name = "[{index}] {n}"`, where `n` is the zero-based index of `reason` |
+
+```
+title,startDate,deadline,expected,reason
+Website redesign,2030-01-01,2030-04-01,ACCEPT,"EP: valid title and dates"
+NULL,2030-01-01,2030-04-01,BadRequestException,"EP: title is null"
+"   ",2030-01-01,2030-04-01,BadRequestException,"EP: title is whitespace only"
+Website redesign,2030-01-01,2029-12-31,BadRequestException,"EP + BVA: deadline one day before startDate"
+Website redesign,2030-01-01,2030-01-01,ACCEPT,"BVA: deadline equal to startDate"
+Website redesign,2030-01-01,2030-01-02,ACCEPT,"BVA: deadline one day after startDate"
+```
+
+```java
+@ParameterizedTest(name = "[{index}] {4}")
+@CsvFileSource(resources = "/testcases/project/project-service/create-dates.csv", numLinesToSkip = 1, nullValues = "NULL")
+@DisplayName("Create - validates title and dates")
+void createValidatesTitleAndDates(String title, LocalDate startDate, LocalDate deadline, String expected, String reason)
+{
+    CreateProjectDTO dto = new CreateProjectDTO(title, startDate, deadline);
+
+    if (expected.equals("ACCEPT"))
+    {
+        ProjectDTO result = projectService.create(dto);
+        assertThat(result.title(), is(title));
+    }
+    else
+    {
+        ApiException exception = assertThrows(ApiException.class, () -> projectService.create(dto));
+        assertThat(exception.getClass().getSimpleName(), is(expected));
+    }
+}
+```
+
+Tests that do not check an input or business rule, such as correct mapping or a single happy path through HTTP, stay ordinary `@Test` methods with a `@DisplayName`.
+
+### 8.4 Techniques per test level
+
+| Level | Tools | Apply |
+|---|---|---|
+| Service (in-memory DAOs) | JUnit, Hamcrest | **The main place.** EP, BVA and decision tables for business rules, validation and data-dependent authorization ("only your own profile") |
+| Endpoint (REST Assured, Testcontainers) | REST Assured, Hamcrest | EP for request shape (missing body, non-numeric ID), a decision table for route access (`401` / `403` / `404` / `2xx`), one representative invalid case per rule set to prove the error mapping. Do **not** repeat every boundary through HTTP |
+| DAO (Testcontainers) | JUnit, Hamcrest | Normally none. Test persistence behaviour: saved, found, not found, constraint violations |
+
+### 8.5 Designing test cases step by step
+
+Follow these steps whenever tests are written or changed:
+
+1. **List the rules** for the service method or endpoint: the acceptance criteria, the *Rules* column of the request body in `docs/api`, the role in `<Feature>Routes`, and data-dependent authorization.
+2. **Partition** every input with EP (8.2).
+3. **Find the boundaries** of every class with BVA (8.2).
+4. **Build a decision table** where two or more conditions combine (8.2).
+5. **Consolidate** into one CSV per rule set, with `expected` and `reason` (8.3).
+6. **Implement** the rule set as one `@ParameterizedTest` that reads its CSV file (see [Test data files](#test-data-files)). A test case covered by a CSV row is not repeated as a separate `@Test`.
+7. **Treat a failing row as a bug or an unclear rule.** Never change `expected` to match the code. Fix the code, or raise the rule with the team (8.2).
+
+### 8.6 Frontend
+
+There is no test framework yet. Until one is adopted, `npm run lint` and `npm run format:check` must pass and the change is verified manually against the running API.
 
 ---
 
@@ -510,6 +671,7 @@ In addition, the reviewer checks the change against these standards:
 
 - [ ] **Layers respected.** Controllers call services, entities do not leave the service, wiring is in `app.config` (section 5).
 - [ ] **Errors handled properly.** `ApiException` subclasses, no swallowed exceptions, causes kept, generic 5xx messages (section 7).
+- [ ] **Tests designed systematically.** Test cases are derived with EP, BVA and decision tables, consolidated into CSV files, and every row has a `reason` (section 8).
 - [ ] **Names and structure** follow sections 4 and 5. Formatting matches `.editorconfig`.
 - [ ] **Comments explain why.** No `TODO`, no commented-out code (section 6).
 - [ ] **Endpoint documentation** is updated (section 9).

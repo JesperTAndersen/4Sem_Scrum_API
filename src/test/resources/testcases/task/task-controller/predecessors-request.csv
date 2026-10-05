@@ -1,0 +1,3 @@
+method,relation,expected,reason
+POST,SELF,400,"DT: task depends on itself (representative of add-predecessor)"
+DELETE,NONE,400,"DT: the dependency does not exist (representative of remove-predecessor)"

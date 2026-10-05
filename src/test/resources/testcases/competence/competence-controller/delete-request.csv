@@ -1,0 +1,2 @@
+usedByTask,expected,reason
+true,409,"DT: delete a competence that a task uses (representative of delete-by-id)"

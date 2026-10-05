@@ -9,8 +9,8 @@ A user story is considered done when:
 - The feature is integrated into the application without breaking existing functionality
 
 ## Quality
-- The feature is covered by relevant tests (happy path, validation failures, and authorization where applicable)
-- All tests pass locally and in CI
+- The feature is covered by relevant tests (happy path, validation failures, and authorization where applicable), designed with equivalence partitioning, boundary value analysis and decision tables as described in [coding standards](coding-standards.md#82-test-case-design)
+- Every input rule and business rule has data-driven test cases, and each test case states which technique it comes from and what it tests- All tests pass locally and in CI
 - Code is self-describing where possible, with comments added for complex domain logic or non-obvious implementation choices
 - No `TODO` comments are left in the code; follow-up work is tracked as a GitHub issue in the backlog, and lasting decisions or limitations go in the documentation
 

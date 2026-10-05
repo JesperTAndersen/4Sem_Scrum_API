@@ -1,0 +1,10 @@
+routeRole,authorization,expected,reason
+ANYONE,NONE,200,"DT: an open route needs no token"
+EMPLOYEE,NONE,401,"DT: protected route without an Authorization header"
+EMPLOYEE,BEARER_ONLY,401,"DT: Authorization header without a token"
+EMPLOYEE,NOT_A_JWT,401,"DT: token is not a JWT"
+EMPLOYEE,WRONG_SIGNATURE,401,"DT: token is signed with another secret"
+EMPLOYEE,EXPIRED,401,"DT: token has expired"
+AUTHENTICATED,EMPLOYEE,200,"DT: a route without a role accepts any valid token"
+EMPLOYEE,PROJECT_MANAGER,403,"DT: valid token without the required role"
+EMPLOYEE,EMPLOYEE,200,"DT: valid token with the required role"

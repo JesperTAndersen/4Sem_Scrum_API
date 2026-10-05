@@ -1,0 +1,3 @@
+body,expected,reason
+NULL,400,"EP: request body is missing"
+"{""firstName"":""A"",""lastName"":""Byron""}",400,"BVA: firstName length 1 (representative of update-profile)"

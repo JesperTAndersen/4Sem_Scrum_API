@@ -1,0 +1,8 @@
+email,password,expected,reason
+manager@example.com,Password1!,ACCEPT,"DT: known email and correct password"
+missing@example.com,Password1!,UnauthorizedException,"DT: unknown email"
+manager@example.com,WrongPassword1!,UnauthorizedException,"DT: known email and wrong password"
+MANAGER@Example.com,Password1!,ACCEPT,"EP: the email is matched ignoring case"
+NULL,Password1!,BadRequestException,"EP: email is missing"
+manager@example.com,NULL,BadRequestException,"EP: password is missing"
+not-an-email,Password1!,BadRequestException,"EP: email is not a valid email address"

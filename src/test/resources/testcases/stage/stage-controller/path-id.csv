@@ -1,0 +1,7 @@
+method,path,expected,reason
+GET,/stages/abc,400,"EP: non-numeric stage id"
+GET,/stages/0,400,"EP + BVA: stage id 0"
+PUT,/stages/abc,400,"EP: non-numeric stage id"
+PUT,/stages/0,400,"EP + BVA: stage id 0"
+DELETE,/stages/abc,400,"EP: non-numeric stage id"
+DELETE,/stages/0,400,"EP + BVA: stage id 0"

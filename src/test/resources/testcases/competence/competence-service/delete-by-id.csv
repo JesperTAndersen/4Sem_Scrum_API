@@ -1,0 +1,4 @@
+id,expected,reason
+2,ACCEPT,"DT: existing competence that no task uses"
+1,ConflictException,"DT: existing competence that a task uses"
+99,NotFoundException,"DT: competence id is positive but unknown"

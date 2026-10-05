@@ -30,6 +30,11 @@ Projects are top-level work containers. A project detail includes its stages and
 
 Task dates are recalculated whenever a project is read. Scheduling starts at the project start date, excludes Saturday and Sunday, respects predecessor dependencies, and does not prevent saving a project whose plan is infeasible.
 
+- A task occupies whole working days: a fractional duration rounds up (0.5 days takes one day).
+- A task with a duration of 0 starts and ends on the same day, and its successors can start that day.
+- `calculatedFinishDate` is the latest task end date, or the project start date when the project has no tasks.
+- `feasible` is `true` when `calculatedFinishDate` is on or before the `deadline`.
+
 ## GET /projects
 
 Returns project summaries. Each item includes `taskCountDTO` with `totalTaskCount` and `taskFinished`.
