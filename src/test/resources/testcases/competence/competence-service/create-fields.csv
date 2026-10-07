@@ -1,6 +1,6 @@
 name,rate,expected,reason
 backend development,850.00,ACCEPT,"EP: valid name and rate"
-Backend Development,850.00,ACCEPT,"EP: a mixed-case name is stored in lowercase"
+Backend Development,850.00,ACCEPT,"EP: a mixed-case name keeps its casing"
 "  backend development  ",850.00,ACCEPT,"EP: surrounding whitespace is trimmed"
 NULL,850.00,BadRequestException,"EP: name is null"
 "",850.00,BadRequestException,"EP + BVA: name is empty (length 0)"

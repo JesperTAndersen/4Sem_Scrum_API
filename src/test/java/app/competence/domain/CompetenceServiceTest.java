@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import java.math.BigDecimal;
-import java.util.Locale;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.comparesEqualTo;
@@ -126,9 +125,9 @@ class CompetenceServiceTest
         }
     }
 
-    // The documented normalization: names are stored trimmed and in lowercase.
+    // The documented normalization: names are stored trimmed, with the casing they are given.
     private String normalized(String name)
     {
-        return name.trim().toLowerCase(Locale.ROOT);
+        return name.trim();
     }
 }

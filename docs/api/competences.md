@@ -1,6 +1,6 @@
 # Competences
 
-Competences represent skills and their hourly rates. Names are normalized to lowercase and are unique without regard to case.
+Competences represent skills and their hourly rates. Names keep the casing they are given and are unique without regard to case.
 
 **Base path:** `/api/v1/competences`  
 **Access:** Authenticated
@@ -20,13 +20,13 @@ Competences represent skills and their hourly rates. Names are normalized to low
 | Field | Type | Description |
 |---|---|---|
 | `id` | number | Unique identifier |
-| `name` | string | Lowercase competence name |
+| `name` | string | Competence name |
 | `rate` | number | Positive hourly rate |
 | `active` | boolean | Whether it can be assigned to new tasks |
 | `createdAt`, `updatedAt` | date-time | Audit timestamps |
 
 ```json
-{ "id": 1, "name": "backend development", "rate": 850.00, "active": true, "createdAt": "2026-01-01T09:00:00", "updatedAt": "2026-01-02T10:00:00" }
+{ "id": 1, "name": "Backend development", "rate": 850.00, "active": true, "createdAt": "2026-01-01T09:00:00", "updatedAt": "2026-01-02T10:00:00" }
 ```
 
 ## GET /competences
@@ -39,7 +39,7 @@ Competences represent skills and their hourly rates. Names are normalized to low
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `name` | string | yes | Trimmed, lowercase; 2–100 valid text characters; unique |
+| `name` | string | yes | Trimmed; 2–100 valid text characters; unique, ignoring case |
 | `rate` | number | yes | Positive JSON number, not a numeric string |
 
 ```json
