@@ -1,14 +1,15 @@
 package app.presentation;
 
-import app.security.domain.Role;
+import app.capacity.presentation.CompanyCapacityRoutes;
+import app.competence.presentation.CompetenceRoutes;
 import app.employee.presentation.EmployeeRoutes;
 import app.presentation.health.HealthCheckRoute;
-import app.user.presentation.UserRoutes;
+import app.project.presentation.ProjectRoutes;
+import app.security.domain.Role;
+import app.security.presentation.SecurityRoutes;
 import app.stage.presentation.StageRoutes;
 import app.task.presentation.TaskRoutes;
-import app.competence.presentation.CompetenceRoutes;
-import app.project.presentation.ProjectRoutes;
-import app.security.presentation.SecurityRoutes;
+import app.user.presentation.UserRoutes;
 import io.javalin.apibuilder.EndpointGroup;
 import lombok.Getter;
 
@@ -29,17 +30,22 @@ public class Routes
     private final ProjectRoutes projectRoutes;
     private final SecurityRoutes securityRoutes;
     private final EmployeeRoutes employeeRoutes;
+    private final CompanyCapacityRoutes companyCapacityRoutes;
 
-    public Routes(HealthCheckRoute healthCheckRoute, UserRoutes userRoute, StageRoutes stageRoute, TaskRoutes taskRoute, CompetenceRoutes competenceRoutes, ProjectRoutes projectRoutes, SecurityRoutes securityRoutes, EmployeeRoutes employeeRoutes)
+    public Routes(HealthCheckRoute healthCheckRoute, UserRoutes userRoutes, StageRoutes stageRoutes,
+                  TaskRoutes taskRoutes, CompetenceRoutes competenceRoutes, ProjectRoutes projectRoutes,
+                  SecurityRoutes securityRoutes, EmployeeRoutes employeeRoutes,
+                  CompanyCapacityRoutes companyCapacityRoutes)
     {
         this.healthCheckRoute = healthCheckRoute;
-        this.userRoutes = userRoute;
-        this.stageRoutes = stageRoute;
-        this.taskRoutes = taskRoute;
+        this.userRoutes = userRoutes;
+        this.stageRoutes = stageRoutes;
+        this.taskRoutes = taskRoutes;
         this.competenceRoutes = competenceRoutes;
         this.projectRoutes = projectRoutes;
         this.securityRoutes = securityRoutes;
         this.employeeRoutes = employeeRoutes;
+        this.companyCapacityRoutes = companyCapacityRoutes;
     }
 
     public EndpointGroup getRoutes()
@@ -58,6 +64,7 @@ public class Routes
                 projectRoutes.getRoutes().addEndpoints();
                 securityRoutes.getRoutes().addEndpoints();
                 employeeRoutes.getRoutes().addEndpoints();
+                companyCapacityRoutes.getRoutes().addEndpoints();
             });
         };
     }
