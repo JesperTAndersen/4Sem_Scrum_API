@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import app.exceptions.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -116,14 +117,14 @@ class UserDAOTest
         User withoutId = new User("No", "ID", "noid@example.com", PasswordUtil.hashPassword("Password123", 4));
 
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> userDAO.get(null)),
-                () -> assertThrows(IllegalArgumentException.class, () -> userDAO.delete(0L)),
+                () -> assertThrows(BadRequestException.class, () -> userDAO.get(null)),
+                () -> assertThrows(BadRequestException.class, () -> userDAO.delete(0L)),
                 () -> assertThrows(NotFoundException.class, () -> userDAO.get(999L)),
-                () -> assertThrows(IllegalArgumentException.class, () -> userDAO.create(null)),
-                () -> assertThrows(IllegalArgumentException.class, () -> userDAO.update(withoutId)),
-                () -> assertThrows(IllegalArgumentException.class, () -> userDAO.findByEmail(null)),
-                () -> assertThrows(IllegalArgumentException.class, () -> userDAO.findByRole(null)),
-                () -> assertThrows(IllegalArgumentException.class, () -> userDAO.existsByEmail(null))
+                () -> assertThrows(BadRequestException.class, () -> userDAO.create(null)),
+                () -> assertThrows(BadRequestException.class, () -> userDAO.update(withoutId)),
+                () -> assertThrows(BadRequestException.class, () -> userDAO.findByEmail(null)),
+                () -> assertThrows(BadRequestException.class, () -> userDAO.findByRole(null)),
+                () -> assertThrows(BadRequestException.class, () -> userDAO.existsByEmail(null))
         );
     }
 }
