@@ -10,6 +10,7 @@ import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Objects;
 
 @Getter
@@ -24,7 +25,10 @@ public class Competence implements IEntity
     @Column(name = "competence_id", nullable = false)
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true, length = 100)
+    @Column(name = "name_key", nullable = false, unique = true, length = 100)
+    private String nameKey;
+
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @Column(name = "rate", nullable = false)
@@ -42,12 +46,14 @@ public class Competence implements IEntity
     public Competence(String name, BigDecimal rate)
     {
         this.name = name.trim();
+        this.nameKey = name.trim().toLowerCase(Locale.ROOT);
         this.rate = rate;
     }
 
     public void update(String name, BigDecimal rate)
     {
         this.name = name.trim();
+        this.nameKey = name.trim().toLowerCase(Locale.ROOT);
         this.rate = rate;
     }
 
@@ -60,6 +66,7 @@ public class Competence implements IEntity
     protected void onCreate()
     {
         this.name = name.trim();
+        this.nameKey = name.trim().toLowerCase(Locale.ROOT);
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
@@ -69,6 +76,7 @@ public class Competence implements IEntity
     protected void onUpdate()
     {
         this.name = name.trim();
+        this.nameKey = name.trim().toLowerCase(Locale.ROOT);
         this.updatedAt = LocalDateTime.now();
     }
 

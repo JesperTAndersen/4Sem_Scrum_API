@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import app.exceptions.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -76,8 +77,8 @@ class ProjectDAOTest
     void invalidIdsAndMissingProjects()
     {
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> projectDAO.get(null)),
-                () -> assertThrows(IllegalArgumentException.class, () -> projectDAO.delete(0L)),
+                () -> assertThrows(BadRequestException.class, () -> projectDAO.get(null)),
+                () -> assertThrows(BadRequestException.class, () -> projectDAO.delete(0L)),
                 () -> assertThrows(NotFoundException.class, () -> projectDAO.get(999L)),
                 () -> assertThrows(NotFoundException.class, () -> projectDAO.delete(999L))
         );
@@ -128,9 +129,9 @@ class ProjectDAOTest
         Project withoutId = project("No ID", ProjectStatus.DRAFT);
 
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> projectDAO.create(null)),
-                () -> assertThrows(IllegalArgumentException.class, () -> projectDAO.update(null)),
-                () -> assertThrows(IllegalArgumentException.class, () -> projectDAO.update(withoutId))
+                () -> assertThrows(BadRequestException.class, () -> projectDAO.create(null)),
+                () -> assertThrows(BadRequestException.class, () -> projectDAO.update(null)),
+                () -> assertThrows(BadRequestException.class, () -> projectDAO.update(withoutId))
         );
     }
 
