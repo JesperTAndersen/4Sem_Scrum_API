@@ -18,7 +18,7 @@ public class ValidationUtil
     {
         if (obj == null)
         {
-            throw new IllegalArgumentException(entityName + " cannot be null.");
+            throw new BadRequestException(entityName + " cannot be null.");
         }
     }
 
@@ -26,7 +26,7 @@ public class ValidationUtil
     {
         if (value == null || value.isBlank())
         {
-            throw new IllegalArgumentException(fieldName + " cannot be blank");
+            throw new BadRequestException(fieldName + " cannot be blank");
         }
     }
 
@@ -66,7 +66,7 @@ public class ValidationUtil
     {
         if (value <= 0)
         {
-            throw new IllegalArgumentException(fieldName + " must be greater than 0");
+            throw new BadRequestException(fieldName + " must be greater than 0");
         }
     }
 
@@ -75,7 +75,7 @@ public class ValidationUtil
         if (number < min || number > max)
         {
             String errorMsg = String.format("%s must be between %d and %d, got: %d", fieldName, min, max, number);
-            throw new IllegalArgumentException(errorMsg);
+            throw new BadRequestException(errorMsg);
         }
     }
 
@@ -83,12 +83,12 @@ public class ValidationUtil
     {
         if (date == null)
         {
-            throw new IllegalArgumentException(fieldName + " is required");
+            throw new BadRequestException(fieldName + " is required");
         }
 
         if (date.isBefore(LocalDate.now()))
         {
-            throw new IllegalArgumentException(fieldName + " must be in the future");
+            throw new BadRequestException(fieldName + " must be in the future");
         }
     }
 
@@ -96,7 +96,7 @@ public class ValidationUtil
     {
         if (id == null || id <= 0)
         {
-            throw new IllegalArgumentException("Invalid ID: must be provided and greater than 0");
+            throw new BadRequestException("Invalid ID: must be provided and greater than 0");
         }
     }
 
@@ -130,7 +130,7 @@ public class ValidationUtil
     {
         if (collection == null || collection.isEmpty())
         {
-            throw new IllegalArgumentException(fieldName + " cannot be empty");
+            throw new BadRequestException(fieldName + " cannot be empty");
         }
     }
 }

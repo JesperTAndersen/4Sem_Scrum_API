@@ -192,12 +192,11 @@ public class UserDAO implements IUserDAO
     public boolean existsByEmail(String email)
     {
         ValidationUtil.validateNotNull(email, "Email");
-
         try (EntityManager em = emf.createEntityManager())
         {
             try
             {
-                Long count = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
+                Long count = em.createQuery("SELECT COUNT(u) FROM User u WHERE LOWER(u.email) = LOWER(:email)", Long.class)
                     .setParameter("email", email)
                     .getSingleResult();
                 return count > 0;

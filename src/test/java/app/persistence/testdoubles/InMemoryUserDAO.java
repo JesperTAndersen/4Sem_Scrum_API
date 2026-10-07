@@ -74,7 +74,7 @@ public class InMemoryUserDAO implements IUserDAO
     public Optional<User> findByEmail(String email)
     {
         return users.values().stream()
-                .filter(user -> user.getEmail().equals(email))
+                .filter(user -> user.getEmail().equalsIgnoreCase(email))
                 .findFirst();
     }
 
