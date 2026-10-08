@@ -1,5 +1,7 @@
 package app.employee.domain;
 
+import app.employee.presentation.dto.EmployeeCapacityDTO;
+import app.employee.presentation.dto.EmployeeCompetencesUpdateDTO;
 import app.employee.presentation.dto.EmployeeCreateDTO;
 import app.employee.presentation.dto.EmployeeDTO;
 import app.employee.presentation.dto.EmployeeUpdateDTO;
@@ -15,6 +17,10 @@ public interface IEmployeeService
     List<EmployeeDTO> getAll();
 
     EmployeeDTO update(Long id, EmployeeUpdateDTO dto);
+
+    EmployeeDTO updateCompetences(Long id, EmployeeCompetencesUpdateDTO dto);
+
+    EmployeeCapacityDTO calculateDailyCapacity(Long competenceId);
 
     void delete(Long id);
 

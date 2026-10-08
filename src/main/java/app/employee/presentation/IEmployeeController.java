@@ -8,4 +8,8 @@ public interface IEmployeeController extends ICrudController
     void setActive(Context ctx);
 
     void setInactive(Context ctx);
+
+    void updateCompetences(Context ctx);
+
+    void getCapacity(Context ctx);
 }

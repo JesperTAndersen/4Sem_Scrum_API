@@ -1,6 +1,6 @@
 package app.employee.presentation;
 
-import app.competence.presentation.ICompetenceController;
+import app.security.domain.Role;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
@@ -18,13 +18,15 @@ public class EmployeeRoutes
     {
         return () -> path("employee", () ->
         {
-            get(employeeController::getAll);
-            get("/{id}", employeeController::get);
-            post(employeeController::create);
-            put("/{id}", employeeController::update);
-            patch("/{id}/activate", employeeController::setActive);
-            patch("/{id}/deactivate", employeeController::setInactive);
-            delete("/{id}", employeeController::delete);
+            get(employeeController::getAll, Role.PROJECT_MANAGER);
+            get("/capacity", employeeController::getCapacity, Role.PROJECT_MANAGER);
+            get("/{id}", employeeController::get, Role.PROJECT_MANAGER);
+            post(employeeController::create, Role.PROJECT_MANAGER);
+            put("/{id}", employeeController::update, Role.PROJECT_MANAGER);
+            put("/{id}/competences", employeeController::updateCompetences, Role.PROJECT_MANAGER);
+            patch("/{id}/activate", employeeController::setActive, Role.PROJECT_MANAGER);
+            patch("/{id}/deactivate", employeeController::setInactive, Role.PROJECT_MANAGER);
+            delete("/{id}", employeeController::delete, Role.PROJECT_MANAGER);
         });
     }
 }

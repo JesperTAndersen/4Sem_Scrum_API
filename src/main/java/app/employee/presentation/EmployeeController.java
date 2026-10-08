@@ -1,6 +1,7 @@
 package app.employee.presentation;
 
 import app.employee.domain.IEmployeeService;
+import app.employee.presentation.dto.EmployeeCompetencesUpdateDTO;
 import app.employee.presentation.dto.EmployeeCreateDTO;
 import app.employee.presentation.dto.EmployeeUpdateDTO;
 import app.utils.RequestUtil;
@@ -54,6 +55,27 @@ public class EmployeeController implements IEmployeeController
                 .get();
 
         ctx.json(employeeService.update(id, body));
+    }
+
+    @Override
+    public void updateCompetences(Context ctx)
+    {
+        Long id = RequestUtil.requirePathId(ctx, "id");
+        EmployeeCompetencesUpdateDTO body = ctx.bodyValidator(EmployeeCompetencesUpdateDTO.class)
+                .check(Objects::nonNull, "Employee competencies payload cannot be null")
+                .check(dto -> dto != null && dto.competenceIds() != null, "Competence ids are required")
+                .get();
+        ctx.json(employeeService.updateCompetences(id, body));
+    }
+
+    @Override
+    public void getCapacity(Context ctx)
+    {
+        Long competenceId = ctx.queryParam("competenceId") == null ? null
+                : ctx.queryParamAsClass("competenceId", Long.class)
+                        .check(id -> id > 0, "Competence id must be positive")
+                        .get();
+        ctx.json(employeeService.calculateDailyCapacity(competenceId));
     }
 
     @Override
