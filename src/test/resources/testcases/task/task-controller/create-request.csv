@@ -1,0 +1,6 @@
+body,expected,reason
+NULL,400,"EP: request body is missing"
+"{""stageId"":{stageId},""name"":""Requirements"",""competenceId"":{competenceId},""minimumDurationInDays"":2}",400,"EP: estimate is missing"
+"{""stageId"":{stageId},""name"":""Requirements"",""competenceId"":{competenceId},""estimate"":16.0,""minimumDurationInDays"":1.5}",400,"EP: minimumDurationInDays is not a whole number"
+"{""stageId"":{stageId},""name"":""Requirements"",""competenceId"":{competenceId},""estimate"":-1,""minimumDurationInDays"":2}",400,"EP: estimate is negative (representative of create-fields)"
+"{""stageId"":999999,""name"":""Requirements"",""competenceId"":{competenceId},""estimate"":16.0,""minimumDurationInDays"":2}",404,"EP: stageId is positive but unknown"

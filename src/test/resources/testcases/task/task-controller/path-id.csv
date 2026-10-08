@@ -1,0 +1,11 @@
+method,path,expected,reason
+GET,/tasks/abc,400,"EP: non-numeric task id"
+GET,/tasks/0,400,"EP + BVA: task id 0"
+PUT,/tasks/abc,400,"EP: non-numeric task id"
+PUT,/tasks/0,400,"EP + BVA: task id 0"
+DELETE,/tasks/abc,400,"EP: non-numeric task id"
+DELETE,/tasks/0,400,"EP + BVA: task id 0"
+POST,/tasks/abc/predecessors/1,400,"EP: non-numeric task id"
+POST,/tasks/0/predecessors/1,400,"EP + BVA: task id 0"
+POST,/tasks/1/predecessors/abc,400,"EP: non-numeric predecessor id"
+DELETE,/tasks/1/predecessors/0,400,"EP + BVA: predecessor id 0"

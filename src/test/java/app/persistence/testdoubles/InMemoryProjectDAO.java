@@ -1,8 +1,8 @@
 package app.persistence.testdoubles;
 
+import app.exceptions.NotFoundException;
 import app.project.domain.Project;
 import app.project.data.IProjectDAO;
-import jakarta.persistence.EntityNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -10,6 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Mirrors {@code ProjectDAO}: a missing project raises {@link NotFoundException}.
+ */
 public class InMemoryProjectDAO implements IProjectDAO
 {
     private final Map<Long, Project> projects = new LinkedHashMap<>();
@@ -31,7 +34,7 @@ public class InMemoryProjectDAO implements IProjectDAO
         Project project = projects.get(id);
         if (project == null)
         {
-            throw new EntityNotFoundException("Project not found");
+            throw new NotFoundException("No project found with id: " + id);
         }
         return project;
     }
@@ -53,6 +56,7 @@ public class InMemoryProjectDAO implements IProjectDAO
     @Override
     public boolean delete(Long id)
     {
+        get(id);
         return projects.remove(id) != null;
     }
 

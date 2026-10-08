@@ -13,6 +13,7 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TypedQuery;
 
 import java.util.List;
+import java.util.Locale;
 
 public class CompetenceDAO implements ICompetenceDAO
 {
@@ -179,14 +180,15 @@ public class CompetenceDAO implements ICompetenceDAO
         {
             try
             {
-                String query = "SELECT COUNT(c) FROM Competence c WHERE LOWER(c.name) = LOWER(:name)";
+                String nameKey = name.trim().toLowerCase(Locale.ROOT);
+                String query = "SELECT COUNT(c) FROM Competence c WHERE c.nameKey = :nameKey";
                 if (excludedId != null)
                 {
                     query += " AND c.id <> :excludedId";
                 }
 
                 var typedQuery = em.createQuery(query, Long.class)
-                        .setParameter("name", name.trim());
+                        .setParameter("nameKey", nameKey);
                 if (excludedId != null)
                 {
                     typedQuery.setParameter("excludedId", excludedId);

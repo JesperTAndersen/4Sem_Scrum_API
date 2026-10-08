@@ -25,25 +25,6 @@ public class UserService implements IUserService
     }
 
     @Override
-    public UserDTO registerUser(CreateUserRequestDTO dto)
-    {
-        validateCreateInput(dto);
-        requireUniqueEmail(dto.email());
-
-        String hashedPassword = PasswordUtil.hashPassword(dto.password(), BCRYPT_COST);
-
-        User user = new User(
-            dto.firstName(),
-            dto.lastName(),
-            dto.email(),
-            hashedPassword
-        );
-
-        User created = userDAO.create(user);
-        return UserMapper.toDTO(created);
-    }
-
-    @Override
     public UserDTO findById(Long id)
     {
         ValidationUtil.validateId(id);
@@ -218,5 +199,4 @@ public class UserService implements IUserService
         }
     }
 }
-
 

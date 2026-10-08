@@ -67,7 +67,7 @@ Creates a task in an existing stage. The assigned competence must be active. New
 | Field | Type | Required | Rules |
 |---|---|---|---|
 | `stageId` | number | yes | Existing stage ID |
-| `name` | string | yes | Not blank |
+| `name` | string | yes | Not blank; surrounding whitespace is trimmed |
 | `competenceId` | number | yes | Existing active competence ID |
 | `estimate` | number | yes | Non-negative, finite number of labor hours |
 | `minimumDurationInDays` | integer | yes | Non-negative whole number |
@@ -116,7 +116,7 @@ Updates supplied task fields. To assign or change a competence, provide both `co
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `name` | string | no | Not blank when supplied |
+| `name` | string | no | Not blank when supplied; surrounding whitespace is trimmed |
 | `minimumDurationInDays` | integer | no | Non-negative whole number when supplied |
 | `competenceId` | number | no | Existing active competence ID, or `0` to remove the assignment |
 | `estimate` | number | no | Must accompany a non-zero `competenceId`; non-negative, finite number of labor hours |

@@ -1,5 +1,10 @@
 package app.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import app.capacity.data.CompanyCapacityDAO;
 import app.capacity.data.ICompanyCapacityDAO;
 import app.capacity.domain.CompanyCapacityService;
@@ -48,9 +53,6 @@ import app.user.domain.IUserService;
 import app.user.domain.UserService;
 import app.user.presentation.IUserController;
 import app.user.presentation.UserController;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.Getter;
 
@@ -110,7 +112,8 @@ public final class DependencyContainer
     {
         this.entityManagerFactory = entityManagerFactory;
         this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT);
         this.healthCheckController = new HealthCheckController(entityManagerFactory);
 
         this.companyCapacityDAO = new CompanyCapacityDAO(entityManagerFactory);

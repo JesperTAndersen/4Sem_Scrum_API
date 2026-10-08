@@ -6,14 +6,12 @@ import app.competence.domain.Competence;
 import app.competence.presentation.dto.SlimCompetenceDTO;
 import app.project.domain.WorkingDaySchedule;
 import app.task.domain.Task;
-import app.task.presentation.dto.SlimTaskDTO;
 import app.task.presentation.dto.TaskDTO;
 
 public final class TaskMapper
 {
     private TaskMapper() {}
 
-    /* FIXME: change to SlimTaskDTO */
     public static TaskDTO toDTO(Task task)
     {
         return toDTO(task, projectStartDate(task));
@@ -37,26 +35,6 @@ public final class TaskMapper
                 dates.endDate(),
                 task.getLaborDurationInDays(),
                 task.getScheduledDurationInDays(),
-                task.getStatus(),
-                task.getPredecessors().stream().map(Task::getId).sorted().toList(),
-                task.getDependencyStartOffsetInDays(),
-                task.getDependencyFinishOffsetInDays()
-        );
-    }
-
-    public static SlimTaskDTO toSlimDTO(Task task)
-    {
-        return toSlimDTO(task, projectStartDate(task));
-    }
-
-    public static SlimTaskDTO toSlimDTO(Task task, LocalDate projectStartDate)
-    {
-        WorkingDaySchedule.TaskDates dates = WorkingDaySchedule.calculateTaskDates(task, projectStartDate);
-        return new SlimTaskDTO(
-                task.getId(),
-                task.getName(),
-                dates.startDate(),
-                dates.endDate(),
                 task.getStatus(),
                 task.getPredecessors().stream().map(Task::getId).sorted().toList(),
                 task.getDependencyStartOffsetInDays(),

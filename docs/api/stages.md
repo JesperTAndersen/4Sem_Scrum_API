@@ -34,7 +34,7 @@ Stages divide a project into named phases. A stage response always contains its 
 | Field | Type | Required | Rules |
 |---|---|---|---|
 | `projectId` | number | yes | Existing project ID |
-| `name` | string | yes | Not blank |
+| `name` | string | yes | Not blank; surrounding whitespace is trimmed |
 
 ```json
 { "projectId": 1, "name": "Planning" }
@@ -57,7 +57,7 @@ Stages divide a project into named phases. A stage response always contains its 
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `name` | string | yes | Not blank |
+| `name` | string | yes | Not blank; surrounding whitespace is trimmed |
 
 ```json
 { "name": "Implementation" }

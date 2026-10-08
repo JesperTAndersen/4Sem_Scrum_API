@@ -1,0 +1,4 @@
+startDate,deadline,taskDays,expected,reason
+2026-01-05,2026-01-06,3,INFEASIBLE,"BVA: the plan finishes one day after the deadline"
+2026-01-05,2026-01-07,3,FEASIBLE,"BVA: the plan finishes on the deadline"
+2026-01-05,2026-01-08,3,FEASIBLE,"BVA: the plan finishes one day before the deadline"
