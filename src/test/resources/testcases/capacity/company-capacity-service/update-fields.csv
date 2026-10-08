@@ -1,0 +1,13 @@
+payloadPresent,dailyCapacity,expected,reason
+"False","NULL","BadRequestException","EP: missing payload"
+"True","6.0","ACCEPT","EP: valid standard hours"
+"True","7.5","ACCEPT","EP: save the existing default"
+"True","NULL","BadRequestException","EP: missing capacity"
+"True","-6.0","BadRequestException","EP: negative capacity"
+"True","-0.01","BadRequestException","BVA: below zero"
+"True","0.0","BadRequestException","BVA: zero exclusive minimum"
+"True","0.01","ACCEPT","BVA: smallest meaningful positive hours"
+"True","NaN","BadRequestException","EP: not a number"
+"True","Infinity","BadRequestException","EP: positive infinity"
+"True","-Infinity","BadRequestException","EP: negative infinity"
+"True","30.0","ACCEPT","EP: no documented upper limit"
