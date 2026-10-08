@@ -1,45 +1,46 @@
 package app.config;
 
-import app.competence.presentation.CompetenceController;
-import app.competence.presentation.ICompetenceController;
-import app.project.domain.IScheduleService;
-import app.project.domain.ScheduleService;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import app.competence.data.CompetenceDAO;
+import app.competence.data.ICompetenceDAO;
+import app.competence.domain.CompetenceService;
+import app.competence.domain.ICompetenceService;
+import app.competence.presentation.CompetenceController;
+import app.competence.presentation.ICompetenceController;
 import app.config.hibernate.HibernateConfig;
 import app.presentation.health.HealthCheckController;
-import app.project.presentation.ProjectController;
-import app.security.presentation.SecurityController;
-import app.stage.presentation.StageController;
-import app.task.presentation.TaskController;
-import app.user.presentation.UserController;
 import app.presentation.health.IHealthCheckController;
-import app.security.presentation.ISecurityController;
-import app.user.presentation.IUserController;
-import app.shared.presentation.ICrudController;
-import app.competence.data.CompetenceDAO;
-import app.project.data.ProjectDAO;
-import app.stage.data.StageDAO;
-import app.task.data.TaskDAO;
-import app.user.data.UserDAO;
-import app.competence.data.ICompetenceDAO;
 import app.project.data.IProjectDAO;
-import app.stage.data.IStageDAO;
-import app.user.data.IUserDAO;
-import app.competence.domain.CompetenceService;
-import app.project.domain.ProjectService;
-import app.security.domain.SecurityService;
-import app.stage.domain.StageService;
-import app.task.domain.TaskService;
-import app.user.domain.UserService;
-import app.competence.domain.ICompetenceService;
+import app.project.data.ProjectDAO;
 import app.project.domain.IProjectService;
+import app.project.domain.IScheduleService;
+import app.project.domain.ProjectService;
+import app.project.domain.ScheduleService;
+import app.project.presentation.ProjectController;
 import app.security.domain.ISecurityService;
+import app.security.domain.SecurityService;
+import app.security.presentation.ISecurityController;
+import app.security.presentation.SecurityController;
+import app.shared.presentation.ICrudController;
+import app.stage.data.IStageDAO;
+import app.stage.data.StageDAO;
 import app.stage.domain.IStageService;
+import app.stage.domain.StageService;
+import app.stage.presentation.StageController;
+import app.task.data.TaskDAO;
 import app.task.domain.ITaskService;
+import app.task.domain.TaskService;
+import app.task.presentation.TaskController;
+import app.user.data.IUserDAO;
+import app.user.data.UserDAO;
 import app.user.domain.IUserService;
+import app.user.domain.UserService;
+import app.user.presentation.IUserController;
+import app.user.presentation.UserController;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.Getter;
 
@@ -89,7 +90,8 @@ public final class DependencyContainer
         this.entityManagerFactory = entityManagerFactory;
 
         this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT);
         this.healthCheckController = new HealthCheckController(entityManagerFactory);
 
         this.userDAO = new UserDAO(entityManagerFactory);
