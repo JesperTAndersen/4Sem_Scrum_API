@@ -78,7 +78,7 @@ Prevents new task assignments while preserving existing ones.
 
 ## DELETE /competences/{id}
 
-Only an unused competence can be deleted. Deactivate a competence that is referenced by a task.
+Only an unused competence can be deleted. Deactivate a competence that is referenced by a task or employee.
 
 **Path parameters:** `id` — competence ID.  
 **Success response:** `204 No Content`.  

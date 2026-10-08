@@ -1,6 +1,6 @@
 # Estimo API
 
-The Estimo API is the backend contract used by the Estimo frontend to manage users, projects, stages, tasks, and competences.
+The Estimo API is the backend contract used by the Estimo frontend to manage users, projects, stages, tasks, competences, and employees.
 
 | Item | Value |
 |---|---|
@@ -58,6 +58,8 @@ Client errors contain a message suitable for display. Server errors use `Interna
 | Stages | `/stages` | Stages within projects | [stages.md](api/stages.md) |
 | Tasks | `/tasks` | Estimated work and required competences | [tasks.md](api/tasks.md) |
 | Competences | `/competences` | Skills and hourly rates | [competences.md](api/competences.md) |
+| Employees | `/employee` | Employees, competencies, and daily availability | [employee.md](api/employee.md) |
+| Company capacities | `/company-capacities` | Standard daily hours per employee | [company-capacities.md](api/company-capacities.md) |
 | Health | `/health` | Database readiness check | [health.md](api/health.md) |
 
 The public welcome endpoint is `GET /` (outside the API base URL).
