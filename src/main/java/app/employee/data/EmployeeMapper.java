@@ -1,8 +1,12 @@
 package app.employee.data;
 
+import app.competence.data.CompetenceMapper;
+import app.competence.domain.Competence;
 import app.employee.domain.Employee;
 import app.employee.presentation.dto.EmployeeCreateDTO;
 import app.employee.presentation.dto.EmployeeDTO;
+
+import java.util.Comparator;
 
 public class EmployeeMapper
 {
@@ -19,7 +23,11 @@ public class EmployeeMapper
                 employee.getLastName(),
                 employee.getDailyCapacity(),
                 employee.isStandardCapacity(),
-                employee.getCompetences(),
+                employee.isActive(),
+                employee.getCompetences().stream()
+                        .sorted(Comparator.comparing(Competence::getId))
+                        .map(CompetenceMapper::toDTO)
+                        .toList(),
                 employee.getCreatedAt(),
                 employee.getUpdatedAt()
         );

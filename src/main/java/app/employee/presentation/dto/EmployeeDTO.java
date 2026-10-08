@@ -1,6 +1,6 @@
 package app.employee.presentation.dto;
 
-import app.competence.domain.Competence;
+import app.competence.presentation.dto.CompetenceDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,7 +11,8 @@ public record EmployeeDTO(
         String lastName,
         double dailyCapacity,
         boolean standardCapacity,
-        List<Competence> competences,
+        boolean active,
+        List<CompetenceDTO> competences,
         LocalDateTime createdAt,
         LocalDateTime updateAt)
 {
