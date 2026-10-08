@@ -43,6 +43,7 @@ import app.stage.data.StageDAO;
 import app.stage.domain.IStageService;
 import app.stage.domain.StageService;
 import app.stage.presentation.StageController;
+import app.task.data.ITaskDAO;
 import app.task.data.TaskDAO;
 import app.task.domain.ITaskService;
 import app.task.domain.TaskService;
@@ -65,7 +66,7 @@ public final class DependencyContainer
     private final IUserDAO userDAO;
     private final ICompetenceDAO competenceDAO;
     private final IStageDAO stageDAO;
-    private final TaskDAO taskDAO;
+    private final ITaskDAO taskDAO;
     private final IProjectDAO projectDAO;
     private final IEmployeeDAO employeeDAO;
     private final ICompanyCapacityDAO companyCapacityDAO;

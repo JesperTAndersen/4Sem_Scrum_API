@@ -1,21 +1,12 @@
 package app.task.domain;
 
-import app.competence.domain.Competence;
-import app.exceptions.NotFoundException;
-import app.persistence.testdoubles.EntityIds;
-import app.persistence.testdoubles.InMemoryCompetenceDAO;
-import app.persistence.testdoubles.InMemoryStageDAO;
-import app.project.domain.Project;
-import app.project.domain.ProjectStatus;
-import app.stage.domain.Stage;
-import app.task.data.TaskDAO;
-import app.task.presentation.dto.TaskCreateDTO;
-import app.task.presentation.dto.TaskDTO;
-import app.task.presentation.dto.TaskUpdateDTO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvFileSource;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,13 +15,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
+
+import app.competence.domain.Competence;
+import app.exceptions.NotFoundException;
+import app.persistence.testdoubles.EntityIds;
+import app.persistence.testdoubles.InMemoryCompetenceDAO;
+import app.persistence.testdoubles.InMemoryStageDAO;
+import app.project.domain.Project;
+import app.project.domain.ProjectStatus;
+import app.stage.domain.Stage;
+import app.task.data.ITaskDAO;
+import app.task.presentation.dto.TaskCreateDTO;
+import app.task.presentation.dto.TaskDTO;
+import app.task.presentation.dto.TaskUpdateDTO;
 
 class TaskServiceTest
 {
@@ -245,14 +246,13 @@ class TaskServiceTest
      * interface. It mirrors {@code TaskDAO}: a missing task raises {@link NotFoundException}, and deleting a task also
      * removes it as a predecessor of other tasks.
      */
-    private static final class InMemoryTaskDAO extends TaskDAO
+    private static final class InMemoryTaskDAO implements ITaskDAO
     {
         private final Map<Long, Task> tasks = new LinkedHashMap<>();
         private long nextId = 1L;
 
         private InMemoryTaskDAO()
         {
-            super(null);
         }
 
         @Override

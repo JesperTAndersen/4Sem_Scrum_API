@@ -1,26 +1,27 @@
 package app.task.domain;
 
+import java.util.List;
+
 import app.competence.domain.Competence;
 import app.exceptions.BadRequestException;
 import app.exceptions.NotFoundException;
 import app.shared.data.IReadDAO;
 import app.stage.domain.Stage;
-import app.task.data.TaskDAO;
+import app.task.data.ITaskDAO;
 import app.task.data.TaskMapper;
 import app.task.presentation.dto.TaskCreateDTO;
 import app.task.presentation.dto.TaskDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
 import app.utils.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
-import java.util.List;
 
 public class TaskService implements ITaskService
 {
-    private final TaskDAO taskDAO;
+    private final ITaskDAO taskDAO;
     private final IReadDAO<Stage> stageReader;
     private final IReadDAO<Competence> competenceReader;
 
-    public TaskService(TaskDAO taskDAO, IReadDAO<Stage> stageReader, IReadDAO<Competence> competenceReader)
+    public TaskService(ITaskDAO taskDAO, IReadDAO<Stage> stageReader, IReadDAO<Competence> competenceReader)
     {
         this.taskDAO = taskDAO;
         this.stageReader = stageReader;
