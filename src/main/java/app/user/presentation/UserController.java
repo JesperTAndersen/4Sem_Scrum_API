@@ -80,17 +80,6 @@ public class UserController implements IUserController
     }
 
     @Override
-    public void create(Context ctx)
-    {
-        CreateUserRequestDTO dto = ctx.bodyValidator(CreateUserRequestDTO.class)
-            .check(Objects::nonNull, "Payload cant be null")
-            .get();
-
-        UserDTO userDTO = userService.registerUser(dto);
-        ctx.status(201).json(userDTO);
-    }
-
-    @Override
     public void update(Context ctx)
     {
         AuthenticatedUser authUser = SecurityUtil.getAuthenticatedUser(ctx);

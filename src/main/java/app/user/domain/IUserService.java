@@ -7,8 +7,6 @@ import java.util.List;
 
 public interface IUserService
 {
-    UserDTO registerUser(CreateUserRequestDTO dto);
-
     UserDTO findById(Long userId);
 
     List<UserDTO> findAll();
