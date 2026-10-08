@@ -62,7 +62,7 @@ public class CompetenceService implements ICompetenceService
         ValidationUtil.validateId(id);
         if (competenceDAO.isInUse(id))
         {
-            throw new ConflictException("Competence is used by one or more tasks and must be deactivated instead");
+            throw new ConflictException("Competence is used by tasks or employees and must be deactivated instead");
         }
         competenceDAO.delete(id);
     }
