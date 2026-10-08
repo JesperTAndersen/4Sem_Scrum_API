@@ -1,21 +1,21 @@
 package app.security.presentation;
 
-import app.security.presentation.ISecurityController;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import app.exceptions.ForbiddenException;
 import app.exceptions.TokenVerificationException;
 import app.exceptions.UnauthorizedException;
+import app.security.domain.ISecurityService;
 import app.security.presentation.dto.AuthenticatedUser;
 import app.security.presentation.dto.LoginRequestDTO;
 import app.security.presentation.dto.LoginResponseDTO;
 import app.user.presentation.dto.CreateUserRequestDTO;
-import app.security.domain.ISecurityService;
 import app.utils.JWTUtil;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.HttpStatus;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class SecurityController implements ISecurityController
 {
@@ -30,7 +30,9 @@ public class SecurityController implements ISecurityController
     @Override
     public void login(Context ctx)
     {
-        LoginRequestDTO request = ctx.bodyAsClass(LoginRequestDTO.class);
+        LoginRequestDTO request = ctx.bodyValidator(LoginRequestDTO.class)
+            .check(Objects::nonNull, "Login payload is required")
+            .get();
         String token = securityService.login(request);
         ctx.status(HttpStatus.OK).json(new LoginResponseDTO(token));
     }
@@ -38,7 +40,9 @@ public class SecurityController implements ISecurityController
     @Override
     public void register(Context ctx)
     {
-        CreateUserRequestDTO request = ctx.bodyAsClass(CreateUserRequestDTO.class);
+        CreateUserRequestDTO request = ctx.bodyValidator(CreateUserRequestDTO.class)
+            .check(Objects::nonNull, "Register payload is required")
+            .get();
         AuthenticatedUser user = securityService.register(request);
         ctx.status(HttpStatus.CREATED).json(user);
     }
