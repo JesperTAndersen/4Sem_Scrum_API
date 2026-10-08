@@ -1,5 +1,6 @@
 package app.employee.domain;
 
+import app.capacity.data.ICompanyCapacityDAO;
 import app.employee.data.EmployeeMapper;
 import app.employee.data.IEmployeeDAO;
 import app.employee.presentation.dto.EmployeeCreateDTO;
@@ -13,20 +14,24 @@ import java.util.List;
 public class EmployeeService implements IEmployeeService
 {
     private final IEmployeeDAO employeeDAO;
+    private final ICompanyCapacityDAO companyCapacityDAO;
 
-    public EmployeeService(IEmployeeDAO employeeDAO)
+    public EmployeeService(IEmployeeDAO employeeDAO, ICompanyCapacityDAO companyCapacityDAO)
     {
         this.employeeDAO = employeeDAO;
+        this.companyCapacityDAO = companyCapacityDAO;
     }
 
     @Override
     public EmployeeDTO create(EmployeeCreateDTO dto)
     {
-        validate(dto == null ? null : dto.firstName(),
-                dto == null ? null : dto.lastName(),
-                dto == null ? null : dto.dailyCapacity());
+        if (dto == null) throw new BadRequestException("Employee payload is required");
+        validate(dto.firstName(), dto.lastName(), dto.dailyCapacity(),
+                Boolean.TRUE.equals(dto.standardCapacity()));
 
-        Employee created = employeeDAO.create(EmployeeMapper.toEntity(dto));
+        Employee employee = EmployeeMapper.toEntity(dto);
+        employee.configureCapacity(Boolean.TRUE.equals(dto.standardCapacity()), companyCapacityDAO.get());
+        Employee created = employeeDAO.create(employee);
         return EmployeeMapper.toDTO(created);
     }
 
@@ -49,12 +54,15 @@ public class EmployeeService implements IEmployeeService
     public EmployeeDTO update(Long id, EmployeeUpdateDTO dto)
     {
         ValidationUtil.validateId(id);
-        validate(dto == null ? null : dto.firstName(),
-                dto == null ? null : dto.lastName(),
-                dto == null ? null : dto.dailyCapacity());
-
+        if (dto == null) throw new BadRequestException("Employee payload is required");
         Employee employee = employeeDAO.get(id);
-        employee.update(dto.firstName().trim(), dto.lastName().trim(), dto.dailyCapacity());
+        boolean standardCapacity = dto.standardCapacity() == null
+                ? employee.isStandardCapacity()
+                : dto.standardCapacity();
+        validate(dto.firstName(), dto.lastName(), dto.dailyCapacity(), standardCapacity);
+        employee.update(dto.firstName().trim(), dto.lastName().trim(),
+                standardCapacity ? 0.0 : dto.dailyCapacity());
+        employee.configureCapacity(standardCapacity, companyCapacityDAO.get());
         return EmployeeMapper.toDTO(employeeDAO.update(employee));
     }
 
@@ -72,7 +80,7 @@ public class EmployeeService implements IEmployeeService
         employeeDAO.setActive(id, active);
     }
 
-    private void validate(String firstName, String lastName, Double dailyCapacity)
+    private void validate(String firstName, String lastName, Double dailyCapacity, boolean standardCapacity)
     {
         if (firstName == null || firstName.isBlank())
         {
@@ -82,13 +90,12 @@ public class EmployeeService implements IEmployeeService
         {
             throw new BadRequestException("Last name is required");
         }
-        if (dailyCapacity == null || !Double.isFinite(dailyCapacity))
+        if (!standardCapacity && (dailyCapacity == null || !Double.isFinite(dailyCapacity) || dailyCapacity <= 0))
         {
             throw new BadRequestException("Daily capacity must be a finite positive number");
         }
 
         ValidationUtil.validateName(firstName, "First name");
         ValidationUtil.validateName(lastName, "Last name");
-        ValidationUtil.validatePositive(dailyCapacity, "Daily capacity");
     }
 }

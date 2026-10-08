@@ -25,9 +25,6 @@ public class EmployeeController implements IEmployeeController
                 .check(Objects::nonNull, "Employee payload cannot be null")
                 .check(employee -> employee != null && employee.firstName() != null && !employee.firstName().isBlank(), "First name is required")
                 .check(employee -> employee != null && employee.lastName() != null && !employee.lastName().isBlank(), "Last name is required")
-                .check(employee -> employee != null && employee.dailyCapacity() != null
-                        && Double.isFinite(employee.dailyCapacity()) && employee.dailyCapacity() > 0,
-                        "Daily capacity must be a positive number")
                 .get();
 
         ctx.status(HttpStatus.CREATED).json(employeeService.create(body));
@@ -54,9 +51,6 @@ public class EmployeeController implements IEmployeeController
                 .check(Objects::nonNull, "Employee payload cannot be null")
                 .check(employee -> employee != null && employee.firstName() != null && !employee.firstName().isBlank(), "First name is required")
                 .check(employee -> employee != null && employee.lastName() != null && !employee.lastName().isBlank(), "Last name is required")
-                .check(employee -> employee != null && employee.dailyCapacity() != null
-                        && Double.isFinite(employee.dailyCapacity()) && employee.dailyCapacity() > 0,
-                        "Daily capacity must be a positive number")
                 .get();
 
         ctx.json(employeeService.update(id, body));

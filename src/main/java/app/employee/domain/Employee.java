@@ -1,23 +1,27 @@
 package app.employee.domain;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import app.capacity.domain.CompanyCapacity;
 import app.competence.domain.Competence;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,6 +38,13 @@ public class Employee
 
     private double dailyCapacity;
 
+    @Column(name = "usesStandardCapacity", nullable = false, columnDefinition = "boolean default false")
+    private boolean standardCapacity;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "standardCapacity_id")
+    private CompanyCapacity companyCapacity;
+
     private boolean active;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -48,6 +59,17 @@ public class Employee
         this.lastName = lastName;
         this.dailyCapacity = dailyCapacity;
         this.active = true;
+    }
+
+    public double getDailyCapacity()
+    {
+        return standardCapacity ? companyCapacity.getDailyCapacity() : dailyCapacity;
+    }
+
+    public void configureCapacity(boolean standardCapacity, CompanyCapacity companyCapacity)
+    {
+        this.standardCapacity = standardCapacity;
+        this.companyCapacity = companyCapacity;
     }
 
     public void update(String firstName, String lastName, double dailyCapacity)

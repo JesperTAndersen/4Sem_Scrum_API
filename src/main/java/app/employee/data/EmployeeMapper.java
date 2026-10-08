@@ -18,6 +18,7 @@ public class EmployeeMapper
                 employee.getFirstName(),
                 employee.getLastName(),
                 employee.getDailyCapacity(),
+                employee.isStandardCapacity(),
                 employee.getCompetences(),
                 employee.getCreatedAt(),
                 employee.getUpdatedAt()
@@ -29,6 +30,6 @@ public class EmployeeMapper
         return new Employee(
                 dto.firstName().trim(),
                 dto.lastName().trim(),
-                dto.dailyCapacity());
+                dto.dailyCapacity() == null ? 0.0 : dto.dailyCapacity());
     }
 }
