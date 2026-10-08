@@ -140,7 +140,7 @@ public final class DependencyContainer
         this.taskController = new TaskController(taskService);
 
         this.employeeDAO = new EmployeeDAO(entityManagerFactory);
-        this.employeeService = new EmployeeService(employeeDAO, companyCapacityDAO);
+        this.employeeService = new EmployeeService(employeeDAO, companyCapacityDAO, competenceDAO);
         this.employeeController = new EmployeeController(employeeService);
     }
 
