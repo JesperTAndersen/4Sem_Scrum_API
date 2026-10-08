@@ -5,6 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import app.capacity.data.CompanyCapacityDAO;
+import app.capacity.data.ICompanyCapacityDAO;
+import app.capacity.domain.CompanyCapacityService;
+import app.capacity.domain.ICompanyCapacityService;
+import app.capacity.presentation.CompanyCapacityController;
+import app.capacity.presentation.ICompanyCapacityController;
 import app.competence.data.CompetenceDAO;
 import app.competence.data.ICompetenceDAO;
 import app.competence.domain.CompetenceService;
@@ -12,6 +18,12 @@ import app.competence.domain.ICompetenceService;
 import app.competence.presentation.CompetenceController;
 import app.competence.presentation.ICompetenceController;
 import app.config.hibernate.HibernateConfig;
+import app.employee.data.EmployeeDAO;
+import app.employee.data.IEmployeeDAO;
+import app.employee.domain.EmployeeService;
+import app.employee.domain.IEmployeeService;
+import app.employee.presentation.EmployeeController;
+import app.employee.presentation.IEmployeeController;
 import app.presentation.health.HealthCheckController;
 import app.presentation.health.IHealthCheckController;
 import app.project.data.IProjectDAO;
@@ -55,6 +67,13 @@ public final class DependencyContainer
     private final IStageDAO stageDAO;
     private final TaskDAO taskDAO;
     private final IProjectDAO projectDAO;
+    private final IEmployeeDAO employeeDAO;
+    private final ICompanyCapacityDAO companyCapacityDAO;
+
+    @Getter
+    private final ICompanyCapacityService companyCapacityService;
+    @Getter
+    private final ICompanyCapacityController companyCapacityController;
 
     @Getter
     private final IUserService userService;
@@ -84,15 +103,23 @@ public final class DependencyContainer
     private final TaskController taskController;
     @Getter
     private final IScheduleService scheduleService;
+    @Getter
+    private final IEmployeeService employeeService;
+    @Getter
+    private final IEmployeeController employeeController;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {
         this.entityManagerFactory = entityManagerFactory;
-
         this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT);
         this.healthCheckController = new HealthCheckController(entityManagerFactory);
+
+        this.companyCapacityDAO = new CompanyCapacityDAO(entityManagerFactory);
+        this.companyCapacityDAO.initialize();
+        this.companyCapacityService = new CompanyCapacityService(companyCapacityDAO);
+        this.companyCapacityController = new CompanyCapacityController(companyCapacityService);
 
         this.userDAO = new UserDAO(entityManagerFactory);
         this.userService = new UserService(userDAO);
@@ -114,6 +141,10 @@ public final class DependencyContainer
         this.taskDAO = new TaskDAO(entityManagerFactory);
         this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO);
         this.taskController = new TaskController(taskService);
+
+        this.employeeDAO = new EmployeeDAO(entityManagerFactory);
+        this.employeeService = new EmployeeService(employeeDAO, companyCapacityDAO, competenceDAO);
+        this.employeeController = new EmployeeController(employeeService);
     }
 
     public static DependencyContainer getInstance()

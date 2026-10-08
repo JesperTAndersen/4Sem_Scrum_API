@@ -218,7 +218,14 @@ public class CompetenceDAO implements ICompetenceDAO
                         """, Long.class)
                         .setParameter("id", id)
                         .getSingleResult();
-                return count > 0;
+                if (count > 0) return true;
+                return em.createQuery("""
+                        SELECT COUNT(e)
+                        FROM Employee e JOIN e.competences c
+                        WHERE c.id = :id
+                        """, Long.class)
+                        .setParameter("id", id)
+                        .getSingleResult() > 0;
             }
             catch (PersistenceException e)
             {

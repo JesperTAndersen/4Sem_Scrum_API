@@ -1,18 +1,15 @@
 package app.config;
 
-import java.util.Map;
-
+import app.capacity.presentation.CompanyCapacityRoutes;
+import app.competence.presentation.CompetenceRoutes;
+import app.employee.presentation.EmployeeRoutes;
+import app.exceptions.ApiException;
 import app.exceptions.ConfigurationException;
 import app.exceptions.ErrorResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import app.security.presentation.ISecurityController;
-import app.exceptions.ApiException;
-import app.competence.presentation.CompetenceRoutes;
+import app.presentation.Routes;
 import app.presentation.health.HealthCheckRoute;
 import app.project.presentation.ProjectRoutes;
-import app.presentation.Routes;
+import app.security.presentation.ISecurityController;
 import app.security.presentation.SecurityRoutes;
 import app.stage.presentation.StageRoutes;
 import app.task.presentation.TaskRoutes;
@@ -24,6 +21,10 @@ import io.javalin.config.JavalinConfig;
 import io.javalin.http.HttpStatus;
 import io.javalin.json.JavalinJackson;
 import jakarta.persistence.EntityManagerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 public class ApplicationConfig
 {
@@ -85,7 +86,9 @@ public class ApplicationConfig
                 new TaskRoutes(dependencyContainer.getTaskController()),
                 new CompetenceRoutes(dependencyContainer.getCompetenceController()),
                 new ProjectRoutes((dependencyContainer.getProjectController())),
-                new SecurityRoutes(dependencyContainer.getSecurityController())
+                new SecurityRoutes(dependencyContainer.getSecurityController()),
+                new EmployeeRoutes(dependencyContainer.getEmployeeController()),
+                new CompanyCapacityRoutes(dependencyContainer.getCompanyCapacityController())
         );
     }
 
