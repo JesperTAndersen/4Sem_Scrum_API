@@ -19,9 +19,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -86,7 +84,13 @@ public class Employee
 
     public void addCompetence(Competence comp)
     {
-        competences.add(comp);
+        if (!competences.contains(comp)) competences.add(comp);
+    }
+
+    public void replaceCompetences(List<Competence> competences)
+    {
+        this.competences.clear();
+        competences.forEach(this::addCompetence);
     }
 
     public void remCompetence(Competence comp)
