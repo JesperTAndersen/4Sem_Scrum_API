@@ -63,3 +63,11 @@ Client errors contain a message suitable for display. Server errors use `Interna
 | Health | `/health` | Database readiness check | [health.md](api/health.md) |
 
 The public welcome endpoint is `GET /` (outside the API base URL).
+
+## Updated documentation
+
+| Document | Updated information |
+|---|---|
+| [Stages](api/stages.md) | Stage dependencies, predecessor endpoints, completion rules, and calculated stage dates |
+| [Tasks](api/tasks.md) | Same-stage task dependencies, start and completion validation, and scheduling behavior |
+| [Dependency migration and deployment](dependency-migration.md) | Existing cross-stage dependencies, data migration decisions, and rollout checks |
