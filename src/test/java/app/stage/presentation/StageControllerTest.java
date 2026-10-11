@@ -148,6 +148,25 @@ class StageControllerTest
         assertTrue(stageInProject.get("tasks").isArray());
     }
 
+    @Test
+    @DisplayName("Stage dependencies: create, retrieve, duplicate rejection and removal")
+    void stagePredecessorApi()
+    {
+        long first = createAsManager("/stages", VALID_CREATE_BODY);
+        long second = createAsManager("/stages", "{ \"projectId\": 1, \"name\": \"Delivery\" }");
+        String path = "/stages/" + second + "/predecessors/" + first;
+        givenManager().when().post(path).then().statusCode(204);
+        JsonNode response = readJson(givenManager().when().get("/stages/" + second)
+                .then().statusCode(200).extract().asString());
+        assertEquals(first, response.get("predecessorIds").get(0).asLong());
+        assertTrue(response.has("completed"));
+        givenManager().when().post(path).then().statusCode(400);
+        givenManager().when().delete(path).then().statusCode(204);
+        response = readJson(givenManager().when().get("/stages/" + second)
+                .then().statusCode(200).extract().asString());
+        assertEquals(0, response.get("predecessorIds").size());
+    }
+
     private String validBody(String method)
     {
         return switch (method)

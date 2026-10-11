@@ -36,8 +36,9 @@ class TaskControllerTest
         String resolvedPath = path;
         if (path.contains("{predecessorId}"))
         {
-            long predecessorId = createTask("Access predecessor", 1);
-            long taskId = target.equals("UNKNOWN") ? UNKNOWN_ID : createTask("Access task", 1);
+            long stageId = createStage();
+            long predecessorId = createTask("Access predecessor", 1, stageId);
+            long taskId = target.equals("UNKNOWN") ? UNKNOWN_ID : createTask("Access task", 1, stageId);
             if (method.equals("DELETE") && target.equals("EXISTING"))
             {
                 addPredecessor(taskId, predecessorId, 204);
@@ -143,8 +144,9 @@ class TaskControllerTest
     @DisplayName("Add predecessor - should store the dependency and its offsets on the task")
     void predecessorCanBeAddedAndIsReturnedOnTask()
     {
-        long predecessorId = createTask("Dependency predecessor", 2);
-        long taskId = createTask("Dependency task", 1);
+        long stageId = createStage();
+        long predecessorId = createTask("Dependency predecessor", 2, stageId);
+        long taskId = createTask("Dependency task", 1, stageId);
 
         addPredecessor(taskId, predecessorId, 204);
 
@@ -159,8 +161,9 @@ class TaskControllerTest
     @DisplayName("Delete - should remove the deleted task from its dependents' predecessors")
     void deletingAPredecessorRemovesTheDependencyReference()
     {
-        long predecessorId = createTask("Deleted predecessor", 1);
-        long taskId = createTask("Dependent task survives", 1);
+        long stageId = createStage();
+        long predecessorId = createTask("Deleted predecessor", 1, stageId);
+        long taskId = createTask("Dependent task survives", 1, stageId);
         addPredecessor(taskId, predecessorId, 204);
 
         givenManager().when().delete("/tasks/" + predecessorId).then().statusCode(204);
@@ -172,8 +175,9 @@ class TaskControllerTest
     @DisplayName("Get project - should include dependency data for its tasks")
     void projectViewIncludesDependencyAwareTaskData()
     {
-        long predecessorId = createTask("Project view predecessor", 2);
-        long taskId = createTask("Project view dependent", 1);
+        long stageId = createStage();
+        long predecessorId = createTask("Project view predecessor", 2, stageId);
+        long taskId = createTask("Project view dependent", 1, stageId);
         addPredecessor(taskId, predecessorId, 204);
 
         String response = givenManager()
@@ -241,9 +245,14 @@ class TaskControllerTest
 
     private long createTask(String name, int minimumDurationInDays)
     {
+        return createTask(name, minimumDurationInDays, createStage());
+    }
+
+    private long createTask(String name, int minimumDurationInDays, long stageId)
+    {
         return createAsManager("/tasks", """
                 { "stageId": %d, "name": "%s", "competenceId": %d, "estimate": 0.0, "minimumDurationInDays": %d }
-                """.formatted(createStage(), name, createCompetence(), minimumDurationInDays));
+                """.formatted(stageId, name, createCompetence(), minimumDurationInDays));
     }
 
     private String validCreateBody()
