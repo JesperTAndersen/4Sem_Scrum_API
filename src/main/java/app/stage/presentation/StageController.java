@@ -52,6 +52,18 @@ public class StageController implements ICrudController
         ctx.status(200).json(stageService.update(id, dto));
     }
 
+    public void addPredecessor(Context ctx)
+    {
+        stageService.addPredecessor(RequestUtil.requirePathId(ctx, "id"), RequestUtil.requirePathId(ctx, "predecessorId"));
+        ctx.status(204);
+    }
+
+    public void removePredecessor(Context ctx)
+    {
+        stageService.removePredecessor(RequestUtil.requirePathId(ctx, "id"), RequestUtil.requirePathId(ctx, "predecessorId"));
+        ctx.status(204);
+    }
+
     @Override
     public void delete(Context ctx)
     {
