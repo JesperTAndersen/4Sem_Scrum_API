@@ -9,11 +9,10 @@ import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
 import app.project.presentation.dto.CreateProjectDTO;
 import app.project.presentation.dto.ProjectDTO;
+import app.project.presentation.dto.ScheduleDTO;
 import app.project.presentation.dto.SlimProjectDTO;
 import app.project.presentation.dto.UpdateProjectDTO;
-import app.project.presentation.dto.*;
-import app.project.domain.Project;
-import app.project.domain.ProjectStatus;
+
 import app.user.data.UserMapper;
 import app.user.domain.User;
 import app.stage.data.StageMapper;
@@ -21,8 +20,6 @@ import app.stage.domain.Stage;
 import app.stage.presentation.dto.StageDTO;
 import app.task.domain.Task;
 import app.task.presentation.dto.TaskCountDTO;
-import app.user.data.UserMapper;
-import app.user.domain.User;
 
 public class ProjectMapper
 {
