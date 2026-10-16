@@ -10,6 +10,10 @@ import app.stage.presentation.dto.StageUpdateDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.api.Test;
+import app.exceptions.BadRequestException;
+import app.task.domain.Task;
+import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import java.time.LocalDate;
@@ -40,6 +44,39 @@ class StageServiceTest
         stageDAO = new InMemoryStageDAO();
         stageDAO.create(new Stage("Planning", project));
         stageService = new StageService(stageDAO, projectDAO);
+    }
+
+
+    @Test
+    @DisplayName("Stage dependencies accept multiple predecessors but reject duplicates and indirect cycles")
+    void stageDependencyValidation()
+    {
+        Stage planning = stageDAO.get(1L);
+        Stage implementation = stageDAO.create(new Stage("Implementation", planning.getProject()));
+        Stage qa = stageDAO.create(new Stage("QA", planning.getProject()));
+        stageService.addPredecessor(implementation.getId(), planning.getId());
+        stageService.addPredecessor(qa.getId(), implementation.getId());
+        assertEquals(java.util.List.of(implementation.getId()), stageService.get(qa.getId()).predecessorIds());
+        assertThrows(BadRequestException.class, () -> stageService.addPredecessor(implementation.getId(), planning.getId()));
+        assertThrows(BadRequestException.class, () -> stageService.addPredecessor(planning.getId(), qa.getId()));
+        assertThrows(BadRequestException.class, () -> stageService.addPredecessor(planning.getId(), planning.getId()));
+        assertThrows(BadRequestException.class, () -> stageService.delete(planning.getId()));
+        stageService.removePredecessor(qa.getId(), implementation.getId());
+        assertTrue(stageService.get(qa.getId()).predecessorIds().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Stage cannot depend on another project's stage, nor be delayed after work starts")
+    void stageDependencyRequiresSameProjectAndNotStarted()
+    {
+        Stage planning = stageDAO.get(1L);
+        Stage other = stageDAO.create(new Stage("Other", Project.builder().id(2L)
+                .startDate(LocalDate.of(2030, 1, 7)).deadline(LocalDate.of(2030, 6, 28)).build()));
+        assertThrows(BadRequestException.class, () -> stageService.addPredecessor(1L, other.getId()));
+        Stage second = stageDAO.create(new Stage("Second", planning.getProject()));
+        Task active = new Task(second, "Started", 1);
+        active.changeStatus(Task.TaskStatus.IN_PROGRESS);
+        assertThrows(BadRequestException.class, () -> stageService.addPredecessor(second.getId(), 1L));
     }
 
     @ParameterizedTest(name = "[{index}] {3}")

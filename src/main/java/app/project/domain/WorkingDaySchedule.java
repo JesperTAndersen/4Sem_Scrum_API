@@ -5,6 +5,9 @@ import app.task.domain.Task;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import app.stage.domain.Stage;
 import java.util.Map;
 
 public final class WorkingDaySchedule
@@ -28,10 +31,10 @@ public final class WorkingDaySchedule
             throw new IllegalArgumentException("Project start date is required");
         }
 
-        return calculate(task, nextWorkingDay(projectStartDate), new HashMap<>());
+        return calculate(task, nextWorkingDay(projectStartDate), new HashMap<>(), new HashSet<>());
     }
 
-    private static TaskDates calculate(Task task, LocalDate projectStartDate, Map<Task, TaskDates> calculated)
+    private static TaskDates calculate(Task task, LocalDate projectStartDate, Map<Task, TaskDates> calculated, Set<Task> visiting)
     {
         TaskDates existing = calculated.get(task);
 
@@ -40,19 +43,34 @@ public final class WorkingDaySchedule
             return existing;
         }
 
+        if (!visiting.add(task)) throw new IllegalStateException("Cyclic schedule dependency");
         LocalDate startDate = projectStartDate;
         for (Task predecessor : task.getPredecessors())
         {
-            TaskDates predecessorDates = calculate(predecessor, projectStartDate, calculated);
+            TaskDates predecessorDates = calculate(predecessor, projectStartDate, calculated, visiting);
             LocalDate availableDate = predecessor.getScheduledDurationInDays() == 0
                     ? predecessorDates.startDate()
                     : nextWorkingDay(predecessorDates.endDate().plusDays(1));
             if (availableDate.isAfter(startDate)) startDate = availableDate;
         }
 
+        if (task.getStage() != null)
+        {
+            for (Stage stage : task.getStage().getPredecessors())
+            {
+                for (Task predecessor : stage.getTasks())
+                {
+                    TaskDates dates = calculate(predecessor, projectStartDate, calculated, visiting);
+                    LocalDate available = predecessor.getScheduledDurationInDays() == 0
+                            ? dates.startDate() : nextWorkingDay(dates.endDate().plusDays(1));
+                    if (available.isAfter(startDate)) startDate = available;
+                }
+            }
+        }
         long workingDays = requiredWorkingDays(task.getScheduledDurationInDays());
         LocalDate endDate = workingDays == 0 ? startDate : addWorkingDays(startDate, workingDays - 1);
         TaskDates result = new TaskDates(startDate, endDate);
+        visiting.remove(task);
         calculated.put(task, result);
         return result;
     }

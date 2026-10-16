@@ -154,7 +154,7 @@ Updates supplied task fields. To assign or change a competence, provide both `co
 
 ## POST /tasks/{taskId}/predecessors/{predecessorId}
 
-Adds a predecessor to a task. Both tasks must belong to the same project. A task cannot depend on itself, duplicate dependencies are rejected, and a dependency that would create a circular chain is rejected.
+Adds a predecessor to a task. Both tasks must belong to the same stage. A task cannot depend on itself, duplicate dependencies are rejected, and a dependency that would create a circular chain is rejected.
 
 **Path parameters**
 
@@ -169,7 +169,7 @@ Adds a predecessor to a task. Both tasks must belong to the same project. A task
 
 | Status | When |
 |---|---|
-| `400` | IDs are invalid, tasks are from different projects, dependency already exists, task depends on itself, or the dependency would create a cycle |
+| `400` | IDs are invalid, tasks are from different stages, dependency already exists, task depends on itself, or the dependency would create a cycle |
 | `404` | Either task does not exist |
 
 ## DELETE /tasks/{taskId}/predecessors/{predecessorId}
@@ -190,3 +190,11 @@ Removes an existing predecessor dependency.
 Dependency offsets are calculated from the task graph. A task without predecessors starts at offset `0`. A dependent task starts after the predecessor with the latest calculated finish, so multiple tasks with the same predecessor can still run in parallel.
 
 The offsets are relative planning values. Converting them into actual Monday-Friday calendar dates is handled by the working-day scheduling story (US-14).
+
+## Task start and completion rules
+
+Task predecessors must be in the **same stage**. Stage predecessors order work across stages. Both `IN_PROGRESS` and `DONE` status transitions reject unfinished task predecessors or predecessor stages (`400`), including direct `NOT_STARTED` to `DONE` attempts. Adding task predecessors after a task has started is rejected.
+
+`predecessorIds` continues to describe task dependencies only. Stage-level dependencies are returned in the owning Stage object. Changes to any predecessor's duration or stage dependencies are reflected in computed task schedule responses.
+
+**Reopening:** reopening a `DONE` task is rejected if a dependent task or a dependent stage has already started. Adding a new unfinished task to a completed stage is rejected when dependent stage work has begun. Directly updating completed tasks with `DONE` is subject to predecessor validation.

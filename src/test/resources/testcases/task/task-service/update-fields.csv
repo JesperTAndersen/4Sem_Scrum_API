@@ -16,4 +16,4 @@ id,name,minimumDurationInDays,competenceId,estimate,status,expected,reason
 1,NULL,NULL,1,-0.01,NULL,BadRequestException,"EP + BVA: estimate is negative"
 1,NULL,NULL,1,0.0,NULL,ACCEPT,"BVA: estimate 0 (minimum)"
 1,NULL,NULL,1,NaN,NULL,BadRequestException,"EP: estimate is not a number"
-1,NULL,NULL,NULL,NULL,IN_PROGRESS,ACCEPT,"EP: status is changed"
+2,NULL,NULL,NULL,NULL,IN_PROGRESS,BadRequestException,"Blocked predecessor: cannot start until required work is done"

@@ -156,12 +156,23 @@ public class Task implements IEntity
                 latestPredecessorFinish = predecessorFinish;
             }
         }
+        if (stage != null)
+        {
+            for (Stage predecessorStage : stage.getPredecessors())
+            {
+                for (Task predecessor : predecessorStage.getTasks())
+                {
+                    latestPredecessorFinish = Math.max(latestPredecessorFinish,
+                            predecessor.getDependencyFinishOffsetInDays());
+                }
+            }
+        }
         return latestPredecessorFinish;
     }
 
     public double getDependencyFinishOffsetInDays()
     {
-        return getDependencyStartOffsetInDays() + getScheduledDurationInDays();
+        return getDependencyStartOffsetInDays() + Math.ceil(getScheduledDurationInDays());
     }
 
     public void addEmpoyee(Employee employee)

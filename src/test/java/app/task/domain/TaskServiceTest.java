@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import app.exceptions.BadRequestException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
@@ -38,6 +41,7 @@ class TaskServiceTest
     private static final double TOLERANCE = 1e-9;
 
     private InMemoryTaskDAO taskDAO;
+    private InMemoryStageDAO stages;
     private TaskService taskService;
 
     /**
@@ -48,6 +52,7 @@ class TaskServiceTest
     void setUp()
     {
         InMemoryStageDAO stageDAO = new InMemoryStageDAO();
+        stages = stageDAO;
         Stage planning = stageDAO.create(new Stage("Planning", project(1L)));
         Stage otherProjectStage = stageDAO.create(new Stage("Other project", project(2L)));
 
@@ -65,6 +70,42 @@ class TaskServiceTest
         build.addPredecessor(design);
 
         taskService = new TaskService(taskDAO, stageDAO, competenceDAO);
+    }
+
+
+    @Test
+    @DisplayName("Cross-stage task dependencies are invalid even inside the same project")
+    void crossStageTaskDependencyIsRejected()
+    {
+        Stage otherStage = stages.create(new Stage("Delivery", project(1L)));
+        // This test deliberately uses the same project id but a different stage id.
+        long otherTaskId = taskService.create(new TaskCreateDTO(otherStage.getId(), "Delivery task", 1L, 0.0, 1)).id();
+        assertThrows(BadRequestException.class, () -> taskService.addPredecessor(otherTaskId, 1L));
+    }
+
+    @Test
+    @DisplayName("Blocked task cannot skip directly to DONE or enter IN_PROGRESS")
+    void blockedTaskCannotProgress()
+    {
+        TaskUpdateDTO progress = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.IN_PROGRESS);
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
+        assertThrows(BadRequestException.class, () -> taskService.update(2L, progress));
+        assertThrows(BadRequestException.class, () -> taskService.update(2L, done));
+        taskService.update(1L, done);
+        taskService.update(2L, progress);
+        assertEquals(Task.TaskStatus.IN_PROGRESS, taskService.get(2L).status());
+    }
+
+    @Test
+    @DisplayName("Cannot reopen a predecessor once its successor has started")
+    void cannotReopenFinishedPredecessorAfterSuccessorStarts()
+    {
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
+        TaskUpdateDTO progress = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.IN_PROGRESS);
+        TaskUpdateDTO reopen = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.NOT_STARTED);
+        taskService.update(1L, done);
+        taskService.update(2L, progress);
+        assertThrows(BadRequestException.class, () -> taskService.update(1L, reopen));
     }
 
     @ParameterizedTest(name = "[{index}] {6}")

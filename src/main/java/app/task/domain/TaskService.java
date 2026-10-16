@@ -39,6 +39,12 @@ public class TaskService implements ITaskService
         Stage stage = stageReader.get(dto.stageId());
         Competence competence = getExistingCompetence(dto.competenceId());
         validateCanBeAssigned(competence);
+        if (stage.isCompleted() && stageReader.getAll().stream().anyMatch(s ->
+                s.getPredecessors().contains(stage) && s.getTasks().stream().anyMatch(t ->
+                        t.getStatus() != Task.TaskStatus.NOT_STARTED)))
+        {
+            throw new BadRequestException("Cannot add unfinished task to completed stage with started dependents");
+        }
         Task task = new Task(stage, dto.name().trim(), dto.minimumDurationInDays());
         task.setCompetence(competence, dto.estimate());
         return TaskMapper.toDTO(taskDAO.create(task));
@@ -72,6 +78,14 @@ public class TaskService implements ITaskService
         if (dto.minimumDurationInDays() != null) validateMinimumDuration(dto.minimumDurationInDays());
 
         Task task = getExistingTask(id);
+        if (dto.status() != null && dto.status() != Task.TaskStatus.NOT_STARTED)
+        {
+            validateCanProgress(task);
+        }
+        if (dto.status() != null && dto.status() != Task.TaskStatus.DONE && task.getStatus() == Task.TaskStatus.DONE)
+        {
+            validateCanReopen(task);
+        }
         task.update(dto.name(), dto.minimumDurationInDays());
         if (dto.status() != null)
         {
@@ -141,9 +155,13 @@ public class TaskService implements ITaskService
 
     private void validateDependency(Task task, Task predecessor)
     {
-        if (!task.getStage().getProject().getId().equals(predecessor.getStage().getProject().getId()))
+        if (!task.getStage().equals(predecessor.getStage()))
         {
-            throw new BadRequestException("Tasks must be in the same project");
+            throw new BadRequestException("Task predecessors must belong to the same stage");
+        }
+        if (task.getStatus() != Task.TaskStatus.NOT_STARTED)
+        {
+            throw new BadRequestException("Cannot add predecessors to a task already started");
         }
 
         if (task.equals(predecessor))
@@ -154,6 +172,30 @@ public class TaskService implements ITaskService
         if (task.wouldCreateCycleWith(predecessor))
         {
             throw new BadRequestException("Circular dependency detected");
+        }
+    }
+
+    private void validateCanProgress(Task task)
+    {
+        if (task.getPredecessors().stream().anyMatch(p -> p.getStatus() != Task.TaskStatus.DONE)
+                || task.getStage().getPredecessors().stream().anyMatch(p -> !p.isCompleted()))
+        {
+            throw new BadRequestException("Cannot start or complete task: unfinished task or stage predecessors");
+        }
+    }
+
+    private void validateCanReopen(Task task)
+    {
+        if (stageReader.getAll().stream().anyMatch(s ->
+                s.getPredecessors().contains(task.getStage()) && s.getTasks().stream().anyMatch(t ->
+                        t.getStatus() != Task.TaskStatus.NOT_STARTED)))
+        {
+            throw new BadRequestException("Cannot reopen stage predecessor: dependent stage already started");
+        }
+        if (task.getStage().getTasks().stream().anyMatch(t ->
+                t.getPredecessors().contains(task) && t.getStatus() != Task.TaskStatus.NOT_STARTED))
+        {
+            throw new BadRequestException("Cannot reopen predecessor: dependent tasks have started");
         }
     }
 
