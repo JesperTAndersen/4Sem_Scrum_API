@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import app.competence.presentation.dto.SlimCompetenceDTO;
+import app.task.domain.Task.StaffingStatus;
 import app.task.domain.Task.TaskStatus;
 
 public record TaskDTO(
@@ -16,12 +17,13 @@ public record TaskDTO(
         BigDecimal cost,
         LocalDate startDate,
         LocalDate endDate,
-        double laborDurationInDays,
-        double scheduledDurationInDays,
+        Double laborDurationInDays,
+        Double scheduledDurationInDays,
         TaskStatus status,
+        StaffingStatus staffingStatus,
         List<Long> predecessorIds,
-        double dependencyStartOffsetInDays,
-        double dependencyFinishOffsetInDays,
+        Double dependencyStartOffsetInDays,
+        Double dependencyFinishOffsetInDays,
         List<EmployeeReferenceDTO> assignedEmployees
 )
 {

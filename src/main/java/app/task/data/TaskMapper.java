@@ -42,6 +42,7 @@ public final class TaskMapper
                 task.getLaborDurationInDays(),
                 task.getScheduledDurationInDays(),
                 task.getStatus(),
+                task.getStaffingStatus(),
                 task.getPredecessors().stream().map(Task::getId).sorted().toList(),
                 task.getDependencyStartOffsetInDays(),
                 task.getDependencyFinishOffsetInDays(),
