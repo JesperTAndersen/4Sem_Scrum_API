@@ -39,8 +39,8 @@ class TaskControllerTest
         String resolvedPath = path;
         if (path.contains("{employeeId}"))
         {
-            long employeeId = createEmployee("Access");
             long taskId = target.equals("UNKNOWN") ? UNKNOWN_ID : createTask("Access task", 1);
+            long employeeId = target.equals("UNKNOWN") ? createEmployee("Access") : createEmployee("Access", taskId);
             if (method.equals("DELETE") && target.equals("EXISTING"))
             {
                 assignEmployee(taskId, employeeId, 204);
@@ -147,7 +147,7 @@ class TaskControllerTest
         RequestSpecification request = givenManager();
         if (body != null)
         {
-            request.body(body.replace("{employeeId}", String.valueOf(createEmployee("Request")))
+            request.body(body.replace("{employeeId}", String.valueOf(createEmployee("Request", taskId)))
                     .replace("{unknownEmployeeId}", String.valueOf(UNKNOWN_ID)));
         }
 
@@ -160,7 +160,7 @@ class TaskControllerTest
     void employeeAssignmentValidatesRequest(String method, String relation, int expected, String reason)
     {
         long taskId = createTask("Assignment request task", 1);
-        long employeeId = relation.equals("UNKNOWN") ? UNKNOWN_ID : createEmployee("Assignment");
+        long employeeId = relation.equals("UNKNOWN") ? UNKNOWN_ID : createEmployee("Assignment", taskId);
         if (relation.equals("ASSIGNED"))
         {
             assignEmployee(taskId, employeeId, 204);
@@ -175,8 +175,8 @@ class TaskControllerTest
     void singleEmployeeCanBeAssignedAndUnassigned()
     {
         long taskId = createTask("Single assignment task", 1);
-        long keptEmployeeId = createEmployee("Single kept");
-        long removedEmployeeId = createEmployee("Single removed");
+        long keptEmployeeId = createEmployee("Single kept", taskId);
+        long removedEmployeeId = createEmployee("Single removed", taskId);
 
         assignEmployee(taskId, keptEmployeeId, 204);
         assignEmployee(taskId, removedEmployeeId, 204);
@@ -191,12 +191,93 @@ class TaskControllerTest
     }
 
     @Test
+    @DisplayName("Assignment eligibility - an inactive employee should not be assigned through PUT or POST")
+    void inactiveEmployeeIsRejected()
+    {
+        long taskId = createTask("Inactive assignment task", 1);
+        long employeeId = createEmployee("Inactive", taskId);
+        givenManager().when().patch("/employee/" + employeeId + "/deactivate").then().statusCode(204);
+
+        replaceEmployees(taskId, "[%d]".formatted(employeeId), 400);
+        assignEmployee(taskId, employeeId, 400);
+
+        assertEquals(0, getTask(taskId).get("assignedEmployees").size());
+    }
+
+    @Test
+    @DisplayName("Assignment eligibility - an employee without the task's competence should not be assigned")
+    void employeeWithoutRequiredCompetenceIsRejected()
+    {
+        long taskId = createTask("Competence assignment task", 1);
+        long employeeId = createEmployee("Unqualified");
+
+        replaceEmployees(taskId, "[%d]".formatted(employeeId), 400);
+        assignEmployee(taskId, employeeId, 400);
+
+        assertEquals(0, getTask(taskId).get("assignedEmployees").size());
+    }
+
+    @Test
+    @DisplayName("Assignment eligibility - a deactivated employee already assigned should stay on the task")
+    void deactivatedAssignedEmployeeIsRetained()
+    {
+        long taskId = createTask("Retained assignment task", 1);
+        long employeeId = createEmployee("Retained", taskId);
+        replaceEmployees(taskId, "[%d]".formatted(employeeId), 200);
+        givenManager().when().patch("/employee/" + employeeId + "/deactivate").then().statusCode(204);
+
+        replaceEmployees(taskId, "[%d]".formatted(employeeId), 200);
+
+        JsonNode employee = getTask(taskId).get("assignedEmployees").get(0);
+        assertEquals(employeeId, employee.get("id").asLong());
+        assertEquals(false, employee.get("active").asBoolean());
+    }
+
+    @Test
+    @DisplayName("Assignment eligibility - assignments on a completed task should be locked")
+    void completedTaskAssignmentsAreLocked()
+    {
+        long taskId = createTask("Completed assignment task", 1);
+        long assignedId = createEmployee("Completed assigned", taskId);
+        long otherId = createEmployee("Completed other", taskId);
+        replaceEmployees(taskId, "[%d]".formatted(assignedId), 200);
+        givenManager().body("{ \"status\": \"DONE\" }")
+                .when().put("/tasks/" + taskId)
+                .then().statusCode(200);
+
+        assignEmployee(taskId, otherId, 400);
+        givenManager().when().delete("/tasks/" + taskId + "/employees/" + assignedId).then().statusCode(400);
+        replaceEmployees(taskId, "[]", 400);
+
+        assertEquals(1, getTask(taskId).get("assignedEmployees").size());
+    }
+
+    @Test
+    @DisplayName("Competence change - should be rejected while an assigned employee lacks the new competence")
+    void competenceChangeIsRejectedWhileAssignedEmployeesLackIt()
+    {
+        long taskId = createTask("Competence change task", 1);
+        long employeeId = createEmployee("Competence change", taskId);
+        replaceEmployees(taskId, "[%d]".formatted(employeeId), 200);
+        long oldCompetenceId = getTask(taskId).get("competence").get("id").asLong();
+        long newCompetenceId = createCompetence();
+
+        givenManager().body("{ \"competenceId\": %d, \"estimate\": 8.0 }".formatted(newCompetenceId))
+                .when().put("/tasks/" + taskId)
+                .then().statusCode(400);
+
+        JsonNode task = getTask(taskId);
+        assertEquals(oldCompetenceId, task.get("competence").get("id").asLong());
+        assertEquals(1, task.get("assignedEmployees").size());
+    }
+
+    @Test
     @DisplayName("Replace employees - should store several employees and return them after reload")
     void employeesCanBeAssignedAndAreReturnedOnTask()
     {
         long taskId = createTask("Staffed task", 1);
-        long firstEmployeeId = createEmployee("First");
-        long secondEmployeeId = createEmployee("Second");
+        long firstEmployeeId = createEmployee("First", taskId);
+        long secondEmployeeId = createEmployee("Second", taskId);
 
         replaceEmployees(taskId, "[%d, %d]".formatted(secondEmployeeId, firstEmployeeId), 200);
 
@@ -214,8 +295,8 @@ class TaskControllerTest
     void removingOneEmployeeKeepsTheOthers()
     {
         long taskId = createTask("Partially staffed task", 1);
-        long keptEmployeeId = createEmployee("Kept");
-        long removedEmployeeId = createEmployee("Removed");
+        long keptEmployeeId = createEmployee("Kept", taskId);
+        long removedEmployeeId = createEmployee("Removed", taskId);
         replaceEmployees(taskId, "[%d, %d]".formatted(keptEmployeeId, removedEmployeeId), 200);
 
         replaceEmployees(taskId, "[%d]".formatted(keptEmployeeId), 200);
@@ -230,7 +311,7 @@ class TaskControllerTest
     void duplicateEmployeeIdsAreStoredOnce()
     {
         long taskId = createTask("Duplicate staffed task", 1);
-        long employeeId = createEmployee("Duplicate");
+        long employeeId = createEmployee("Duplicate", taskId);
 
         replaceEmployees(taskId, "[%d, %d]".formatted(employeeId, employeeId), 200);
 
@@ -242,7 +323,7 @@ class TaskControllerTest
     void invalidEmployeesRequestKeepsExistingAssignments()
     {
         long taskId = createTask("Unchanged staffed task", 1);
-        long employeeId = createEmployee("Unchanged");
+        long employeeId = createEmployee("Unchanged", taskId);
         replaceEmployees(taskId, "[%d]".formatted(employeeId), 200);
 
         replaceEmployees(taskId, "[%d, %d]".formatted(employeeId, UNKNOWN_ID), 404);
@@ -257,7 +338,7 @@ class TaskControllerTest
     void projectViewIncludesAssignedEmployees()
     {
         long taskId = createTask("Project view staffed task", 1);
-        long employeeId = createEmployee("Project");
+        long employeeId = createEmployee("Project", taskId);
         replaceEmployees(taskId, "[%d]".formatted(employeeId), 200);
 
         String response = givenManager()
@@ -375,6 +456,17 @@ class TaskControllerTest
         return createAsManager("/employee", """
                 { "firstName": "%s", "lastName": "Worker", "dailyCapacity": 7.5, "standardCapacity": false }
                 """.formatted(firstName));
+    }
+
+    private long createEmployee(String firstName, long taskId)
+    {
+        long employeeId = createEmployee(firstName);
+        long competenceId = getTask(taskId).get("competence").get("id").asLong();
+        givenManager()
+                .body("{ \"competenceIds\": [%d] }".formatted(competenceId))
+                .when().put("/employee/" + employeeId + "/competences")
+                .then().statusCode(200);
+        return employeeId;
     }
 
     private JsonNode findTaskInProject(JsonNode project, long taskId)
