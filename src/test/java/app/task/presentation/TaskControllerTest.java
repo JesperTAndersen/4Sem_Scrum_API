@@ -7,6 +7,7 @@ import static app.config.ApiTestExtension.givenToken;
 import static app.config.ApiTestExtension.readJson;
 import static app.config.ApiTestExtension.tokenFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import app.config.ApiTestExtension;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -351,6 +352,66 @@ class TaskControllerTest
     }
 
     @Test
+    @DisplayName("Duration - an unassigned task should use one assumed worker and require staffing")
+    void unassignedTaskRequiresStaffing()
+    {
+        long taskId = createEstimatedTask("Unstaffed duration task", 30.0);
+
+        JsonNode task = getTask(taskId);
+        assertEquals("STAFFING_REQUIRED", task.get("staffingStatus").asText());
+        assertEquals(4.0, task.get("laborDurationInDays").asDouble());
+    }
+
+    @Test
+    @DisplayName("Duration - should be derived from the capacity of the assigned employees")
+    void durationIsDerivedFromAssignedEmployees()
+    {
+        long taskId = createEstimatedTask("Staffed duration task", 30.0);
+        long firstEmployeeId = createEmployee("Duration first", taskId);
+        long secondEmployeeId = createEmployee("Duration second", taskId);
+
+        replaceEmployees(taskId, "[%d, %d]".formatted(firstEmployeeId, secondEmployeeId), 200);
+
+        JsonNode task = getTask(taskId);
+        assertEquals("STAFFED", task.get("staffingStatus").asText());
+        assertEquals(2.0, task.get("laborDurationInDays").asDouble());
+        assertEquals(2.0, task.get("scheduledDurationInDays").asDouble());
+    }
+
+    @Test
+    @DisplayName("Duration - should be undetermined for the task and project when no assigned employee is active")
+    void deactivatedCrewMakesTaskAndProjectUndetermined()
+    {
+        long taskId = createEstimatedTask("Undetermined duration task", 30.0);
+        try
+        {
+            long employeeId = createEmployee("Undetermined", taskId);
+            replaceEmployees(taskId, "[%d]".formatted(employeeId), 200);
+            givenManager().when().patch("/employee/" + employeeId + "/deactivate").then().statusCode(204);
+
+            JsonNode task = getTask(taskId);
+            assertEquals("NO_AVAILABLE_CAPACITY", task.get("staffingStatus").asText());
+            assertTrue(isNull(task.get("laborDurationInDays")));
+            assertTrue(isNull(task.get("scheduledDurationInDays")));
+            assertTrue(isNull(task.get("startDate")));
+            assertTrue(isNull(task.get("endDate")));
+
+            String response = givenManager()
+                    .when().get("/projects/1")
+                    .then().statusCode(200)
+                    .extract().asString();
+            JsonNode schedule = readJson(response).get("schedule");
+            assertTrue(isNull(schedule.get("calculatedFinishDate")));
+            assertTrue(isNull(schedule.get("feasible")));
+        }
+        finally
+        {
+            // Project 1 is shared by the API tests, so remove the undetermined task again.
+            givenManager().when().delete("/tasks/" + taskId).then().statusCode(204);
+        }
+    }
+
+    @Test
     @DisplayName("Get all - should show the current status of each task")
     void taskListShowsCurrentStatusForEachTask()
     {
@@ -516,6 +577,18 @@ class TaskControllerTest
         return createAsManager("/tasks", """
                 { "stageId": %d, "name": "%s", "competenceId": %d, "estimate": 0.0, "minimumDurationInDays": %d }
                 """.formatted(stageId, name, createCompetence(), minimumDurationInDays));
+    }
+
+    private long createEstimatedTask(String name, double estimate)
+    {
+        return createAsManager("/tasks", """
+                { "stageId": %d, "name": "%s", "competenceId": %d, "estimate": %s, "minimumDurationInDays": 0 }
+                """.formatted(createStage(), name, createCompetence(), estimate));
+    }
+
+    private static boolean isNull(JsonNode node)
+    {
+        return node == null || node.isNull();
     }
 
     private String validCreateBody()
