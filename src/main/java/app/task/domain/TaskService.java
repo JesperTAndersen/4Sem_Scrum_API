@@ -106,6 +106,7 @@ public class TaskService implements ITaskService
                 validateEstimate(dto.estimate());
                 Competence competence = getExistingCompetence(dto.competenceId());
                 validateCanBeAssigned(competence);
+                validateAssignedEmployeesHaveCompetence(task, competence);
                 task.setCompetence(competence, dto.estimate());
             }
         }
@@ -171,6 +172,11 @@ public class TaskService implements ITaskService
                 .map(employeeReader::get)
                 .toList();
 
+        validateAssignmentsCanChange(task);
+        employees.stream()
+                .filter(employee -> !task.getEmployees().contains(employee))
+                .forEach(employee -> validateNewAssignment(task, employee));
+
         task.replaceEmployees(employees);
         taskDAO.update(task);
         return get(taskId);
@@ -189,6 +195,9 @@ public class TaskService implements ITaskService
         {
             throw new BadRequestException("Employee is already assigned to the task");
         }
+
+        validateAssignmentsCanChange(task);
+        validateNewAssignment(task, employee);
 
         task.assignEmployee(employee);
         taskDAO.update(task);
@@ -288,5 +297,39 @@ public class TaskService implements ITaskService
     {
         try { return taskDAO.get(id); }
         catch (EntityNotFoundException e) { throw new NotFoundException("Task not found with id: " + id); }
+    }
+
+    private void validateAssignmentsCanChange(Task task)
+    {
+        if (task.getStatus() == Task.TaskStatus.DONE)
+        {
+            throw new BadRequestException("Employees cannot be assigned to a completed task");
+        }
+    }
+
+    private void validateNewAssignment(Task task, Employee employee)
+    {
+        if (!employee.isActive())
+        {
+            throw new BadRequestException("Inactive employees cannot be assigned");
+        }
+
+        Competence required = task.getCompetence();
+        if (required != null && !employee.getCompetences().contains(required))
+        {
+            throw new BadRequestException("Employee does not have the task's required competence");
+        }
+    }
+
+    private void validateAssignedEmployeesHaveCompetence(Task task, Competence competence)
+    {
+        boolean allAssignedHaveCompetence = task.getEmployees().stream()
+                .allMatch(employee -> employee.getCompetences().contains(competence));
+
+        if (!allAssignedHaveCompetence)
+        {
+            throw new BadRequestException(
+                    "Unassign employees without the new competence before changing the task's competence");
+        }
     }
 }
