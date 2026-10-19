@@ -3,6 +3,7 @@ package app.task.domain;
 import java.util.List;
 
 import app.competence.domain.Competence;
+import app.employee.domain.Employee;
 import app.exceptions.BadRequestException;
 import app.exceptions.NotFoundException;
 import app.shared.data.IReadDAO;
@@ -11,6 +12,7 @@ import app.task.data.ITaskDAO;
 import app.task.data.TaskMapper;
 import app.task.presentation.dto.TaskCreateDTO;
 import app.task.presentation.dto.TaskDTO;
+import app.task.presentation.dto.TaskEmployeesDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
 import app.utils.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,12 +22,14 @@ public class TaskService implements ITaskService
     private final ITaskDAO taskDAO;
     private final IReadDAO<Stage> stageReader;
     private final IReadDAO<Competence> competenceReader;
+    private final IReadDAO<Employee> employeeReader;
 
-    public TaskService(ITaskDAO taskDAO, IReadDAO<Stage> stageReader, IReadDAO<Competence> competenceReader)
+    public TaskService(ITaskDAO taskDAO, IReadDAO<Stage> stageReader, IReadDAO<Competence> competenceReader, IReadDAO<Employee> employeeReader)
     {
         this.taskDAO = taskDAO;
         this.stageReader = stageReader;
         this.competenceReader = competenceReader;
+        this.employeeReader = employeeReader;
     }
 
     @Override public TaskDTO create(TaskCreateDTO dto)
@@ -151,6 +155,25 @@ public class TaskService implements ITaskService
 
         task.removePredecessor(predecessor);
         taskDAO.update(task);
+    }
+
+    @Override
+    public TaskDTO replaceEmployees(Long taskId, TaskEmployeesDTO taskEmployeesDTO)
+    {
+        ValidationUtil.validateId(taskId);
+        ValidationUtil.validateNotNull(taskEmployeesDTO, "Employees");
+        ValidationUtil.validateNotNull(taskEmployeesDTO.employeeIds(), "Employee ids");
+        taskEmployeesDTO.employeeIds().forEach(ValidationUtil::validateId);
+
+        Task task = getExistingTask(taskId);
+        List<Employee> employees = taskEmployeesDTO.employeeIds().stream()
+                .distinct()
+                .map(employeeReader::get)
+                .toList();
+
+        task.replaceEmployees(employees);
+        Task updated = taskDAO.update(task);
+        return TaskMapper.toDTO(updated);
     }
 
     private void validateDependency(Task task, Task predecessor)

@@ -139,13 +139,14 @@ public final class DependencyContainer
         this.projectController = new ProjectController(projectService);
         this.securityService = new SecurityService(userDAO);
         this.securityController = new SecurityController(securityService);
-        this.taskDAO = new TaskDAO(entityManagerFactory);
-        this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO);
-        this.taskController = new TaskController(taskService);
 
         this.employeeDAO = new EmployeeDAO(entityManagerFactory);
         this.employeeService = new EmployeeService(employeeDAO, companyCapacityDAO, competenceDAO);
         this.employeeController = new EmployeeController(employeeService);
+
+        this.taskDAO = new TaskDAO(entityManagerFactory);
+        this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO, employeeDAO);
+        this.taskController = new TaskController(taskService);
     }
 
     public static DependencyContainer getInstance()
