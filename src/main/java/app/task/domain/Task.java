@@ -3,6 +3,7 @@ package app.task.domain;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import app.competence.domain.Competence;
@@ -175,14 +176,22 @@ public class Task implements IEntity
         return getDependencyStartOffsetInDays() + Math.ceil(getScheduledDurationInDays());
     }
 
-    public void addEmpoyee(Employee employee)
+    public void assignEmployee(Employee employee)
     {
+        validateEmployeeNotNull(employee);
         employees.add(employee);
     }
 
-    public void remEmpoyee(Employee employee)
+    public void unassignEmployee(Employee employee)
     {
+        validateEmployeeNotNull(employee);
         employees.remove(employee);
+    }
+
+    public void replaceEmployees(List<Employee> employees) {
+        employees.forEach(this::validateEmployeeNotNull);
+        this.employees.clear();
+        this.employees.addAll(employees);
     }
 
     @PrePersist
@@ -207,5 +216,11 @@ public class Task implements IEntity
     public final int hashCode()
     {
         return getClass().hashCode();
+    }
+
+    private void validateEmployeeNotNull(Employee employee) {
+        if(employee == null) {
+            throw new IllegalArgumentException("Employee cant be null");
+        }
     }
 }
