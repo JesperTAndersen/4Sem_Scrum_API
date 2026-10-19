@@ -27,13 +27,14 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days |
 | `competence` | object\|null | Assigned competence with only `id` and `name`; `null` when none is assigned |
 | `estimate` | number | Estimated labor hours |
-| `startDate`, `endDate` | date | Calculated Monday-Friday schedule dates; `endDate` is inclusive |
-| `laborDurationInDays` | number | Estimated labor duration (`estimate / 7.5`) |
-| `scheduledDurationInDays` | number | Greater of labor duration and minimum duration |
+| `startDate`, `endDate` | date\|null | Calculated Monday-Friday schedule dates; `endDate` is inclusive. `null` when the schedule is undetermined |
+| `laborDurationInDays` | number\|null | `estimate` divided by the daily capacity of the assigned employees (see [Staffing and duration](#staffing-and-duration)); `null` when no assigned employee is available |
+| `scheduledDurationInDays` | number\|null | Greater of labor duration and minimum duration; `null` when the labor duration is undetermined |
 | `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
+| `staffingStatus` | enum | `STAFFED`, `STAFFING_REQUIRED`, or `NO_AVAILABLE_CAPACITY` (see [Staffing and duration](#staffing-and-duration)) |
 | `predecessorIds` | number[] | IDs of tasks that must finish before this task can start |
-| `dependencyStartOffsetInDays` | number | Earliest start offset based on predecessor durations; `0` when there are no predecessors |
-| `dependencyFinishOffsetInDays` | number | Start offset plus the task scheduled duration |
+| `dependencyStartOffsetInDays` | number\|null | Earliest start offset based on predecessor durations; `0` when there are no predecessors; `null` when a predecessor is undetermined |
+| `dependencyFinishOffsetInDays` | number\|null | Start offset plus the task scheduled duration; `null` when undetermined |
 | `assignedEmployees` | [Employee reference](#employee-reference-object)[] | Employees assigned to the task, ordered by ID; empty when none are assigned |
 
 ```json
@@ -46,6 +47,7 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
   "laborDurationInDays": 2.1333333333333333,
   "scheduledDurationInDays": 2.1333333333333333,
   "status": "NOT_STARTED",
+  "staffingStatus": "STAFFING_REQUIRED",
   "predecessorIds": [],
   "dependencyStartOffsetInDays": 0.0,
   "dependencyFinishOffsetInDays": 2.1333333333333333,
@@ -286,6 +288,32 @@ These rules apply to every endpoint that changes assignments (`PUT /tasks/{id}/e
 - Assignments on a `DONE` task cannot be changed, so completed work keeps its staffing history.
 - An employee is stored once per task, regardless of duplicate IDs or how many competences they hold.
 - Changing a task's competence through `PUT /tasks/{id}` is rejected while an assigned employee lacks the new competence. Unassign those employees first; assignments are never removed automatically. Removing the competence (`competenceId: 0`) keeps the assignments.
+
+## Staffing and duration
+
+A task's labor duration is calculated from the employees assigned to it:
+
+```
+laborDurationInDays = estimate / combined daily capacity of the active assigned employees
+```
+
+Each employee contributes their effective daily capacity once (custom capacity, or the company standard capacity when `standardCapacity` is `true`), regardless of how many competences they hold. The scheduled duration is the greater of the labor duration and `minimumDurationInDays`; working-day rounding and dependency ordering are unchanged.
+
+| `staffingStatus` | When | Labor duration |
+|---|---|---|
+| `STAFFED` | At least one assigned employee is active | `estimate / combined capacity` |
+| `STAFFING_REQUIRED` | No employees are assigned | `estimate / 7.5` (one assumed worker; no named employee is allocated) |
+| `NO_AVAILABLE_CAPACITY` | Employees are assigned, but none is active | `null` (undetermined) |
+
+Examples:
+
+- 30 hours, two active employees at 7.5 hours/day: 30 / 15 = **2 days**.
+- 30 hours, employees at 7.5 and 2.5 hours/day: 30 / 10 = **3 days**.
+- 30 hours, no employees assigned: 30 / 7.5 = **4 days**, `STAFFING_REQUIRED`.
+
+**Undetermined schedules.** A task with `NO_AVAILABLE_CAPACITY` has no duration and no dates. Every task that depends on it, directly or through a predecessor stage, is also undetermined. Stage end dates and the project's `schedule` become `null` as well (see [stages](stages.md) and [projects](projects.md)). The plan can still be saved; assigning an active employee recalculates everything.
+
+**Completed tasks.** Until completed tasks store their historical values (#152), all assigned employees count for a `DONE` task, including deactivated employees, so completed work keeps its dates.
 
 ## Dependency scheduling
 

@@ -24,7 +24,7 @@ Stages divide a project into named phases. A stage response always contains its 
 | `totalEstimatedHours` | number | Sum of its task estimates |
 | `totalCost` | number | Sum of its task costs |
 | `tasks` | [Task](tasks.md#task-object)[] | Tasks in the stage |
-| `startDate`, `endDate` | date | Earliest task start and latest task finish (project start for empty stages) |
+| `startDate`, `endDate` | date\|null | Earliest known task start and latest task finish (project start for empty stages). `endDate` is `null` when any task in the stage has an undetermined schedule (see [Staffing and duration](tasks.md#staffing-and-duration)) |
 | `completed` | boolean | True when nonempty and all tasks are `DONE` |
 | `predecessorIds` | number[] | IDs of stages that must finish before this stage starts |
 
