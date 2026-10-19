@@ -37,7 +37,18 @@ class TaskControllerTest
     void enforcesEndpointAccess(String method, String path, String target, String token, int expected, String reason)
     {
         String resolvedPath = path;
-        if (path.contains("{predecessorId}"))
+        if (path.contains("{employeeId}"))
+        {
+            long employeeId = createEmployee("Access");
+            long taskId = target.equals("UNKNOWN") ? UNKNOWN_ID : createTask("Access task", 1);
+            if (method.equals("DELETE") && target.equals("EXISTING"))
+            {
+                assignEmployee(taskId, employeeId, 204);
+            }
+            resolvedPath = path.replace("{id}", String.valueOf(taskId))
+                    .replace("{employeeId}", String.valueOf(employeeId));
+        }
+        else if (path.contains("{predecessorId}"))
         {
             long stageId = createStage();
             long predecessorId = createTask("Access predecessor", 1, stageId);
@@ -141,6 +152,42 @@ class TaskControllerTest
         }
 
         request.when().put("/tasks/" + taskId + "/employees").then().statusCode(expected);
+    }
+
+    @ParameterizedTest(name = "[{index}] {3}")
+    @CsvFileSource(resources = "/testcases/task/task-controller/employee-assignment-request.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Assign and unassign employee - reject an invalid assignment")
+    void employeeAssignmentValidatesRequest(String method, String relation, int expected, String reason)
+    {
+        long taskId = createTask("Assignment request task", 1);
+        long employeeId = relation.equals("UNKNOWN") ? UNKNOWN_ID : createEmployee("Assignment");
+        if (relation.equals("ASSIGNED"))
+        {
+            assignEmployee(taskId, employeeId, 204);
+        }
+
+        givenManager().when().request(method, "/tasks/" + taskId + "/employees/" + employeeId)
+                .then().statusCode(expected);
+    }
+
+    @Test
+    @DisplayName("Assign and unassign employee - should update one assignment and keep the others")
+    void singleEmployeeCanBeAssignedAndUnassigned()
+    {
+        long taskId = createTask("Single assignment task", 1);
+        long keptEmployeeId = createEmployee("Single kept");
+        long removedEmployeeId = createEmployee("Single removed");
+
+        assignEmployee(taskId, keptEmployeeId, 204);
+        assignEmployee(taskId, removedEmployeeId, 204);
+        assertEquals(2, getTask(taskId).get("assignedEmployees").size());
+
+        givenManager().when().delete("/tasks/" + taskId + "/employees/" + removedEmployeeId)
+                .then().statusCode(204);
+
+        JsonNode employees = getTask(taskId).get("assignedEmployees");
+        assertEquals(1, employees.size());
+        assertEquals(keptEmployeeId, employees.get(0).get("id").asLong());
     }
 
     @Test
@@ -305,6 +352,13 @@ class TaskControllerTest
     {
         givenManager()
                 .when().post("/tasks/" + taskId + "/predecessors/" + predecessorId)
+                .then().statusCode(expectedStatus);
+    }
+
+    private void assignEmployee(long taskId, long employeeId, int expectedStatus)
+    {
+        givenManager()
+                .when().post("/tasks/" + taskId + "/employees/" + employeeId)
                 .then().statusCode(expectedStatus);
     }
 

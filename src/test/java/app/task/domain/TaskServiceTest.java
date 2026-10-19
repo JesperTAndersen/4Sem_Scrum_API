@@ -216,6 +216,58 @@ class TaskServiceTest
         }
     }
 
+    @ParameterizedTest(name = "[{index}] {3}")
+    @CsvFileSource(resources = "/testcases/task/task-service/assign-employee.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Assign employee - accepts only an unassigned, existing employee on an existing task")
+    void assignEmployeeValidatesRequest(Long taskId, Long employeeId, String expected, String reason)
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(2L)));
+
+        if (expected.equals("ACCEPT"))
+        {
+            taskService.assignEmployee(taskId, employeeId);
+            assertThat(assignedEmployeeIds(taskId), is(List.of(1L, 2L)));
+        }
+        else
+        {
+            Exception exception = assertThrows(Exception.class, () -> taskService.assignEmployee(taskId, employeeId));
+            assertThat(exception.getClass().getSimpleName(), is(expected));
+            assertThat(assignedEmployeeIds(1L), is(List.of(2L)));
+        }
+    }
+
+    @ParameterizedTest(name = "[{index}] {3}")
+    @CsvFileSource(resources = "/testcases/task/task-service/unassign-employee.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Unassign employee - requires an existing assignment")
+    void unassignEmployeeValidatesRequest(Long taskId, Long employeeId, String expected, String reason)
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(2L)));
+
+        if (expected.equals("ACCEPT"))
+        {
+            taskService.unassignEmployee(taskId, employeeId);
+            assertThat(assignedEmployeeIds(taskId), is(List.of()));
+        }
+        else
+        {
+            Exception exception = assertThrows(Exception.class, () -> taskService.unassignEmployee(taskId, employeeId));
+            assertThat(exception.getClass().getSimpleName(), is(expected));
+            assertThat(assignedEmployeeIds(1L), is(List.of(2L)));
+        }
+    }
+
+    @Test
+    @DisplayName("Unassign employee - keeps the other assignments")
+    void unassigningOneEmployeeKeepsTheOthers()
+    {
+        taskService.assignEmployee(1L, 1L);
+        taskService.assignEmployee(1L, 2L);
+
+        taskService.unassignEmployee(1L, 1L);
+
+        assertThat(assignedEmployeeIds(1L), is(List.of(2L)));
+    }
+
     @Test
     @DisplayName("Replace employees - rejects a missing request body")
     void replaceEmployeesRejectsMissingBody()
@@ -357,6 +409,13 @@ class TaskServiceTest
                 .deadline(LocalDate.of(2030, 6, 28))
                 .status(ProjectStatus.DRAFT)
                 .build();
+    }
+
+    private List<Long> assignedEmployeeIds(Long taskId)
+    {
+        return taskService.get(taskId).assignedEmployees().stream()
+                .map(EmployeeReferenceDTO::id)
+                .toList();
     }
 
     private static List<Long> parseIds(String ids)
