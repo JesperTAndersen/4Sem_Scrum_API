@@ -80,6 +80,22 @@ public class TaskController implements ICrudController
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
+    public void assignEmployee(Context ctx)
+    {
+        Long taskId = RequestUtil.requirePathId(ctx, "taskId");
+        Long employeeId = RequestUtil.requirePathId(ctx, "employeeId");
+        taskService.assignEmployee(taskId, employeeId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void unassignEmployee(Context ctx)
+    {
+        Long taskId = RequestUtil.requirePathId(ctx, "taskId");
+        Long employeeId = RequestUtil.requirePathId(ctx, "employeeId");
+        taskService.unassignEmployee(taskId, employeeId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
     public void replaceEmployees(Context ctx)
     {
         Long id = RequestUtil.requirePathId(ctx, "id");

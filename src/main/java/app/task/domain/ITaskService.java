@@ -14,4 +14,6 @@ public interface ITaskService extends ICrudService<TaskCreateDTO, TaskDTO>
     void addPredecessor(Long taskId, Long predecessorId);
     void removePredecessor(Long taskId, Long predecessorId);
     TaskDTO replaceEmployees(Long taskId, TaskEmployeesDTO taskEmployeesDTO);
+    void assignEmployee(Long taskId, Long employeeId);
+    void unassignEmployee(Long taskId, Long employeeId);
 }

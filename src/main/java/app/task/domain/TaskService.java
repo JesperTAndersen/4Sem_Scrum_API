@@ -176,6 +176,42 @@ public class TaskService implements ITaskService
         return get(taskId);
     }
 
+    @Override
+    public void assignEmployee(Long taskId, Long employeeId)
+    {
+        ValidationUtil.validateId(taskId);
+        ValidationUtil.validateId(employeeId);
+
+        Task task = getExistingTask(taskId);
+        Employee employee = employeeReader.get(employeeId);
+
+        if (task.getEmployees().contains(employee))
+        {
+            throw new BadRequestException("Employee is already assigned to the task");
+        }
+
+        task.assignEmployee(employee);
+        taskDAO.update(task);
+    }
+
+    @Override
+    public void unassignEmployee(Long taskId, Long employeeId)
+    {
+        ValidationUtil.validateId(taskId);
+        ValidationUtil.validateId(employeeId);
+
+        Task task = getExistingTask(taskId);
+        Employee employee = employeeReader.get(employeeId);
+
+        if (!task.getEmployees().contains(employee))
+        {
+            throw new BadRequestException("Employee is not assigned to the task");
+        }
+
+        task.unassignEmployee(employee);
+        taskDAO.update(task);
+    }
+
     private void validateDependency(Task task, Task predecessor)
     {
         if (!task.getStage().equals(predecessor.getStage()))

@@ -13,6 +13,8 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | [`PUT`](#put-tasksid) | `/tasks/{id}` | Update a task |
 | [`DELETE`](#delete-tasksid) | `/tasks/{id}` | Delete a task |
 | [`PUT`](#put-tasksidemployees) | `/tasks/{id}/employees` | Replace the employees assigned to a task |
+| [`POST`](#post-taskstaskidemployeesemployeeid) | `/tasks/{taskId}/employees/{employeeId}` | Assign one employee to a task |
+| [`DELETE`](#delete-taskstaskidemployeesemployeeid) | `/tasks/{taskId}/employees/{employeeId}` | Unassign one employee from a task |
 | [`POST`](#post-taskstaskidpredecessorspredecessorid) | `/tasks/{taskId}/predecessors/{predecessorId}` | Add a predecessor dependency |
 | [`DELETE`](#delete-taskstaskidpredecessorspredecessorid) | `/tasks/{taskId}/predecessors/{predecessorId}` | Remove a predecessor dependency |
 
@@ -200,6 +202,46 @@ Eligibility rules (active employees and required competence) are not enforced ye
 |---|---|
 | `400` | `id` is invalid, the body or `employeeIds` is missing, or an employee ID is not a positive number |
 | `404` | The task or an employee does not exist |
+
+## POST /tasks/{taskId}/employees/{employeeId}
+
+Assigns one employee to a task and keeps the existing assignments. Use [`PUT /tasks/{id}/employees`](#put-tasksidemployees) to change several assignments at once.
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `taskId` | number | Task ID |
+| `employeeId` | number | Employee to assign |
+
+**Success response:** `204 No Content`.
+
+**Errors**
+
+| Status | When |
+|---|---|
+| `400` | IDs are invalid or the employee is already assigned to the task |
+| `404` | The task or employee does not exist |
+
+## DELETE /tasks/{taskId}/employees/{employeeId}
+
+Unassigns one employee from a task and keeps the other assignments.
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `taskId` | number | Task ID |
+| `employeeId` | number | Employee to unassign |
+
+**Success response:** `204 No Content`.
+
+**Errors**
+
+| Status | When |
+|---|---|
+| `400` | IDs are invalid or the employee is not assigned to the task |
+| `404` | The task or employee does not exist |
 
 ## POST /tasks/{taskId}/predecessors/{predecessorId}
 
