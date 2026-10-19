@@ -217,6 +217,8 @@ public class TaskService implements ITaskService
             throw new BadRequestException("Employee is not assigned to the task");
         }
 
+        validateAssignmentsCanChange(task);
+
         task.unassignEmployee(employee);
         taskDAO.update(task);
     }
@@ -303,7 +305,7 @@ public class TaskService implements ITaskService
     {
         if (task.getStatus() == Task.TaskStatus.DONE)
         {
-            throw new BadRequestException("Employees cannot be assigned to a completed task");
+            throw new BadRequestException("Assignments cannot be changed on a completed task");
         }
     }
 
