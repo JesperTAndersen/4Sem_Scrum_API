@@ -27,6 +27,9 @@ class TaskControllerTest
     private static final String VALID_UPDATE_BODY = """
             { "status": "IN_PROGRESS" }
             """;
+    private static final String VALID_EMPLOYEES_BODY = """
+            { "employeeIds": [] }
+            """;
 
     @ParameterizedTest(name = "[{index}] {5}")
     @CsvFileSource(resources = "/testcases/task/task-controller/endpoint-access.csv", numLinesToSkip = 1, nullValues = "NULL")
@@ -55,6 +58,10 @@ class TaskControllerTest
         if (method.equals("POST") && path.equals("/tasks"))
         {
             request.body(validCreateBody());
+        }
+        else if (method.equals("PUT") && path.endsWith("/employees"))
+        {
+            request.body(VALID_EMPLOYEES_BODY);
         }
         else if (method.equals("PUT"))
         {
@@ -118,6 +125,101 @@ class TaskControllerTest
 
         givenManager().when().request(method, "/tasks/" + taskId + "/predecessors/" + predecessorId)
                 .then().statusCode(expected);
+    }
+
+    @ParameterizedTest(name = "[{index}] {2}")
+    @CsvFileSource(resources = "/testcases/task/task-controller/employees-request.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Replace employees - rejects an invalid request")
+    void employeesValidateRequest(String body, int expected, String reason)
+    {
+        long taskId = createTask("Employees request task", 1);
+        RequestSpecification request = givenManager();
+        if (body != null)
+        {
+            request.body(body.replace("{employeeId}", String.valueOf(createEmployee("Request")))
+                    .replace("{unknownEmployeeId}", String.valueOf(UNKNOWN_ID)));
+        }
+
+        request.when().put("/tasks/" + taskId + "/employees").then().statusCode(expected);
+    }
+
+    @Test
+    @DisplayName("Replace employees - should store several employees and return them after reload")
+    void employeesCanBeAssignedAndAreReturnedOnTask()
+    {
+        long taskId = createTask("Staffed task", 1);
+        long firstEmployeeId = createEmployee("First");
+        long secondEmployeeId = createEmployee("Second");
+
+        replaceEmployees(taskId, "[%d, %d]".formatted(secondEmployeeId, firstEmployeeId), 200);
+
+        JsonNode employees = getTask(taskId).get("assignedEmployees");
+        assertEquals(2, employees.size());
+        assertEquals(firstEmployeeId, employees.get(0).get("id").asLong());
+        assertEquals("First", employees.get(0).get("firstName").asText());
+        assertEquals("Worker", employees.get(0).get("lastName").asText());
+        assertEquals(true, employees.get(0).get("active").asBoolean());
+        assertEquals(secondEmployeeId, employees.get(1).get("id").asLong());
+    }
+
+    @Test
+    @DisplayName("Replace employees - removing one employee should keep the others")
+    void removingOneEmployeeKeepsTheOthers()
+    {
+        long taskId = createTask("Partially staffed task", 1);
+        long keptEmployeeId = createEmployee("Kept");
+        long removedEmployeeId = createEmployee("Removed");
+        replaceEmployees(taskId, "[%d, %d]".formatted(keptEmployeeId, removedEmployeeId), 200);
+
+        replaceEmployees(taskId, "[%d]".formatted(keptEmployeeId), 200);
+
+        JsonNode employees = getTask(taskId).get("assignedEmployees");
+        assertEquals(1, employees.size());
+        assertEquals(keptEmployeeId, employees.get(0).get("id").asLong());
+    }
+
+    @Test
+    @DisplayName("Replace employees - duplicate ids should be stored once")
+    void duplicateEmployeeIdsAreStoredOnce()
+    {
+        long taskId = createTask("Duplicate staffed task", 1);
+        long employeeId = createEmployee("Duplicate");
+
+        replaceEmployees(taskId, "[%d, %d]".formatted(employeeId, employeeId), 200);
+
+        assertEquals(1, getTask(taskId).get("assignedEmployees").size());
+    }
+
+    @Test
+    @DisplayName("Replace employees - an invalid request should keep the existing assignments")
+    void invalidEmployeesRequestKeepsExistingAssignments()
+    {
+        long taskId = createTask("Unchanged staffed task", 1);
+        long employeeId = createEmployee("Unchanged");
+        replaceEmployees(taskId, "[%d]".formatted(employeeId), 200);
+
+        replaceEmployees(taskId, "[%d, %d]".formatted(employeeId, UNKNOWN_ID), 404);
+
+        JsonNode employees = getTask(taskId).get("assignedEmployees");
+        assertEquals(1, employees.size());
+        assertEquals(employeeId, employees.get(0).get("id").asLong());
+    }
+
+    @Test
+    @DisplayName("Get project - should include assigned employees for its tasks")
+    void projectViewIncludesAssignedEmployees()
+    {
+        long taskId = createTask("Project view staffed task", 1);
+        long employeeId = createEmployee("Project");
+        replaceEmployees(taskId, "[%d]".formatted(employeeId), 200);
+
+        String response = givenManager()
+                .when().get("/projects/1")
+                .then().statusCode(200)
+                .extract().asString();
+
+        JsonNode task = findTaskInProject(readJson(response), taskId);
+        assertEquals(employeeId, task.get("assignedEmployees").get(0).get("id").asLong());
     }
 
     @Test
@@ -204,6 +306,21 @@ class TaskControllerTest
         givenManager()
                 .when().post("/tasks/" + taskId + "/predecessors/" + predecessorId)
                 .then().statusCode(expectedStatus);
+    }
+
+    private void replaceEmployees(long taskId, String employeeIds, int expectedStatus)
+    {
+        givenManager()
+                .body("{ \"employeeIds\": %s }".formatted(employeeIds))
+                .when().put("/tasks/" + taskId + "/employees")
+                .then().statusCode(expectedStatus);
+    }
+
+    private long createEmployee(String firstName)
+    {
+        return createAsManager("/employee", """
+                { "firstName": "%s", "lastName": "Worker", "dailyCapacity": 7.5, "standardCapacity": false }
+                """.formatted(firstName));
     }
 
     private JsonNode findTaskInProject(JsonNode project, long taskId)

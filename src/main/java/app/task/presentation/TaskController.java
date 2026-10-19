@@ -84,7 +84,8 @@ public class TaskController implements ICrudController
     {
         Long id = RequestUtil.requirePathId(ctx, "id");
         TaskEmployeesDTO dto = ctx.bodyValidator(TaskEmployeesDTO.class)
-                .check(Objects::isNull, "Employee ids are required")
+                .check(Objects::nonNull, "Task employees payload cannot be null")
+                .check(body -> body != null && body.employeeIds() != null, "Employee ids are required")
                 .get();
 
         TaskDTO taskDTO = taskService.replaceEmployees(id, dto);

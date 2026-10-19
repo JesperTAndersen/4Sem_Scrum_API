@@ -172,8 +172,8 @@ public class TaskService implements ITaskService
                 .toList();
 
         task.replaceEmployees(employees);
-        Task updated = taskDAO.update(task);
-        return TaskMapper.toDTO(updated);
+        taskDAO.update(task);
+        return get(taskId);
     }
 
     private void validateDependency(Task task, Task predecessor)

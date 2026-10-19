@@ -12,6 +12,7 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | [`GET`](#get-tasksid) | `/tasks/{id}` | Get a task |
 | [`PUT`](#put-tasksid) | `/tasks/{id}` | Update a task |
 | [`DELETE`](#delete-tasksid) | `/tasks/{id}` | Delete a task |
+| [`PUT`](#put-tasksidemployees) | `/tasks/{id}/employees` | Replace the employees assigned to a task |
 | [`POST`](#post-taskstaskidpredecessorspredecessorid) | `/tasks/{taskId}/predecessors/{predecessorId}` | Add a predecessor dependency |
 | [`DELETE`](#delete-taskstaskidpredecessorspredecessorid) | `/tasks/{taskId}/predecessors/{predecessorId}` | Remove a predecessor dependency |
 
@@ -31,6 +32,7 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | `predecessorIds` | number[] | IDs of tasks that must finish before this task can start |
 | `dependencyStartOffsetInDays` | number | Earliest start offset based on predecessor durations; `0` when there are no predecessors |
 | `dependencyFinishOffsetInDays` | number | Start offset plus the task scheduled duration |
+| `assignedEmployees` | [Employee reference](#employee-reference-object)[] | Employees assigned to the task, ordered by ID; empty when none are assigned |
 
 ```json
 {
@@ -44,13 +46,27 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
   "status": "NOT_STARTED",
   "predecessorIds": [],
   "dependencyStartOffsetInDays": 0.0,
-  "dependencyFinishOffsetInDays": 2.1333333333333333
+  "dependencyFinishOffsetInDays": 2.1333333333333333,
+  "assignedEmployees": [
+    { "id": 1, "firstName": "Alice", "lastName": "Worker", "active": true, "dailyCapacity": 7.5 }
+  ]
 }
 ```
 
+## Employee reference object
+
+A compact view of an assigned employee. It does not include the employee's competences; use [`GET /employee/{id}`](employee.md) for the full Employee object.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | number | Employee ID |
+| `firstName`, `lastName` | string | Employee name |
+| `active` | boolean | Whether the employee is currently active |
+| `dailyCapacity` | number | Effective hours per working day |
+
 ## Slim task object
 
-Tasks nested in a stage or project response include only `id`, `name`, calculated `startDate` and `endDate`, `status`, and dependency fields (`predecessorIds`, `dependencyStartOffsetInDays`, and `dependencyFinishOffsetInDays`).
+Tasks nested in a stage or project response include only `id`, `name`, calculated `startDate` and `endDate`, `status`, dependency fields (`predecessorIds`, `dependencyStartOffsetInDays`, and `dependencyFinishOffsetInDays`), and `assignedEmployees`.
 
 ---
 
@@ -151,6 +167,39 @@ Updates supplied task fields. To assign or change a competence, provide both `co
 |---|---|
 | `400` | `id` is invalid |
 | `404` | The task does not exist |
+
+## PUT /tasks/{id}/employees
+
+Replaces the complete set of employees assigned to a task. Send every employee that should be assigned; employees left out are unassigned. Send an empty list to remove all assignments. Duplicate IDs are stored once.
+
+The whole request is validated before anything is saved, so an invalid request leaves the existing assignments unchanged.
+
+Eligibility rules (active employees and required competence) are not enforced yet; see #155. Assignments do not affect task duration yet; see #156.
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `id` | number | Task ID |
+
+**Request body**
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| `employeeIds` | number[] | yes | Positive IDs of existing employees; may be empty |
+
+```json
+{ "employeeIds": [1, 2] }
+```
+
+**Success response:** `200 OK` with the updated Task object, including `assignedEmployees`.
+
+**Errors**
+
+| Status | When |
+|---|---|
+| `400` | `id` is invalid, the body or `employeeIds` is missing, or an employee ID is not a positive number |
+| `404` | The task or an employee does not exist |
 
 ## POST /tasks/{taskId}/predecessors/{predecessorId}
 

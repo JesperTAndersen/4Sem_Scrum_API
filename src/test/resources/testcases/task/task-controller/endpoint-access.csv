@@ -25,3 +25,7 @@ DELETE,/tasks/{id}/predecessors/{predecessorId},EXISTING,NONE,401,"DT R1: remove
 DELETE,/tasks/{id}/predecessors/{predecessorId},EXISTING,EMPLOYEE,403,"DT R2: remove a predecessor as EMPLOYEE"
 DELETE,/tasks/{id}/predecessors/{predecessorId},UNKNOWN,PROJECT_MANAGER,404,"DT R3: remove a predecessor from an unknown task"
 DELETE,/tasks/{id}/predecessors/{predecessorId},EXISTING,PROJECT_MANAGER,204,"DT R4: remove an existing predecessor"
+PUT,/tasks/{id}/employees,EXISTING,NONE,401,"DT R1: replace employees without a token"
+PUT,/tasks/{id}/employees,EXISTING,EMPLOYEE,403,"DT R2: replace employees as EMPLOYEE"
+PUT,/tasks/{id}/employees,UNKNOWN,PROJECT_MANAGER,404,"DT R3: replace employees on an unknown task"
+PUT,/tasks/{id}/employees,EXISTING,PROJECT_MANAGER,200,"DT R4: replace employees on an existing task"
