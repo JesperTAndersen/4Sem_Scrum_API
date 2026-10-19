@@ -150,7 +150,7 @@ Updates supplied task fields. To assign or change a competence, provide both `co
 
 | Status | When |
 |---|---|
-| `400` | `id` or supplied field values are invalid, an estimate is supplied without a competence ID, or the competence is inactive |
+| `400` | `id` or supplied field values are invalid, an estimate is supplied without a competence ID, the competence is inactive, or an assigned employee lacks the new competence |
 | `404` | The task or supplied competence does not exist |
 
 ## DELETE /tasks/{id}
@@ -176,7 +176,7 @@ Replaces the complete set of employees assigned to a task. Send every employee t
 
 The whole request is validated before anything is saved, so an invalid request leaves the existing assignments unchanged.
 
-Eligibility rules (active employees and required competence) are not enforced yet; see #155. Assignments do not affect task duration yet; see #156.
+Assignments do not affect task duration yet; see #156. See [Assignment rules](#assignment-rules) for which employees can be assigned.
 
 **Path parameters**
 
@@ -200,7 +200,7 @@ Eligibility rules (active employees and required competence) are not enforced ye
 
 | Status | When |
 |---|---|
-| `400` | `id` is invalid, the body or `employeeIds` is missing, or an employee ID is not a positive number |
+| `400` | `id` is invalid, the body or `employeeIds` is missing, an employee ID is not a positive number, a new employee is inactive or lacks the task's competence, or the task is `DONE` |
 | `404` | The task or an employee does not exist |
 
 ## POST /tasks/{taskId}/employees/{employeeId}
@@ -220,7 +220,7 @@ Assigns one employee to a task and keeps the existing assignments. Use [`PUT /ta
 
 | Status | When |
 |---|---|
-| `400` | IDs are invalid or the employee is already assigned to the task |
+| `400` | IDs are invalid, the employee is already assigned, inactive or lacks the task's competence, or the task is `DONE` |
 | `404` | The task or employee does not exist |
 
 ## DELETE /tasks/{taskId}/employees/{employeeId}
@@ -240,7 +240,7 @@ Unassigns one employee from a task and keeps the other assignments.
 
 | Status | When |
 |---|---|
-| `400` | IDs are invalid or the employee is not assigned to the task |
+| `400` | IDs are invalid, the employee is not assigned to the task, or the task is `DONE` |
 | `404` | The task or employee does not exist |
 
 ## POST /tasks/{taskId}/predecessors/{predecessorId}
@@ -275,6 +275,17 @@ Removes an existing predecessor dependency.
 |---|---|
 | `400` | IDs are invalid or the dependency does not exist |
 | `404` | Either task does not exist |
+
+## Assignment rules
+
+These rules apply to every endpoint that changes assignments (`PUT /tasks/{id}/employees`, `POST` and `DELETE /tasks/{taskId}/employees/{employeeId}`):
+
+- A **new** assignment requires an **active** employee.
+- A **new** assignment requires the employee to hold the task's competence. Tasks without a competence accept any active employee.
+- An employee who is already assigned is not a new assignment: a deactivated employee can stay in a `PUT` request and can always be removed (unless the task is `DONE`).
+- Assignments on a `DONE` task cannot be changed, so completed work keeps its staffing history.
+- An employee is stored once per task, regardless of duplicate IDs or how many competences they hold.
+- Changing a task's competence through `PUT /tasks/{id}` is rejected while an assigned employee lacks the new competence. Unassign those employees first; assignments are never removed automatically. Removing the competence (`competenceId: 0`) keeps the assignments.
 
 ## Dependency scheduling
 
