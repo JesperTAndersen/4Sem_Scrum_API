@@ -1,0 +1,7 @@
+activeProjects,completedProjects,expectedSize,reason
+0,0,0,"EP + BVA: no projects give an empty list"
+1,0,1,"BVA: one active project"
+4,0,4,"BVA: one below the limit of five"
+5,0,5,"BVA: exactly the limit of five"
+6,0,5,"BVA: one above the limit is cut to five"
+4,2,4,"EP: completed projects with earlier deadlines do not take a place in the list"

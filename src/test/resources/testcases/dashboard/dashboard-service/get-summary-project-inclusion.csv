@@ -1,0 +1,13 @@
+status,schedule,expectedAtRisk,expectedUpcoming,reason
+DRAFT,FEASIBLE,false,true,"DT R1: feasible DRAFT project is upcoming, not at risk"
+DRAFT,INFEASIBLE,true,true,"DT R2 + BVA: DRAFT project finishing one day after its deadline is at risk"
+DRAFT,UNDETERMINED,false,true,"DT R3: undetermined DRAFT project is upcoming, not at risk"
+PLANNED,FEASIBLE,false,true,"DT R1 + BVA: PLANNED project finishing on its deadline is feasible"
+PLANNED,INFEASIBLE,true,true,"DT R2: infeasible PLANNED project is at risk"
+PLANNED,UNDETERMINED,false,true,"DT R3: undetermined PLANNED project is upcoming, not at risk"
+IN_PROGRESS,FEASIBLE,false,true,"DT R1: feasible IN_PROGRESS project is upcoming, not at risk"
+IN_PROGRESS,INFEASIBLE,true,true,"DT R2: infeasible IN_PROGRESS project is at risk"
+IN_PROGRESS,UNDETERMINED,false,true,"DT R3: undetermined IN_PROGRESS project is upcoming, not at risk"
+COMPLETED,FEASIBLE,false,false,"DT R4: feasible COMPLETED project is left out"
+COMPLETED,INFEASIBLE,false,false,"DT R4: infeasible COMPLETED project is left out of both lists and the infeasible count"
+COMPLETED,UNDETERMINED,false,false,"DT R4: undetermined COMPLETED project is left out"

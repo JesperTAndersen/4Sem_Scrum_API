@@ -1,0 +1,4 @@
+token,expected,reason
+NONE,401,"DT R1: get the dashboard summary without a token"
+EMPLOYEE,403,"DT R2: get the dashboard summary as EMPLOYEE"
+PROJECT_MANAGER,200,"DT R3: get the dashboard summary as PROJECT_MANAGER"
