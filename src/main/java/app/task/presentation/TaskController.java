@@ -1,6 +1,8 @@
 package app.task.presentation;
 
 import app.task.presentation.dto.TaskCreateDTO;
+import app.task.presentation.dto.TaskDTO;
+import app.task.presentation.dto.TaskEmployeesDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
 import app.task.domain.ITaskService;
 import app.shared.presentation.ICrudController;
@@ -76,5 +78,33 @@ public class TaskController implements ICrudController
         Long predecessorId = RequestUtil.requirePathId(ctx, "predecessorId");
         taskService.removePredecessor(taskId, predecessorId);
         ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void assignEmployee(Context ctx)
+    {
+        Long taskId = RequestUtil.requirePathId(ctx, "taskId");
+        Long employeeId = RequestUtil.requirePathId(ctx, "employeeId");
+        taskService.assignEmployee(taskId, employeeId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void unassignEmployee(Context ctx)
+    {
+        Long taskId = RequestUtil.requirePathId(ctx, "taskId");
+        Long employeeId = RequestUtil.requirePathId(ctx, "employeeId");
+        taskService.unassignEmployee(taskId, employeeId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void replaceEmployees(Context ctx)
+    {
+        Long id = RequestUtil.requirePathId(ctx, "id");
+        TaskEmployeesDTO dto = ctx.bodyValidator(TaskEmployeesDTO.class)
+                .check(Objects::nonNull, "Task employees payload cannot be null")
+                .check(body -> body != null && body.employeeIds() != null, "Employee ids are required")
+                .get();
+
+        TaskDTO taskDTO = taskService.replaceEmployees(id, dto);
+        ctx.status(HttpStatus.OK).json(taskDTO);
     }
 }

@@ -12,6 +12,8 @@ Stages divide a project into named phases. A stage response always contains its 
 | [`GET`](#get-stagesid) | `/stages/{id}` | Get a stage |
 | [`PUT`](#put-stagesid) | `/stages/{id}` | Rename a stage |
 | [`DELETE`](#delete-stagesid) | `/stages/{id}` | Delete a stage |
+| `POST` | `/stages/{id}/predecessors/{predecessorId}` | Add a stage dependency |
+| `DELETE` | `/stages/{id}/predecessors/{predecessorId}` | Remove a stage dependency |
 
 ## Stage object
 
@@ -22,6 +24,9 @@ Stages divide a project into named phases. A stage response always contains its 
 | `totalEstimatedHours` | number | Sum of its task estimates |
 | `totalCost` | number | Sum of its task costs |
 | `tasks` | [Task](tasks.md#task-object)[] | Tasks in the stage |
+| `startDate`, `endDate` | date\|null | Earliest known task start and latest task finish (project start for empty stages). `endDate` is `null` when any task in the stage has an undetermined schedule (see [Staffing and duration](tasks.md#staffing-and-duration)) |
+| `completed` | boolean | True when nonempty and all tasks are `DONE` |
+| `predecessorIds` | number[] | IDs of stages that must finish before this stage starts |
 
 ## GET /stages
 
@@ -71,3 +76,12 @@ Stages divide a project into named phases. A stage response always contains its 
 **Path parameters:** `id` — stage ID.  
 **Success response:** `204 No Content`.  
 **Errors:** `400` for an invalid ID; `404` when the stage does not exist.
+## Stage predecessor endpoints
+
+`POST /stages/{id}/predecessors/{predecessorId}` adds a predecessor to the stage; `DELETE` on the same path removes it. Both return `204 No Content`.
+
+The `GET /stages` and `GET /stages/{id}` responses include `predecessorIds` and `completed`.
+
+Add rejects with `400`: different-project stages, self-dependency, duplicate, direct/indirect cycle, or a stage whose tasks already started. Remove rejects nonexistent dependencies with `400`. Missing IDs return `404`. Deleting a stage with dependent stages is rejected with `400`.
+
+**Empty stages:** never completed. Their dates fall back to the project start; an empty predecessor imposes no scheduling delay, but blocks task progress until it contains finished tasks. Zero-duration tasks use their start as finish and impose no next-day delay.

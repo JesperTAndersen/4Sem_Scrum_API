@@ -14,6 +14,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -30,8 +33,30 @@ public class Stage implements IEntity
     @ManyToOne(fetch = FetchType.LAZY)
     private Project project;
 
-    @OneToMany(mappedBy = "stage", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "stage", fetch = FetchType.EAGER)
     private Set<Task> tasks = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "stage_predecessors", joinColumns = @JoinColumn(name = "stage_id"),
+            inverseJoinColumns = @JoinColumn(name = "predecessor_id"))
+    private Set<Stage> predecessors = new HashSet<>();
+
+    public boolean isCompleted()
+    {
+        return !tasks.isEmpty() && tasks.stream().allMatch(t -> t.getStatus() == Task.TaskStatus.DONE);
+    }
+
+    public boolean wouldCreateCycleWith(Stage predecessor)
+    {
+        return predecessor.canReach(this, new HashSet<>());
+    }
+
+    private boolean canReach(Stage target, Set<Stage> visited)
+    {
+        if (this == target || (id != null && id.equals(target.id))) return true;
+        if (!visited.add(this)) return false;
+        return predecessors.stream().anyMatch(p -> p.canReach(target, visited));
+    }
 
     public Stage() {}
     public Stage(String name, Project project)

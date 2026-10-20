@@ -153,14 +153,14 @@ public class EmployeeDAO implements IEmployeeDAO
         {
             try
             {
-                Query query = em.createQuery("""
-                    UPDATE Employee e SET e.active = :active WHERE e.id=:id
-                        """);
-                query.setParameter("active", active);
-                query.setParameter("id", id);
-                em.getTransaction().begin();
-                query.executeUpdate();
-                em.getTransaction().commit();
+                Employee e = em.find(Employee.class, id);
+                DBValidator.validateExists(e, id, Employee.class);
+                if (e.isActive() != active) {
+                    em.getTransaction().begin();
+                    e.setActive(active);
+                    em.merge(e);
+                    em.getTransaction().commit();
+                }
             }
             catch (EntityNotFoundException e)
             {

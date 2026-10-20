@@ -9,6 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Mirrors {@code EmployeeDAO}: a missing employee raises {@link NotFoundException}.
+ */
 public class InMemoryEmployeeDAO implements IEmployeeDAO
 {
     private final Map<Long, Employee> employees = new LinkedHashMap<>();
@@ -57,11 +60,6 @@ public class InMemoryEmployeeDAO implements IEmployeeDAO
     @Override
     public void setActive(Long id, boolean active)
     {
-        // The real DAO's bulk update leaves an unknown ID unchanged.
-        Employee employee = employees.get(id);
-        if (employee != null)
-        {
-            employee.setActive(active);
-        }
+        get(id).setActive(active);
     }
 }

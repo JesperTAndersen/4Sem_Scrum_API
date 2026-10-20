@@ -13,6 +13,8 @@ public record StageDTO(
         BigDecimal totalCost,
         LocalDate startDate,
         LocalDate endDate,
-        List<TaskDTO> tasks)
+        List<TaskDTO> tasks,
+        boolean completed,
+        List<Long> predecessorIds)
 {
 }

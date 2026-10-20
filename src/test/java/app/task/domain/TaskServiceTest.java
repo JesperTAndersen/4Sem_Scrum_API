@@ -1,29 +1,5 @@
 package app.task.domain;
 
-import app.competence.domain.Competence;
-import app.exceptions.NotFoundException;
-import app.persistence.testdoubles.EntityIds;
-import app.persistence.testdoubles.InMemoryCompetenceDAO;
-import app.persistence.testdoubles.InMemoryStageDAO;
-import app.project.domain.Project;
-import app.project.domain.ProjectStatus;
-import app.stage.domain.Stage;
-import app.task.data.TaskDAO;
-import app.task.presentation.dto.TaskCreateDTO;
-import app.task.presentation.dto.TaskDTO;
-import app.task.presentation.dto.TaskUpdateDTO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvFileSource;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.hasItem;
@@ -32,27 +8,66 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import app.exceptions.BadRequestException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
+
+import app.competence.domain.Competence;
+import app.employee.domain.Employee;
+import app.exceptions.NotFoundException;
+import app.persistence.testdoubles.EntityIds;
+import app.persistence.testdoubles.InMemoryCompetenceDAO;
+import app.persistence.testdoubles.InMemoryEmployeeDAO;
+import app.persistence.testdoubles.InMemoryStageDAO;
+import app.project.domain.Project;
+import app.project.domain.ProjectStatus;
+import app.stage.domain.Stage;
+import app.task.data.ITaskDAO;
+import app.task.presentation.dto.TaskCreateDTO;
+import app.task.presentation.dto.EmployeeReferenceDTO;
+import app.task.presentation.dto.TaskDTO;
+import app.task.presentation.dto.TaskEmployeesDTO;
+import app.task.presentation.dto.TaskUpdateDTO;
+
 class TaskServiceTest
 {
     private static final double TOLERANCE = 1e-9;
 
     private InMemoryTaskDAO taskDAO;
+    private InMemoryStageDAO stages;
+    private InMemoryEmployeeDAO employees;
     private TaskService taskService;
 
     /**
      * Seeds tasks 1, 2 and 3 in project 1 and task 4 in project 2. Task 2 depends on task 1, and task 3 on task 2.
-     * Competence 1 is active, competence 2 is inactive.
+     * Competence 1 (carpenter) and 3 (painter) are active, competence 2 is inactive. Task 1 requires carpenter;
+     * tasks 2 and 3 have no competence. Employees: 1 and 2 are active carpenters, 3 is active without competences,
+     * 4 is an active carpenter (deactivated by tests that need it), and 5 is an active carpenter and painter.
      */
     @BeforeEach
     void setUp()
     {
         InMemoryStageDAO stageDAO = new InMemoryStageDAO();
+        stages = stageDAO;
         Stage planning = stageDAO.create(new Stage("Planning", project(1L)));
         Stage otherProjectStage = stageDAO.create(new Stage("Other project", project(2L)));
 
         InMemoryCompetenceDAO competenceDAO = new InMemoryCompetenceDAO();
         Competence carpenter = competenceDAO.create(new Competence("carpenter", new BigDecimal("850.00")));
         competenceDAO.create(new Competence("plumber", new BigDecimal("800.00"))).setActive(false);
+        Competence painter = competenceDAO.create(new Competence("painter", new BigDecimal("700.00")));
 
         taskDAO = new InMemoryTaskDAO();
         Task requirements = taskDAO.create(new Task(planning, "Requirements", 1));
@@ -63,7 +78,53 @@ class TaskServiceTest
         design.addPredecessor(requirements);
         build.addPredecessor(design);
 
-        taskService = new TaskService(taskDAO, stageDAO, competenceDAO);
+        InMemoryEmployeeDAO employeeDAO = new InMemoryEmployeeDAO();
+        employees = employeeDAO;
+        employeeDAO.create(new Employee("Alice", "Worker", 7.5)).addCompetence(carpenter);
+        employeeDAO.create(new Employee("Bob", "Builder", 6.0)).addCompetence(carpenter);
+        employeeDAO.create(new Employee("Carl", "Helper", 7.5));
+        employeeDAO.create(new Employee("Dina", "Former", 7.5)).addCompetence(carpenter);
+        Employee eva = employeeDAO.create(new Employee("Eva", "Allround", 7.5));
+        eva.addCompetence(carpenter);
+        eva.addCompetence(painter);
+
+        taskService = new TaskService(taskDAO, stageDAO, competenceDAO, employeeDAO);
+    }
+
+
+    @Test
+    @DisplayName("Cross-stage task dependencies are invalid even inside the same project")
+    void crossStageTaskDependencyIsRejected()
+    {
+        Stage otherStage = stages.create(new Stage("Delivery", project(1L)));
+        // This test deliberately uses the same project id but a different stage id.
+        long otherTaskId = taskService.create(new TaskCreateDTO(otherStage.getId(), "Delivery task", 1L, 0.0, 1)).id();
+        assertThrows(BadRequestException.class, () -> taskService.addPredecessor(otherTaskId, 1L));
+    }
+
+    @Test
+    @DisplayName("Blocked task cannot skip directly to DONE or enter IN_PROGRESS")
+    void blockedTaskCannotProgress()
+    {
+        TaskUpdateDTO progress = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.IN_PROGRESS);
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
+        assertThrows(BadRequestException.class, () -> taskService.update(2L, progress));
+        assertThrows(BadRequestException.class, () -> taskService.update(2L, done));
+        taskService.update(1L, done);
+        taskService.update(2L, progress);
+        assertEquals(Task.TaskStatus.IN_PROGRESS, taskService.get(2L).status());
+    }
+
+    @Test
+    @DisplayName("Cannot reopen a predecessor once its successor has started")
+    void cannotReopenFinishedPredecessorAfterSuccessorStarts()
+    {
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
+        TaskUpdateDTO progress = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.IN_PROGRESS);
+        TaskUpdateDTO reopen = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.NOT_STARTED);
+        taskService.update(1L, done);
+        taskService.update(2L, progress);
+        assertThrows(BadRequestException.class, () -> taskService.update(1L, reopen));
     }
 
     @ParameterizedTest(name = "[{index}] {6}")
@@ -143,6 +204,250 @@ class TaskServiceTest
             Exception exception = assertThrows(Exception.class, () -> taskService.addPredecessor(taskId, predecessorId));
             assertThat(exception.getClass().getSimpleName(), is(expected));
         }
+    }
+
+    @ParameterizedTest(name = "[{index}] {4}")
+    @CsvFileSource(resources = "/testcases/task/task-service/replace-employees.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Replace employees - validates the task and every employee id before storing the selection")
+    void replaceEmployeesValidatesRequest(Long taskId, String employeeIds, int expectedCount, String expected, String reason)
+    {
+        TaskEmployeesDTO dto = new TaskEmployeesDTO(parseIds(employeeIds));
+
+        if (expected.equals("ACCEPT"))
+        {
+            TaskDTO result = taskService.replaceEmployees(taskId, dto);
+            assertThat(result.assignedEmployees().size(), is(expectedCount));
+            assertThat(taskService.get(taskId).assignedEmployees().size(), is(expectedCount));
+        }
+        else
+        {
+            Exception exception = assertThrows(Exception.class, () -> taskService.replaceEmployees(taskId, dto));
+            assertThat(exception.getClass().getSimpleName(), is(expected));
+        }
+    }
+
+    @ParameterizedTest(name = "[{index}] {3}")
+    @CsvFileSource(resources = "/testcases/task/task-service/assign-employee.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Assign employee - accepts only an unassigned, existing employee on an existing task")
+    void assignEmployeeValidatesRequest(Long taskId, Long employeeId, String expected, String reason)
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(2L)));
+
+        if (expected.equals("ACCEPT"))
+        {
+            taskService.assignEmployee(taskId, employeeId);
+            assertThat(assignedEmployeeIds(taskId), is(List.of(1L, 2L)));
+        }
+        else
+        {
+            Exception exception = assertThrows(Exception.class, () -> taskService.assignEmployee(taskId, employeeId));
+            assertThat(exception.getClass().getSimpleName(), is(expected));
+            assertThat(assignedEmployeeIds(1L), is(List.of(2L)));
+        }
+    }
+
+    @ParameterizedTest(name = "[{index}] {3}")
+    @CsvFileSource(resources = "/testcases/task/task-service/unassign-employee.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Unassign employee - requires an existing assignment")
+    void unassignEmployeeValidatesRequest(Long taskId, Long employeeId, String expected, String reason)
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(2L)));
+
+        if (expected.equals("ACCEPT"))
+        {
+            taskService.unassignEmployee(taskId, employeeId);
+            assertThat(assignedEmployeeIds(taskId), is(List.of()));
+        }
+        else
+        {
+            Exception exception = assertThrows(Exception.class, () -> taskService.unassignEmployee(taskId, employeeId));
+            assertThat(exception.getClass().getSimpleName(), is(expected));
+            assertThat(assignedEmployeeIds(1L), is(List.of(2L)));
+        }
+    }
+
+    @Test
+    @DisplayName("Unassign employee - keeps the other assignments")
+    void unassigningOneEmployeeKeepsTheOthers()
+    {
+        taskService.assignEmployee(1L, 1L);
+        taskService.assignEmployee(1L, 2L);
+
+        taskService.unassignEmployee(1L, 1L);
+
+        assertThat(assignedEmployeeIds(1L), is(List.of(2L)));
+    }
+
+    @ParameterizedTest(name = "[{index}] {4}")
+    @CsvFileSource(resources = "/testcases/task/task-service/assignment-eligibility.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Assignment eligibility - new employees must be active and hold the task's competence")
+    void newAssignmentsMustBeEligible(String path, Long taskId, Long employeeId, String expected, String reason)
+    {
+        employees.setActive(4L, false);
+        Runnable assignment = path.equals("REPLACE")
+                ? () -> taskService.replaceEmployees(taskId, new TaskEmployeesDTO(List.of(employeeId)))
+                : () -> taskService.assignEmployee(taskId, employeeId);
+
+        if (expected.equals("ACCEPT"))
+        {
+            assignment.run();
+            assertThat(assignedEmployeeIds(taskId), hasItem(employeeId));
+        }
+        else
+        {
+            Exception exception = assertThrows(Exception.class, assignment::run);
+            assertThat(exception.getClass().getSimpleName(), is(expected));
+            assertThat(assignedEmployeeIds(taskId), is(List.of()));
+        }
+    }
+
+    @Test
+    @DisplayName("Assignment eligibility - an assigned employee who is later deactivated can be retained and removed")
+    void retainedInactiveAssignmentIsNotANewAssignment()
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(4L)));
+        employees.setActive(4L, false);
+
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(4L, 1L)));
+        assertThat(assignedEmployeeIds(1L), is(List.of(1L, 4L)));
+
+        taskService.unassignEmployee(1L, 4L);
+        assertThat(assignedEmployeeIds(1L), is(List.of(1L)));
+    }
+
+    @Test
+    @DisplayName("Assignment eligibility - a deactivated employee cannot be re-assigned once removed")
+    void removedInactiveEmployeeCannotBeAssignedAgain()
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(4L)));
+        employees.setActive(4L, false);
+        taskService.unassignEmployee(1L, 4L);
+
+        assertThrows(BadRequestException.class, () -> taskService.assignEmployee(1L, 4L));
+        assertThrows(BadRequestException.class,
+                () -> taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(4L))));
+    }
+
+    @Test
+    @DisplayName("Assignment eligibility - an employee with several matching competences is stored once")
+    void employeeWithSeveralCompetencesIsStoredOnce()
+    {
+        TaskDTO result = taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(5L, 5L)));
+
+        assertThat(result.assignedEmployees().size(), is(1));
+    }
+
+    @Test
+    @DisplayName("Assignment eligibility - one ineligible employee rejects the whole replacement")
+    void ineligibleEmployeeRejectsWholeReplacement()
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L)));
+
+        assertThrows(BadRequestException.class,
+                () -> taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L, 2L, 3L))));
+
+        assertThat(assignedEmployeeIds(1L), is(List.of(1L)));
+    }
+
+    @Test
+    @DisplayName("Assignment eligibility - assignments on a completed task cannot be changed")
+    void completedTaskAssignmentsAreLocked()
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L)));
+        taskService.update(1L, new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE));
+
+        assertThrows(BadRequestException.class,
+                () -> taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L, 2L))));
+        assertThrows(BadRequestException.class, () -> taskService.assignEmployee(1L, 2L));
+        assertThrows(BadRequestException.class, () -> taskService.unassignEmployee(1L, 1L));
+
+        assertThat(assignedEmployeeIds(1L), is(List.of(1L)));
+    }
+
+    @Test
+    @DisplayName("Competence change - rejected while an assigned employee lacks the new competence")
+    void competenceChangeIsRejectedWhileAssignedEmployeesLackIt()
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L)));
+
+        assertThrows(BadRequestException.class,
+                () -> taskService.update(1L, new TaskUpdateDTO(null, null, 3L, 8.0, null)));
+
+        TaskDTO task = taskService.get(1L);
+        assertThat(task.competence().id(), is(1L));
+        assertThat(assignedEmployeeIds(1L), is(List.of(1L)));
+    }
+
+    @Test
+    @DisplayName("Competence change - accepted when every assigned employee holds the new competence")
+    void competenceChangeIsAcceptedWhenAssignedEmployeesHoldIt()
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(5L)));
+
+        TaskDTO task = taskService.update(1L, new TaskUpdateDTO(null, null, 3L, 8.0, null));
+
+        assertThat(task.competence().id(), is(3L));
+        assertThat(assignedEmployeeIds(1L), is(List.of(5L)));
+    }
+
+    @Test
+    @DisplayName("Competence change - removing the competence keeps the assignments")
+    void removingCompetenceKeepsAssignments()
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L)));
+
+        TaskDTO task = taskService.update(1L, new TaskUpdateDTO(null, null, 0L, null, null));
+
+        assertThat(task.competence(), is(nullValue()));
+        assertThat(assignedEmployeeIds(1L), is(List.of(1L)));
+    }
+
+    @Test
+    @DisplayName("Replace employees - rejects a missing request body")
+    void replaceEmployeesRejectsMissingBody()
+    {
+        assertThrows(BadRequestException.class, () -> taskService.replaceEmployees(1L, null));
+    }
+
+    @Test
+    @DisplayName("Replace employees - removing one employee keeps the others")
+    void removingOneEmployeeKeepsTheOthers()
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L, 2L)));
+
+        TaskDTO result = taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(2L)));
+
+        assertThat(result.assignedEmployees().size(), is(1));
+        assertThat(result.assignedEmployees().get(0).id(), is(2L));
+    }
+
+    @Test
+    @DisplayName("Replace employees - an invalid request leaves the existing assignments unchanged")
+    void invalidRequestKeepsExistingAssignments()
+    {
+        taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L, 2L)));
+
+        assertThrows(NotFoundException.class,
+                () -> taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L, 99L))));
+
+        List<Long> assignedIds = taskService.get(1L).assignedEmployees().stream()
+                .map(EmployeeReferenceDTO::id)
+                .toList();
+        assertThat(assignedIds, is(List.of(1L, 2L)));
+    }
+
+    @Test
+    @DisplayName("Replace employees - returns id, name and active status sorted by id")
+    void assignedEmployeesAreReturnedWithReferenceFields()
+    {
+        TaskDTO result = taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(2L, 1L)));
+
+        EmployeeReferenceDTO first = result.assignedEmployees().get(0);
+        assertThat(first.id(), is(1L));
+        assertThat(first.firstName(), is("Alice"));
+        assertThat(first.lastName(), is("Worker"));
+        assertThat(first.active(), is(true));
+        assertThat(result.assignedEmployees().get(1).id(), is(2L));
     }
 
     @ParameterizedTest(name = "[{index}] {3}")
@@ -240,19 +545,38 @@ class TaskServiceTest
                 .build();
     }
 
+    private List<Long> assignedEmployeeIds(Long taskId)
+    {
+        return taskService.get(taskId).assignedEmployees().stream()
+                .map(EmployeeReferenceDTO::id)
+                .toList();
+    }
+
+    private static List<Long> parseIds(String ids)
+    {
+        if (ids == null)
+        {
+            return null;
+        }
+        if (ids.equals("EMPTY"))
+        {
+            return List.of();
+        }
+        return Arrays.stream(ids.split(";")).map(Long::valueOf).toList();
+    }
+
     /**
      * {@code TaskService} depends on the concrete {@code TaskDAO}, so this double extends it instead of implementing an
      * interface. It mirrors {@code TaskDAO}: a missing task raises {@link NotFoundException}, and deleting a task also
      * removes it as a predecessor of other tasks.
      */
-    private static final class InMemoryTaskDAO extends TaskDAO
+    private static final class InMemoryTaskDAO implements ITaskDAO
     {
         private final Map<Long, Task> tasks = new LinkedHashMap<>();
         private long nextId = 1L;
 
         private InMemoryTaskDAO()
         {
-            super(null);
         }
 
         @Override

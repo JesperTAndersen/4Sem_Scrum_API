@@ -1,0 +1,8 @@
+body,expected,reason
+NULL,400,"EP: missing body"
+"{}",400,"EP: missing employeeIds"
+"{ ""employeeIds"": null }",400,"EP: null employeeIds"
+"{ ""employeeIds"": [0] }",400,"EP + BVA: employee id 0"
+"{ ""employeeIds"": [{unknownEmployeeId}] }",404,"EP: unknown employee"
+"{ ""employeeIds"": [] }",200,"EP + BVA: empty list removes all assignments"
+"{ ""employeeIds"": [{employeeId}] }",200,"EP: existing employee"

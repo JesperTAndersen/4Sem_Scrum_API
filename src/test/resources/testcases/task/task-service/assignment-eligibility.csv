@@ -1,0 +1,10 @@
+path,taskId,employeeId,expected,reason
+REPLACE,1,3,BadRequestException,"EP: new employee lacks the task's required competence"
+ASSIGN,1,3,BadRequestException,"EP: new employee lacks the task's required competence"
+REPLACE,1,4,BadRequestException,"EP: new employee is inactive"
+ASSIGN,1,4,BadRequestException,"EP: new employee is inactive"
+REPLACE,2,3,ACCEPT,"EP: a task without a competence accepts any active employee"
+ASSIGN,2,3,ACCEPT,"EP: a task without a competence accepts any active employee"
+REPLACE,2,4,BadRequestException,"EP: inactive employees are rejected even without a required competence"
+REPLACE,1,5,ACCEPT,"EP: employee with several competences including the required one"
+ASSIGN,1,5,ACCEPT,"EP: employee with several competences including the required one"

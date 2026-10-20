@@ -12,11 +12,11 @@ import io.javalin.apibuilder.EndpointGroup;
 
 public class StageRoutes
 {
-    private final ICrudController stageController;
+    private final StageController stageController;
 
     public StageRoutes(ICrudController stageController)
     {
-        this.stageController = stageController;
+        this.stageController = (StageController) stageController;
     }
 
     public EndpointGroup getRoutes()
@@ -29,6 +29,8 @@ public class StageRoutes
                 post(stageController::create, Role.PROJECT_MANAGER);
                 put("/{id}", stageController::update, Role.PROJECT_MANAGER);
                 delete("/{id}", stageController::delete, Role.PROJECT_MANAGER);
+                post("/{id}/predecessors/{predecessorId}", stageController::addPredecessor, Role.PROJECT_MANAGER);
+                delete("/{id}/predecessors/{predecessorId}", stageController::removePredecessor, Role.PROJECT_MANAGER);
             });
     }
 }

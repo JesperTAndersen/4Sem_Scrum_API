@@ -4,7 +4,6 @@ import java.util.List;
 
 import app.exceptions.DatabaseException;
 import app.exceptions.NotFoundException;
-import app.shared.data.ICrudDAO;
 import app.task.domain.Task;
 import app.utils.DBValidator;
 import app.utils.TransactionUtil;
@@ -15,7 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TypedQuery;
 
-public class TaskDAO implements ICrudDAO<Task>
+public class TaskDAO implements ITaskDAO
 {
     private final EntityManagerFactory emf;
 
