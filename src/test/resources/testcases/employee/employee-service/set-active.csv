@@ -1,0 +1,11 @@
+id,initiallyActive,active,expected,reason
+"1","False","False","ACCEPT","Decision table: active state False to False"
+"1","False","True","ACCEPT","Decision table: active state False to True"
+"1","True","False","ACCEPT","Decision table: active state True to False"
+"1","True","True","ACCEPT","Decision table: active state True to True"
+"NULL","True","False","BadRequestException","EP + BVA: invalid employee ID NULL active False"
+"NULL","True","True","BadRequestException","EP + BVA: invalid employee ID NULL active True"
+"-1","True","False","BadRequestException","EP + BVA: invalid employee ID -1 active False"
+"-1","True","True","BadRequestException","EP + BVA: invalid employee ID -1 active True"
+"0","True","False","BadRequestException","EP + BVA: invalid employee ID 0 active False"
+"0","True","True","BadRequestException","EP + BVA: invalid employee ID 0 active True"

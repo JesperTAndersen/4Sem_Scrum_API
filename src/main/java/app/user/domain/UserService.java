@@ -113,7 +113,7 @@ public class UserService implements IUserService
 
         if (authUser.id().equals(targetUserId))
         {
-            throw new IllegalArgumentException("Cannot delete your own account");
+            throw new ForbiddenException("Cannot delete your own account");
         }
 
         return userDAO.delete(targetUserId);
@@ -170,30 +170,14 @@ public class UserService implements IUserService
 
     private void validatePassword(String password)
     {
-        if (password == null || password.length() < 8)
-        {
-            throw new BadRequestException("Password must be at least 8 characters");
-        }
-
-        if (!password.matches(".*[A-Z].*"))
-        {
-            throw new BadRequestException("Password must contain at least one uppercase letter");
-        }
-
-        if (!password.matches(".*[0-9].*"))
-        {
-            throw new BadRequestException("Password must contain at least one number");
-        }
+        ValidationUtil.validatePassword(password);
     }
 
     private void requireMinimumLength(String name, String field)
     {
-        if (name == null || name.trim().isEmpty())
-        {
-            throw new IllegalArgumentException(field + " cannot be empty");
-        }
+        ValidationUtil.validateNotBlank(name, field);
 
-        if (name.length() < 2)
+        if (name.trim().length() < 2)
         {
             throw new BadRequestException(field + " must be at least 2 characters");
         }

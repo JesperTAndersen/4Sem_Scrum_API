@@ -12,6 +12,9 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | [`GET`](#get-tasksid) | `/tasks/{id}` | Get a task |
 | [`PUT`](#put-tasksid) | `/tasks/{id}` | Update a task |
 | [`DELETE`](#delete-tasksid) | `/tasks/{id}` | Delete a task |
+| [`PUT`](#put-tasksidemployees) | `/tasks/{id}/employees` | Replace the employees assigned to a task |
+| [`POST`](#post-taskstaskidemployeesemployeeid) | `/tasks/{taskId}/employees/{employeeId}` | Assign one employee to a task |
+| [`DELETE`](#delete-taskstaskidemployeesemployeeid) | `/tasks/{taskId}/employees/{employeeId}` | Unassign one employee from a task |
 | [`POST`](#post-taskstaskidpredecessorspredecessorid) | `/tasks/{taskId}/predecessors/{predecessorId}` | Add a predecessor dependency |
 | [`DELETE`](#delete-taskstaskidpredecessorspredecessorid) | `/tasks/{taskId}/predecessors/{predecessorId}` | Remove a predecessor dependency |
 
@@ -24,13 +27,15 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days |
 | `competence` | object\|null | Assigned competence with only `id` and `name`; `null` when none is assigned |
 | `estimate` | number | Estimated labor hours |
-| `startDate`, `endDate` | date | Calculated Monday-Friday schedule dates; `endDate` is inclusive |
-| `laborDurationInDays` | number | Estimated labor duration (`estimate / 7.5`) |
-| `scheduledDurationInDays` | number | Greater of labor duration and minimum duration |
+| `startDate`, `endDate` | date\|null | Calculated Monday-Friday schedule dates; `endDate` is inclusive. `null` when the schedule is undetermined |
+| `laborDurationInDays` | number\|null | `estimate` divided by the daily capacity of the assigned employees (see [Staffing and duration](#staffing-and-duration)); `null` when no assigned employee is available |
+| `scheduledDurationInDays` | number\|null | Greater of labor duration and minimum duration; `null` when the labor duration is undetermined |
 | `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
+| `staffingStatus` | enum | `STAFFED`, `STAFFING_REQUIRED`, or `NO_AVAILABLE_CAPACITY` (see [Staffing and duration](#staffing-and-duration)) |
 | `predecessorIds` | number[] | IDs of tasks that must finish before this task can start |
-| `dependencyStartOffsetInDays` | number | Earliest start offset based on predecessor durations; `0` when there are no predecessors |
-| `dependencyFinishOffsetInDays` | number | Start offset plus the task scheduled duration |
+| `dependencyStartOffsetInDays` | number\|null | Earliest start offset based on predecessor durations; `0` when there are no predecessors; `null` when a predecessor is undetermined |
+| `dependencyFinishOffsetInDays` | number\|null | Start offset plus the task scheduled duration; `null` when undetermined |
+| `assignedEmployees` | [Employee reference](#employee-reference-object)[] | Employees assigned to the task, ordered by ID; empty when none are assigned |
 
 ```json
 {
@@ -42,15 +47,30 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
   "laborDurationInDays": 2.1333333333333333,
   "scheduledDurationInDays": 2.1333333333333333,
   "status": "NOT_STARTED",
+  "staffingStatus": "STAFFING_REQUIRED",
   "predecessorIds": [],
   "dependencyStartOffsetInDays": 0.0,
-  "dependencyFinishOffsetInDays": 2.1333333333333333
+  "dependencyFinishOffsetInDays": 2.1333333333333333,
+  "assignedEmployees": [
+    { "id": 1, "firstName": "Alice", "lastName": "Worker", "active": true, "dailyCapacity": 7.5 }
+  ]
 }
 ```
 
+## Employee reference object
+
+A compact view of an assigned employee. It does not include the employee's competences; use [`GET /employee/{id}`](employee.md) for the full Employee object.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | number | Employee ID |
+| `firstName`, `lastName` | string | Employee name |
+| `active` | boolean | Whether the employee is currently active |
+| `dailyCapacity` | number | Effective hours per working day |
+
 ## Slim task object
 
-Tasks nested in a stage or project response include only `id`, `name`, calculated `startDate` and `endDate`, `status`, and dependency fields (`predecessorIds`, `dependencyStartOffsetInDays`, and `dependencyFinishOffsetInDays`).
+Tasks nested in a stage or project response include only `id`, `name`, calculated `startDate` and `endDate`, `status`, dependency fields (`predecessorIds`, `dependencyStartOffsetInDays`, and `dependencyFinishOffsetInDays`), and `assignedEmployees`.
 
 ---
 
@@ -132,7 +152,7 @@ Updates supplied task fields. To assign or change a competence, provide both `co
 
 | Status | When |
 |---|---|
-| `400` | `id` or supplied field values are invalid, an estimate is supplied without a competence ID, or the competence is inactive |
+| `400` | `id` or supplied field values are invalid, an estimate is supplied without a competence ID, the competence is inactive, or an assigned employee lacks the new competence |
 | `404` | The task or supplied competence does not exist |
 
 ## DELETE /tasks/{id}
@@ -151,6 +171,79 @@ Updates supplied task fields. To assign or change a competence, provide both `co
 |---|---|
 | `400` | `id` is invalid |
 | `404` | The task does not exist |
+
+## PUT /tasks/{id}/employees
+
+Replaces the complete set of employees assigned to a task. Send every employee that should be assigned; employees left out are unassigned. Send an empty list to remove all assignments. Duplicate IDs are stored once.
+
+The whole request is validated before anything is saved, so an invalid request leaves the existing assignments unchanged.
+
+Assignments do not affect task duration yet; see #156. See [Assignment rules](#assignment-rules) for which employees can be assigned.
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `id` | number | Task ID |
+
+**Request body**
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| `employeeIds` | number[] | yes | Positive IDs of existing employees; may be empty |
+
+```json
+{ "employeeIds": [1, 2] }
+```
+
+**Success response:** `200 OK` with the updated Task object, including `assignedEmployees`.
+
+**Errors**
+
+| Status | When |
+|---|---|
+| `400` | `id` is invalid, the body or `employeeIds` is missing, an employee ID is not a positive number, a new employee is inactive or lacks the task's competence, or the task is `DONE` |
+| `404` | The task or an employee does not exist |
+
+## POST /tasks/{taskId}/employees/{employeeId}
+
+Assigns one employee to a task and keeps the existing assignments. Use [`PUT /tasks/{id}/employees`](#put-tasksidemployees) to change several assignments at once.
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `taskId` | number | Task ID |
+| `employeeId` | number | Employee to assign |
+
+**Success response:** `204 No Content`.
+
+**Errors**
+
+| Status | When |
+|---|---|
+| `400` | IDs are invalid, the employee is already assigned, inactive or lacks the task's competence, or the task is `DONE` |
+| `404` | The task or employee does not exist |
+
+## DELETE /tasks/{taskId}/employees/{employeeId}
+
+Unassigns one employee from a task and keeps the other assignments.
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `taskId` | number | Task ID |
+| `employeeId` | number | Employee to unassign |
+
+**Success response:** `204 No Content`.
+
+**Errors**
+
+| Status | When |
+|---|---|
+| `400` | IDs are invalid, the employee is not assigned to the task, or the task is `DONE` |
+| `404` | The task or employee does not exist |
 
 ## POST /tasks/{taskId}/predecessors/{predecessorId}
 
@@ -184,6 +277,43 @@ Removes an existing predecessor dependency.
 |---|---|
 | `400` | IDs are invalid or the dependency does not exist |
 | `404` | Either task does not exist |
+
+## Assignment rules
+
+These rules apply to every endpoint that changes assignments (`PUT /tasks/{id}/employees`, `POST` and `DELETE /tasks/{taskId}/employees/{employeeId}`):
+
+- A **new** assignment requires an **active** employee.
+- A **new** assignment requires the employee to hold the task's competence. Tasks without a competence accept any active employee.
+- An employee who is already assigned is not a new assignment: a deactivated employee can stay in a `PUT` request and can always be removed (unless the task is `DONE`).
+- Assignments on a `DONE` task cannot be changed, so completed work keeps its staffing history.
+- An employee is stored once per task, regardless of duplicate IDs or how many competences they hold.
+- Changing a task's competence through `PUT /tasks/{id}` is rejected while an assigned employee lacks the new competence. Unassign those employees first; assignments are never removed automatically. Removing the competence (`competenceId: 0`) keeps the assignments.
+
+## Staffing and duration
+
+A task's labor duration is calculated from the employees assigned to it:
+
+```
+laborDurationInDays = estimate / combined daily capacity of the active assigned employees
+```
+
+Each employee contributes their effective daily capacity once (custom capacity, or the company standard capacity when `standardCapacity` is `true`), regardless of how many competences they hold. The scheduled duration is the greater of the labor duration and `minimumDurationInDays`; working-day rounding and dependency ordering are unchanged.
+
+| `staffingStatus` | When | Labor duration |
+|---|---|---|
+| `STAFFED` | At least one assigned employee is active | `estimate / combined capacity` |
+| `STAFFING_REQUIRED` | No employees are assigned | `estimate / 7.5` (one assumed worker; no named employee is allocated) |
+| `NO_AVAILABLE_CAPACITY` | Employees are assigned, but none is active | `null` (undetermined) |
+
+Examples:
+
+- 30 hours, two active employees at 7.5 hours/day: 30 / 15 = **2 days**.
+- 30 hours, employees at 7.5 and 2.5 hours/day: 30 / 10 = **3 days**.
+- 30 hours, no employees assigned: 30 / 7.5 = **4 days**, `STAFFING_REQUIRED`.
+
+**Undetermined schedules.** A task with `NO_AVAILABLE_CAPACITY` has no duration and no dates. Every task that depends on it, directly or through a predecessor stage, is also undetermined. Stage end dates and the project's `schedule` become `null` as well (see [stages](stages.md) and [projects](projects.md)). The plan can still be saved; assigning an active employee recalculates everything.
+
+**Completed tasks.** Until completed tasks store their historical values (#152), all assigned employees count for a `DONE` task, including deactivated employees, so completed work keeps its dates.
 
 ## Dependency scheduling
 

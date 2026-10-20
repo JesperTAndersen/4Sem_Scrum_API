@@ -1,11 +1,17 @@
 package app.task.data;
 
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 
 import app.competence.domain.Competence;
 import app.competence.presentation.dto.SlimCompetenceDTO;
+import app.employee.data.EmployeeMapper;
+import app.employee.domain.Employee;
 import app.project.domain.WorkingDaySchedule;
 import app.task.domain.Task;
+import app.task.presentation.dto.EmployeeReferenceDTO;
 import app.task.presentation.dto.TaskDTO;
 
 public final class TaskMapper
@@ -36,9 +42,11 @@ public final class TaskMapper
                 task.getLaborDurationInDays(),
                 task.getScheduledDurationInDays(),
                 task.getStatus(),
+                task.getStaffingStatus(),
                 task.getPredecessors().stream().map(Task::getId).sorted().toList(),
                 task.getDependencyStartOffsetInDays(),
-                task.getDependencyFinishOffsetInDays()
+                task.getDependencyFinishOffsetInDays(),
+                mapToEmployeeReferenceDTOs(task.getEmployees())
         );
     }
 
@@ -47,6 +55,17 @@ public final class TaskMapper
         return task.getStage() == null || task.getStage().getProject() == null
                 ? LocalDate.ofEpochDay(0)
                 : task.getStage().getProject().getStartDate();
+    }
+
+    private static List<EmployeeReferenceDTO> mapToEmployeeReferenceDTOs(Set<Employee> employees)
+    {
+        if(employees != null && !employees.isEmpty()) {
+            return employees.stream()
+                    .sorted(Comparator.comparing(Employee::getId))
+                    .map(EmployeeMapper::toEmployeeReferenceDTO)
+                    .toList();
+        }
+        return List.of();
     }
 
 }
