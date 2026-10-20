@@ -1,0 +1,7 @@
+competenceId,token,expected,reason
+EXISTING,NONE,401,"DT R1: list employees by competence without a token"
+EXISTING,EMPLOYEE,403,"DT R2: list employees by competence as EMPLOYEE"
+abc,PROJECT_MANAGER,400,"EP: non-numeric competence id"
+0,PROJECT_MANAGER,400,"EP + BVA: competence id 0"
+UNKNOWN,PROJECT_MANAGER,404,"EP: unknown competence"
+EXISTING,PROJECT_MANAGER,200,"DT R4: list employees by an existing competence"
