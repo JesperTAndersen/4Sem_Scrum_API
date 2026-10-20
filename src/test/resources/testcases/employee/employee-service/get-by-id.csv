@@ -1,0 +1,7 @@
+id,expected,reason
+"NULL","BadRequestException","EP: null employee ID"
+"-1","BadRequestException","EP + BVA: negative employee ID"
+"0","BadRequestException","BVA: zero employee ID"
+"1","ACCEPT","BVA: minimum existing employee ID"
+"2","NotFoundException","BVA: next positive but unknown employee ID"
+"999","NotFoundException","EP: unknown positive employee ID"

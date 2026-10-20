@@ -18,6 +18,12 @@ public final class WorkingDaySchedule
 
     public record TaskDates(LocalDate startDate, LocalDate endDate)
     {
+        public static final TaskDates UNDETERMINED = new TaskDates(null, null);
+
+        public boolean isDetermined()
+        {
+            return startDate != null && endDate != null;
+        }
     }
 
     public static TaskDates calculateTaskDates(Task task, LocalDate projectStartDate)
@@ -48,6 +54,10 @@ public final class WorkingDaySchedule
         for (Task predecessor : task.getPredecessors())
         {
             TaskDates predecessorDates = calculate(predecessor, projectStartDate, calculated, visiting);
+            if (!predecessorDates.isDetermined())
+            {
+                return remember(task, TaskDates.UNDETERMINED, calculated, visiting);
+            }
             LocalDate availableDate = predecessor.getScheduledDurationInDays() == 0
                     ? predecessorDates.startDate()
                     : nextWorkingDay(predecessorDates.endDate().plusDays(1));
@@ -61,18 +71,31 @@ public final class WorkingDaySchedule
                 for (Task predecessor : stage.getTasks())
                 {
                     TaskDates dates = calculate(predecessor, projectStartDate, calculated, visiting);
+                    if (!dates.isDetermined())
+                    {
+                        return remember(task, TaskDates.UNDETERMINED, calculated, visiting);
+                    }
                     LocalDate available = predecessor.getScheduledDurationInDays() == 0
                             ? dates.startDate() : nextWorkingDay(dates.endDate().plusDays(1));
                     if (available.isAfter(startDate)) startDate = available;
                 }
             }
         }
-        long workingDays = requiredWorkingDays(task.getScheduledDurationInDays());
+        Double duration = task.getScheduledDurationInDays();
+        if (duration == null)
+        {
+            return remember(task, TaskDates.UNDETERMINED, calculated, visiting);
+        }
+        long workingDays = requiredWorkingDays(duration);
         LocalDate endDate = workingDays == 0 ? startDate : addWorkingDays(startDate, workingDays - 1);
-        TaskDates result = new TaskDates(startDate, endDate);
+        return remember(task, new TaskDates(startDate, endDate), calculated, visiting);
+    }
+
+    private static TaskDates remember(Task task, TaskDates dates, Map<Task, TaskDates> calculated, Set<Task> visiting)
+    {
         visiting.remove(task);
-        calculated.put(task, result);
-        return result;
+        calculated.put(task, dates);
+        return dates;
     }
 
     private static long requiredWorkingDays(double durationInDays)

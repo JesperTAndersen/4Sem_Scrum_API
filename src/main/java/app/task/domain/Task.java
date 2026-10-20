@@ -2,7 +2,9 @@ package app.task.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import app.competence.domain.Competence;
@@ -28,7 +30,7 @@ import lombok.Getter;
 @Entity
 public class Task implements IEntity
 {
-    private static final double WORKING_HOURS_PER_DAY = 7.5;
+    private static final double ASSUMED_WORKING_HOURS_PER_DAY = 7.5;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +38,11 @@ public class Task implements IEntity
     private String name;
     private int minimumDurationInDays;
 
-    public enum TaskStatus { NOT_STARTED, IN_PROGRESS, DONE }
+    public enum TaskStatus
+    {NOT_STARTED, IN_PROGRESS, DONE}
+
+    public enum StaffingStatus
+    {STAFFED, STAFFING_REQUIRED, NO_AVAILABLE_CAPACITY}
 
     @Enumerated(EnumType.STRING)
     private TaskStatus status;
@@ -61,7 +67,9 @@ public class Task implements IEntity
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Employee> employees = new HashSet<>();
 
-    public Task() {}
+    public Task()
+    {
+    }
 
     public Task(Stage stage, String name, int minimumDurationInDays)
     {
@@ -72,7 +80,10 @@ public class Task implements IEntity
         if (stage != null) stage.addTask(this);
     }
 
-    public void changeStatus(TaskStatus status) { this.status = status; }
+    public void changeStatus(TaskStatus status)
+    {
+        this.status = status;
+    }
 
     public void update(String name, Integer minimumDurationInDays)
     {
@@ -88,20 +99,27 @@ public class Task implements IEntity
 
     public BigDecimal getCost()
     {
-        if (competence != null) {
+        if (competence != null)
+        {
             return competence.getRate().multiply(new BigDecimal(estimate));
         }
         return new BigDecimal(0);
     }
 
-    public double getLaborDurationInDays()
+    public Double getLaborDurationInDays()
     {
-        return estimate / WORKING_HOURS_PER_DAY;
+        return switch (getStaffingStatus())
+        {
+            case STAFFED -> estimate / getAvailableDailyCapacity();
+            case STAFFING_REQUIRED -> estimate / ASSUMED_WORKING_HOURS_PER_DAY;
+            case NO_AVAILABLE_CAPACITY -> null;
+        };
     }
 
-    public double getScheduledDurationInDays()
+    public Double getScheduledDurationInDays()
     {
-        return Math.max(getLaborDurationInDays(), minimumDurationInDays);
+        Double labor = getLaborDurationInDays();
+        return labor == null ? null : Math.max(labor, minimumDurationInDays);
     }
 
     public void addPredecessor(Task predecessor)
@@ -145,44 +163,80 @@ public class Task implements IEntity
         return false;
     }
 
-    public double getDependencyStartOffsetInDays()
+    public Double getDependencyStartOffsetInDays()
     {
         double latestPredecessorFinish = 0;
-        for (Task predecessor : predecessors)
+        for (Task predecessor : getAllPredecessorTasks())
         {
-            double predecessorFinish = predecessor.getDependencyFinishOffsetInDays();
-            if (predecessorFinish > latestPredecessorFinish)
+            Double predecessorFinish = predecessor.getDependencyFinishOffsetInDays();
+            if (predecessorFinish == null)
             {
-                latestPredecessorFinish = predecessorFinish;
+                return null;
             }
-        }
-        if (stage != null)
-        {
-            for (Stage predecessorStage : stage.getPredecessors())
-            {
-                for (Task predecessor : predecessorStage.getTasks())
-                {
-                    latestPredecessorFinish = Math.max(latestPredecessorFinish,
-                            predecessor.getDependencyFinishOffsetInDays());
-                }
-            }
+            latestPredecessorFinish = Math.max(latestPredecessorFinish, predecessorFinish);
         }
         return latestPredecessorFinish;
     }
 
-    public double getDependencyFinishOffsetInDays()
+    public Double getDependencyFinishOffsetInDays()
     {
-        return getDependencyStartOffsetInDays() + Math.ceil(getScheduledDurationInDays());
+        Double start = getDependencyStartOffsetInDays();
+        Double duration = getScheduledDurationInDays();
+        if (start == null || duration == null)
+        {
+            return null;
+        }
+        return start + Math.ceil(duration);
     }
 
-    public void addEmpoyee(Employee employee)
+    private List<Task> getAllPredecessorTasks()
     {
+        List<Task> allPredecessors = new ArrayList<>(predecessors);
+        if (stage != null)
+        {
+            for (Stage predecessorStage : stage.getPredecessors())
+            {
+                allPredecessors.addAll(predecessorStage.getTasks());
+            }
+        }
+        return allPredecessors;
+    }
+
+    public void assignEmployee(Employee employee)
+    {
+        validateEmployeeNotNull(employee);
         employees.add(employee);
     }
 
-    public void remEmpoyee(Employee employee)
+    public void unassignEmployee(Employee employee)
     {
+        validateEmployeeNotNull(employee);
         employees.remove(employee);
+    }
+
+    public void replaceEmployees(List<Employee> employees)
+    {
+        employees.forEach(this::validateEmployeeNotNull);
+        this.employees.clear();
+        this.employees.addAll(employees);
+    }
+
+    private double getAvailableDailyCapacity()
+    {
+        return employees.stream()
+                .filter(employee -> employee.isActive() || status == TaskStatus.DONE)
+                .mapToDouble(Employee::getDailyCapacity)
+                .sum();
+    }
+
+    public StaffingStatus getStaffingStatus()
+    {
+        if (employees.isEmpty())
+        {
+            return StaffingStatus.STAFFING_REQUIRED;
+        }
+
+        return getAvailableDailyCapacity() > 0 ? StaffingStatus.STAFFED : StaffingStatus.NO_AVAILABLE_CAPACITY;
     }
 
     @PrePersist
@@ -198,7 +252,8 @@ public class Task implements IEntity
         updatedAt = LocalDateTime.now();
     }
 
-    @Override public final boolean equals(Object o)
+    @Override
+    public final boolean equals(Object o)
     {
         return this == o || (o instanceof Task && id != null && id.equals(((Task) o).getId()));
     }
@@ -207,5 +262,13 @@ public class Task implements IEntity
     public final int hashCode()
     {
         return getClass().hashCode();
+    }
+
+    private void validateEmployeeNotNull(Employee employee)
+    {
+        if (employee == null)
+        {
+            throw new IllegalArgumentException("Employee cant be null");
+        }
     }
 }

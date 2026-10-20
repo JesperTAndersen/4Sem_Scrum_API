@@ -1,0 +1,11 @@
+taskId,employeeIds,expectedCount,expected,reason
+1,1;2,2,ACCEPT,"EP: assigns several employees"
+1,1;1;2,2,ACCEPT,"EP: duplicate employee ids are stored once"
+1,EMPTY,0,ACCEPT,"EP + BVA: an empty list removes all assignments"
+NULL,1,0,BadRequestException,"EP: missing task id"
+0,1,0,BadRequestException,"BVA: task id 0"
+1,NULL,0,BadRequestException,"EP: missing employee id list"
+1,0,0,BadRequestException,"BVA: employee id 0"
+1,1;-1,0,BadRequestException,"EP: one invalid employee id rejects the whole request"
+99,1,0,NotFoundException,"EP: task does not exist"
+1,99,0,NotFoundException,"EP: employee does not exist"

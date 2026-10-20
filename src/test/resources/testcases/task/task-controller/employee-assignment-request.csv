@@ -1,0 +1,5 @@
+method,relation,expected,reason
+POST,ASSIGNED,400,"EP: employee is already assigned"
+POST,UNKNOWN,404,"EP: employee does not exist"
+DELETE,UNASSIGNED,400,"EP: employee is not assigned"
+DELETE,UNKNOWN,404,"EP: employee does not exist"

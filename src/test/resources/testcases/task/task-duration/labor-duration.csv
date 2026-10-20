@@ -1,0 +1,10 @@
+estimate,capacities,activeFlags,minimumDays,expectedLabor,expectedScheduled,expectedStatus,reason
+30.0,7.5;7.5,true;true,0,2.0,2.0,STAFFED,"AC: two active employees at 7.5 h/day"
+30.0,7.5;2.5,true;true,0,3.0,3.0,STAFFED,"AC: employees at 7.5 and 2.5 h/day"
+30.0,NONE,NONE,0,4.0,4.0,STAFFING_REQUIRED,"AC: unassigned task uses one assumed worker at 7.5 h/day"
+30.0,7.5,false,0,NULL,NULL,NO_AVAILABLE_CAPACITY,"AC: only inactive employees leaves the duration undetermined"
+30.0,7.5;7.5,true;false,0,4.0,4.0,STAFFED,"EP: only active employees contribute capacity"
+0.0,7.5,true,0,0.0,0.0,STAFFED,"BVA: zero estimated hours"
+0.0,NONE,NONE,0,0.0,0.0,STAFFING_REQUIRED,"BVA: zero estimated hours without staffing"
+30.0,7.5;7.5,true;true,5,2.0,5.0,STAFFED,"AC: minimum duration is used when it is longer than the labor duration"
+30.0,7.5,false,5,NULL,NULL,NO_AVAILABLE_CAPACITY,"EP: minimum duration cannot replace missing capacity"
