@@ -38,9 +38,11 @@ public class Task implements IEntity
     private String name;
     private int minimumDurationInDays;
 
-    public enum TaskStatus { NOT_STARTED, IN_PROGRESS, DONE }
+    public enum TaskStatus
+    {NOT_STARTED, IN_PROGRESS, DONE}
 
-    public enum StaffingStatus {STAFFED, STAFFING_REQUIRED, NO_AVAILABLE_CAPACITY}
+    public enum StaffingStatus
+    {STAFFED, STAFFING_REQUIRED, NO_AVAILABLE_CAPACITY}
 
     @Enumerated(EnumType.STRING)
     private TaskStatus status;
@@ -65,7 +67,9 @@ public class Task implements IEntity
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Employee> employees = new HashSet<>();
 
-    public Task() {}
+    public Task()
+    {
+    }
 
     public Task(Stage stage, String name, int minimumDurationInDays)
     {
@@ -76,7 +80,10 @@ public class Task implements IEntity
         if (stage != null) stage.addTask(this);
     }
 
-    public void changeStatus(TaskStatus status) { this.status = status; }
+    public void changeStatus(TaskStatus status)
+    {
+        this.status = status;
+    }
 
     public void update(String name, Integer minimumDurationInDays)
     {
@@ -92,7 +99,8 @@ public class Task implements IEntity
 
     public BigDecimal getCost()
     {
-        if (competence != null) {
+        if (competence != null)
+        {
             return competence.getRate().multiply(new BigDecimal(estimate));
         }
         return new BigDecimal(0);
@@ -206,7 +214,8 @@ public class Task implements IEntity
         employees.remove(employee);
     }
 
-    public void replaceEmployees(List<Employee> employees) {
+    public void replaceEmployees(List<Employee> employees)
+    {
         employees.forEach(this::validateEmployeeNotNull);
         this.employees.clear();
         this.employees.addAll(employees);
@@ -222,7 +231,7 @@ public class Task implements IEntity
 
     public StaffingStatus getStaffingStatus()
     {
-        if(employees.isEmpty())
+        if (employees.isEmpty())
         {
             return StaffingStatus.STAFFING_REQUIRED;
         }
@@ -243,7 +252,8 @@ public class Task implements IEntity
         updatedAt = LocalDateTime.now();
     }
 
-    @Override public final boolean equals(Object o)
+    @Override
+    public final boolean equals(Object o)
     {
         return this == o || (o instanceof Task && id != null && id.equals(((Task) o).getId()));
     }
@@ -254,8 +264,10 @@ public class Task implements IEntity
         return getClass().hashCode();
     }
 
-    private void validateEmployeeNotNull(Employee employee) {
-        if(employee == null) {
+    private void validateEmployeeNotNull(Employee employee)
+    {
+        if (employee == null)
+        {
             throw new IllegalArgumentException("Employee cant be null");
         }
     }
