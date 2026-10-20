@@ -26,7 +26,7 @@ Projects are top-level work containers. A project detail includes its stages and
 | `totalEstimatedHours` | number | Sum of estimates in all stages |
 | `totalCost` | number | Sum of costs in all stages |
 | `stages` | Stage[] | Full nested stage hierarchy |
-| `schedule` | object | Calculated schedule: `calculatedFinishDate` and `feasible` |
+| `schedule` | object | Calculated schedule: `calculatedFinishDate` and `feasible`; both `null` when the schedule is undetermined |
 
 Task dates are recalculated whenever a project is read. Scheduling starts at the project start date, excludes Saturday and Sunday, respects predecessor dependencies, and does not prevent saving a project whose plan is infeasible.
 
@@ -34,6 +34,8 @@ Task dates are recalculated whenever a project is read. Scheduling starts at the
 - A task with a duration of 0 starts and ends on the same day, and its successors can start that day.
 - `calculatedFinishDate` is the latest task end date, or the project start date when the project has no tasks.
 - `feasible` is `true` when `calculatedFinishDate` is on or before the `deadline`.
+- Task durations are based on the capacity of the assigned employees (see [Staffing and duration](tasks.md#staffing-and-duration)).
+- If any task has an undetermined schedule (`staffingStatus` is `NO_AVAILABLE_CAPACITY`, or it depends on such a task), `calculatedFinishDate` and `feasible` are both `null`: the plan cannot be evaluated against the deadline until the missing capacity is resolved. The project can still be saved.
 
 ## GET /projects
 

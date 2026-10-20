@@ -5,6 +5,7 @@ import app.competence.domain.Competence;
 import app.employee.domain.Employee;
 import app.employee.presentation.dto.EmployeeCreateDTO;
 import app.employee.presentation.dto.EmployeeDTO;
+import app.task.presentation.dto.EmployeeReferenceDTO;
 
 import java.util.Comparator;
 
@@ -33,6 +34,22 @@ public class EmployeeMapper
         );
     }
 
+    public static EmployeeReferenceDTO toEmployeeReferenceDTO(Employee employee)
+    {
+        if (employee == null)
+        {
+            return null;
+        }
+
+        return new EmployeeReferenceDTO(
+                employee.getId(),
+                employee.getFirstName(),
+                employee.getLastName(),
+                employee.isActive(),
+                employee.getDailyCapacity()
+        );
+    }
+
     public static Employee toEntity(EmployeeCreateDTO dto)
     {
         return new Employee(
@@ -40,4 +57,5 @@ public class EmployeeMapper
                 dto.lastName().trim(),
                 dto.dailyCapacity() == null ? 0.0 : dto.dailyCapacity());
     }
+
 }
