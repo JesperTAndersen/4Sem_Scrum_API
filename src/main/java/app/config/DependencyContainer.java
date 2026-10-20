@@ -3,6 +3,7 @@ package app.config;
 import app.dashboard.domain.DashboardService;
 import app.dashboard.domain.IDashboardService;
 import app.dashboard.presentation.DashboardController;
+import app.dashboard.presentation.IDashboardController;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -114,7 +115,7 @@ public final class DependencyContainer
     @Getter
     private final IDashboardService dashboardService;
     @Getter
-    private final DashboardController dashboardController;
+    private final IDashboardController dashboardController;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {

@@ -8,6 +8,7 @@ import app.project.data.ProjectMapper;
 import app.project.domain.IScheduleService;
 import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
+import app.project.presentation.dto.ScheduleDTO;
 import app.task.presentation.dto.TaskCountDTO;
 
 import java.math.BigDecimal;
@@ -18,6 +19,10 @@ import java.util.Map;
 
 public class DashboardService implements IDashboardService
 {
+    private record ScheduledProject(Project project, ScheduleDTO scheduleDTO)
+    {
+    }
+
     private final IProjectDAO projectDAO;
     private final IScheduleService scheduleService;
     private final IEmployeeService employeeService;
@@ -50,6 +55,10 @@ public class DashboardService implements IDashboardService
     private ProjectStatisticsDTO getProjectStatistics(List<Project> projects, int infeasible)
     {
         Map<ProjectStatus, Integer> byStatus = new EnumMap<>(ProjectStatus.class);
+        for (ProjectStatus status : ProjectStatus.values())
+        {
+            byStatus.put(status, 0);
+        }
 
         for (Project project : projects)
         {
@@ -80,14 +89,16 @@ public class DashboardService implements IDashboardService
                 .filter(project -> project.getStatus() != ProjectStatus.COMPLETED)
                 .map(project -> new ScheduledProject(project,
                         scheduleService.calculateFinishDate(project)))
-                .sorted(Comparator.comparing(schedule -> schedule.project().getDeadline()))
+                .sorted(Comparator.comparing((ScheduledProject scheduled) -> scheduled.project().getDeadline())
+                        .thenComparing(scheduled -> scheduled.project().getId()))
                 .toList();
     }
 
     private List<AtRiskProjectDTO> getAtRisk(List<ScheduledProject> activeProjects)
     {
         return activeProjects.stream()
-                .filter(scheduled -> !scheduled.scheduleDTO().feasible())
+                // An undetermined schedule has feasible == null and cannot be evaluated, so it is not at risk.
+                .filter(scheduled -> Boolean.FALSE.equals(scheduled.scheduleDTO().feasible()))
                 .map(scheduled -> new AtRiskProjectDTO(
                         scheduled.project().getId(),
                         scheduled.project().getTitle(),

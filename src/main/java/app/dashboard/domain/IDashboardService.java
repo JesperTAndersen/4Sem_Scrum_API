@@ -4,5 +4,5 @@ import app.dashboard.presentation.dto.DashboardSummaryDTO;
 
 public interface IDashboardService
 {
-    public DashboardSummaryDTO getSummary();
+    DashboardSummaryDTO getSummary();
 }

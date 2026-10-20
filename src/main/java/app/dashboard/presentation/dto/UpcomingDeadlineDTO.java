@@ -7,7 +7,7 @@ public record UpcomingDeadlineDTO(
         String title,
         LocalDate deadline,
         LocalDate calculatedFinishDate,
-        boolean feasible
+        Boolean feasible
 )
 {
 }
