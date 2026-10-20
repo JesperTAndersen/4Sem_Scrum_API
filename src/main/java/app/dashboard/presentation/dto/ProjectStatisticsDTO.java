@@ -1,4 +1,4 @@
-package app.dashboard.presentation;
+package app.dashboard.presentation.dto;
 
 import app.project.domain.ProjectStatus;
 

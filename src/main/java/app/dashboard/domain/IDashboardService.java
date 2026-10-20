@@ -1,6 +1,6 @@
 package app.dashboard.domain;
 
-import app.dashboard.presentation.DashboardSummaryDTO;
+import app.dashboard.presentation.dto.DashboardSummaryDTO;
 
 public interface IDashboardService
 {

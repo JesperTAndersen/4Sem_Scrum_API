@@ -1,7 +1,7 @@
 package app.dashboard.domain;
 
-import app.dashboard.presentation.DashboardSummaryDTO;
-import app.dashboard.presentation.ProjectStatisticsDTO;
+import app.dashboard.presentation.dto.DashboardSummaryDTO;
+import app.dashboard.presentation.dto.ProjectStatisticsDTO;
 import app.employee.domain.IEmployeeService;
 import app.project.data.IProjectDAO;
 import app.project.domain.IScheduleService;

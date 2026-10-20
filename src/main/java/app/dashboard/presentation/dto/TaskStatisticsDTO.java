@@ -1,4 +1,4 @@
-package app.dashboard.presentation;
+package app.dashboard.presentation.dto;
 
 public record TaskStatisticsDTO(
         int notStarted,

@@ -1,4 +1,4 @@
-package app.dashboard.presentation;
+package app.dashboard.presentation.dto;
 
 import java.math.BigDecimal;
 import java.util.List;
