@@ -234,6 +234,80 @@ class TaskControllerTest
         assertEquals(false, employee.get("active").asBoolean());
     }
 
+    @ParameterizedTest(name = "[{index}] {4}")
+    @CsvFileSource(resources = "/testcases/task/task-controller/deactivated-assignments.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Deactivation - reloaded tasks retain named assignments without adding unavailable capacity")
+    void deactivationPreservesAssignmentHistory(String status, boolean hasActiveColleague,
+                                                String expectedStaffingStatus, Double expectedLabor, String reason)
+    {
+        long stageId = createStage();
+        long taskId = createAsManager("/tasks", """
+                { "stageId": %d, "name": "Assignment history task", "competenceId": %d,
+                  "estimate": 30.0, "minimumDurationInDays": 0 }
+                """.formatted(stageId, createCompetence()));
+        try
+        {
+            long employeeId = createEmployee("Historical", taskId);
+            assignEmployee(taskId, employeeId, 204);
+            if (hasActiveColleague)
+            {
+                assignEmployee(taskId, createEmployee("Active colleague", taskId), 204);
+            }
+            givenManager().body("{ \"status\": \"%s\" }".formatted(status))
+                    .when().put("/tasks/" + taskId).then().statusCode(200);
+            JsonNode before = getTask(taskId);
+            long competenceId = before.get("competence").get("id").asLong();
+
+            givenManager().when().patch("/employee/" + employeeId + "/deactivate").then().statusCode(204);
+
+            // A separate GET reloads the persisted assignment, without writing it back after deactivation.
+            JsonNode task = getTask(taskId);
+            JsonNode employees = task.get("assignedEmployees");
+            assertEquals(hasActiveColleague ? 2 : 1, employees.size());
+            JsonNode employee = employees.get(0);
+            assertEquals(employeeId, employee.get("id").asLong());
+            assertEquals("Historical", employee.get("firstName").asText());
+            assertEquals("Worker", employee.get("lastName").asText());
+            assertEquals(false, employee.get("active").asBoolean());
+            assertEquals(status, task.get("status").asText());
+            assertEquals(before.get("estimate"), task.get("estimate"));
+            assertEquals(before.get("competence"), task.get("competence"));
+            assertEquals(before.get("cost"), task.get("cost"));
+            assertEquals(before.get("minimumDurationInDays"), task.get("minimumDurationInDays"));
+            assertEquals(expectedStaffingStatus, task.get("staffingStatus").asText());
+            if (expectedLabor == null)
+            {
+                assertTrue(isNull(task.get("laborDurationInDays")));
+                assertTrue(isNull(task.get("scheduledDurationInDays")));
+            }
+            else
+            {
+                assertEquals(expectedLabor, task.get("laborDurationInDays").asDouble());
+            }
+
+            givenManager().queryParam("competenceId", competenceId)
+                    .when().get("/employee/capacity").then().statusCode(200)
+                    .body("employeeCount", org.hamcrest.Matchers.equalTo(hasActiveColleague ? 1 : 0))
+                    .body("dailyCapacity", org.hamcrest.Matchers.equalTo(hasActiveColleague ? 7.5f : 0.0f));
+
+            JsonNode project = readJson(givenManager().when().get("/projects/1")
+                    .then().statusCode(200).extract().asString());
+            JsonNode projectTask = findTaskInProject(project, taskId);
+            assertEquals(employees, projectTask.get("assignedEmployees"));
+            assertEquals(task, projectTask);
+            JsonNode stage = readJson(givenManager().when().get("/stages/" + stageId)
+                    .then().statusCode(200).extract().asString());
+            assertEquals(task, findTask(stage.get("tasks"), taskId));
+            assertEquals(task, findTask(readJson(givenManager().when().get("/tasks")
+                    .then().statusCode(200).extract().asString()), taskId));
+        }
+        finally
+        {
+            // Keep the shared project's schedule usable by the other API tests.
+            givenManager().when().delete("/tasks/" + taskId).then().statusCode(204);
+        }
+    }
+
     @Test
     @DisplayName("Assignment eligibility - assignments on a completed task should be locked")
     void completedTaskAssignmentsAreLocked()
