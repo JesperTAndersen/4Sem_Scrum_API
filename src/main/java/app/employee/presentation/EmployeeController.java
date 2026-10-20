@@ -41,7 +41,7 @@ public class EmployeeController implements IEmployeeController
     @Override
     public void getAll(Context ctx)
     {
-        ctx.json(employeeService.getAll());
+        ctx.json(employeeService.getAll(optionalCompetenceId(ctx)));
     }
 
     @Override
@@ -71,11 +71,15 @@ public class EmployeeController implements IEmployeeController
     @Override
     public void getCapacity(Context ctx)
     {
-        Long competenceId = ctx.queryParam("competenceId") == null ? null
+        ctx.json(employeeService.calculateDailyCapacity(optionalCompetenceId(ctx)));
+    }
+
+    private Long optionalCompetenceId(Context ctx)
+    {
+        return ctx.queryParam("competenceId") == null ? null
                 : ctx.queryParamAsClass("competenceId", Long.class)
                         .check(id -> id > 0, "Competence id must be positive")
                         .get();
-        ctx.json(employeeService.calculateDailyCapacity(competenceId));
     }
 
     @Override

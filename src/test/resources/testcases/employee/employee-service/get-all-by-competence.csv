@@ -1,0 +1,8 @@
+competenceId,expectedNames,expected,reason
+NULL,Alice;Bob;Carl;Dina,ACCEPT,"EP: no filter returns every employee"
+1,Alice;Bob;Dina,ACCEPT,"EP: carpenters, including the inactive employee"
+2,Carl;Dina,ACCEPT,"EP: painters, including an employee with several competences"
+3,EMPTY,ACCEPT,"EP: existing competence without employees returns an empty list"
+0,NONE,BadRequestException,"BVA: competence id 0"
+-1,NONE,BadRequestException,"EP: negative competence id"
+99,NONE,NotFoundException,"EP: competence does not exist"

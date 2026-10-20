@@ -5,7 +5,7 @@ See [authentication and errors](../API.md). The existing singular `/employee` pa
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/employee` | List employees, including inactive employees |
+| GET | `/employee` | List employees, including inactive employees; optionally filtered by competence |
 | POST | `/employee` | Register an active employee |
 | GET | `/employee/{id}` | Get an employee |
 | PUT | `/employee/{id}` | Update employee information and daily capacity |
@@ -63,7 +63,17 @@ Configure competencies using the separate endpoint below.
 
 ## GET /employee
 
+| Query parameter | Type | Required | Rules |
+|---|---|---|---|
+| `competenceId` | number | no | Existing positive competency ID |
+
+```
+GET /employee?competenceId=3
+```
+
 **Success response:** `200 OK` with Employee objects, including inactive employees.
+With `competenceId`, only employees holding that competency are returned (active and inactive); a competency without employees returns an empty list.
+**Errors:** `400` for an invalid filter; `404` when the competency does not exist.
 
 ## GET /employee/{id}
 

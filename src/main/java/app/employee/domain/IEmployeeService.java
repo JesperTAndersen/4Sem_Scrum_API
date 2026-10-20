@@ -16,6 +16,8 @@ public interface IEmployeeService
 
     List<EmployeeDTO> getAll();
 
+    List<EmployeeDTO> getAll(Long competenceId);
+
     EmployeeDTO update(Long id, EmployeeUpdateDTO dto);
 
     EmployeeDTO updateCompetences(Long id, EmployeeCompetencesUpdateDTO dto);

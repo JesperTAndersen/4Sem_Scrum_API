@@ -54,7 +54,16 @@ public class EmployeeService implements IEmployeeService
     @Override
     public List<EmployeeDTO> getAll()
     {
+        return getAll(null);
+    }
+
+    @Override
+    public List<EmployeeDTO> getAll(Long competenceId)
+    {
+        validateCompetenceFilter(competenceId);
+
         return employeeDAO.getAll().stream()
+                .filter(employee -> hasCompetence(employee, competenceId))
                 .map(EmployeeMapper::toDTO)
                 .toList();
     }
@@ -108,16 +117,11 @@ public class EmployeeService implements IEmployeeService
     @Override
     public EmployeeCapacityDTO calculateDailyCapacity(Long competenceId)
     {
-        if (competenceId != null)
-        {
-            ValidationUtil.validateId(competenceId);
-            competenceReader.get(competenceId);
-        }
+        validateCompetenceFilter(competenceId);
 
         List<Employee> employees = employeeDAO.getAll().stream()
                 .filter(Employee::isActive)
-                .filter(employee -> competenceId == null || employee.getCompetences().stream()
-                        .anyMatch(competence -> competenceId.equals(competence.getId())))
+                .filter(employee -> hasCompetence(employee, competenceId))
                 .toList();
         double dailyCapacity = employees.stream().mapToDouble(Employee::getDailyCapacity).sum();
         return new EmployeeCapacityDTO(competenceId, employees.size(), dailyCapacity);
@@ -154,5 +158,20 @@ public class EmployeeService implements IEmployeeService
 
         ValidationUtil.validateName(firstName, "First name");
         ValidationUtil.validateName(lastName, "Last name");
+    }
+
+    private void validateCompetenceFilter(Long competenceId)
+    {
+        if (competenceId != null)
+        {
+            ValidationUtil.validateId(competenceId);
+            competenceReader.get(competenceId);
+        }
+    }
+
+    private boolean hasCompetence(Employee employee, Long competenceId)
+    {
+        return competenceId == null || employee.getCompetences().stream()
+                .anyMatch(competence -> competenceId.equals(competence.getId()));
     }
 }
