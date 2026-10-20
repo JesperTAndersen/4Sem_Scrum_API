@@ -2,6 +2,7 @@ package app.dashboard.domain;
 
 import app.dashboard.presentation.dto.DashboardSummaryDTO;
 import app.dashboard.presentation.dto.ProjectStatisticsDTO;
+import app.dashboard.presentation.dto.ScheduledProject;
 import app.employee.domain.IEmployeeService;
 import app.project.data.IProjectDAO;
 import app.project.domain.IScheduleService;
@@ -9,6 +10,7 @@ import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -62,5 +64,15 @@ public class DashboardService implements IDashboardService
         return projects.stream()
                 .mapToDouble(Project::getTotalEstimatedHours)
                 .sum();
+    }
+
+    private List<ScheduledProject> getActiveProjectsByDeadline(List<Project> projects)
+    {
+        return projects.stream()
+                .filter(project -> project.getStatus() != ProjectStatus.COMPLETED)
+                .map(project -> new ScheduledProject(project,
+                        scheduleService.calculateFinishDate(project)))
+                .sorted(Comparator.comparing(schedule -> schedule.project().getDeadline()))
+                .toList();
     }
 }
