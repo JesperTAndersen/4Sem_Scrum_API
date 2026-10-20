@@ -1,0 +1,7 @@
+status,hasActiveColleague,expectedStaffingStatus,expectedLabor,reason
+NOT_STARTED,false,NO_AVAILABLE_CAPACITY,NULL,AC: not started task retains its inactive assignment after reload
+IN_PROGRESS,false,NO_AVAILABLE_CAPACITY,NULL,AC: in progress task retains its inactive assignment after reload
+DONE,false,STAFFED,4.0,AC: completed task retains its assignment and historical duration
+NOT_STARTED,true,STAFFED,4.0,AC: only the active colleague contributes to unfinished task capacity
+IN_PROGRESS,true,STAFFED,4.0,AC: inactive assignment stays visible alongside an active colleague
+DONE,true,STAFFED,2.0,AC: completed crew stays visible without adding available company capacity
