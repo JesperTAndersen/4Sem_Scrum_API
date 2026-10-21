@@ -1,6 +1,7 @@
 package app.task.domain;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -55,6 +56,30 @@ public class Task implements IEntity
     private Stage stage;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private LocalDate completedStartDate;
+    private LocalDate completedEndDate;
+    private Double completedLaborDurationInDays;
+    private Double completedScheduledDurationInDays;
+    private LocalDateTime planningSnapshotRecordedAt;
+
+    public void recordPlanningSnapshot(
+            LocalDate startDate,
+            LocalDate endDate,
+            Double laborDurationInDays,
+            Double scheduledDurationInDays)
+    {
+        this.completedStartDate = startDate;
+        this.completedEndDate = endDate;
+        this.completedLaborDurationInDays = laborDurationInDays;
+        this.completedScheduledDurationInDays = scheduledDurationInDays;
+        this.planningSnapshotRecordedAt = LocalDateTime.now();
+    }
+
+    public boolean hasPlanningSnapshot()
+    {
+        return planningSnapshotRecordedAt != null;
+    }
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
