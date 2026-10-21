@@ -46,7 +46,8 @@ public final class TaskMapper
                 task.getPredecessors().stream().map(Task::getId).sorted().toList(),
                 task.getDependencyStartOffsetInDays(),
                 task.getDependencyFinishOffsetInDays(),
-                mapToEmployeeReferenceDTOs(task.getEmployees())
+                mapToEmployeeReferenceDTOs(task.getEmployees()),
+                task.getStaffingWarnings()
         );
     }
 

@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import app.config.ApiTestExtension;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -276,6 +277,14 @@ class TaskControllerTest
             assertEquals(before.get("cost"), task.get("cost"));
             assertEquals(before.get("minimumDurationInDays"), task.get("minimumDurationInDays"));
             assertEquals(expectedStaffingStatus, task.get("staffingStatus").asText());
+            JsonNode warnings = task.get("staffingWarnings");
+            assertEquals(status.equals("DONE") ? 0 : 1, warnings.size());
+            if (!status.equals("DONE"))
+            {
+                assertEquals("INACTIVE_ASSIGNED_EMPLOYEE", warnings.get(0).get("warningType").asText());
+                assertEquals(taskId, warnings.get(0).get("taskId").asLong());
+                assertEquals(employeeId, warnings.get(0).get("employeeId").asLong());
+            }
             if (expectedLabor == null)
             {
                 assertTrue(isNull(task.get("laborDurationInDays")));
@@ -301,6 +310,36 @@ class TaskControllerTest
             assertEquals(task, findTask(stage.get("tasks"), taskId));
             assertEquals(task, findTask(readJson(givenManager().when().get("/tasks")
                     .then().statusCode(200).extract().asString()), taskId));
+
+            assertTaskWarningsInSchedule(project, taskId, warnings);
+            var projectUpdate = JsonNodeFactory.instance.objectNode();
+            for (String field : new String[]{"title", "description", "startDate", "deadline", "status"})
+            {
+                projectUpdate.set(field, project.get(field));
+            }
+            JsonNode savedProject = readJson(givenManager().body(projectUpdate.toString())
+                    .when().put("/projects/1").then().statusCode(200).extract().asString());
+            assertTaskWarningsInSchedule(savedProject, taskId, warnings);
+            assertEquals(task, findTaskInProject(savedProject, taskId));
+            JsonNode summaries = readJson(givenManager().when().get("/projects")
+                    .then().statusCode(200).extract().asString());
+            assertTaskWarningsInSchedule(findTask(summaries, 1L), taskId, warnings);
+
+            // Saving an unfinished plan with unavailable capacity keeps its warning after a fresh read.
+            JsonNode saved = readJson(givenManager().body("{ \"name\": \"Reviewed staffing\" }")
+                    .when().put("/tasks/" + taskId).then().statusCode(200).extract().asString());
+            assertEquals(warnings, saved.get("staffingWarnings"));
+            assertEquals(warnings, getTask(taskId).get("staffingWarnings"));
+
+            givenManager().when().patch("/employee/" + employeeId + "/activate").then().statusCode(204);
+            JsonNode reactivated = getTask(taskId);
+            assertEquals(0, reactivated.get("staffingWarnings").size());
+            assertEquals(before.get("laborDurationInDays"), reactivated.get("laborDurationInDays"));
+            assertEquals(before.get("scheduledDurationInDays"), reactivated.get("scheduledDurationInDays"));
+            assertEquals(employees.size(), reactivated.get("assignedEmployees").size());
+            JsonNode restoredProject = readJson(givenManager().when().get("/projects/1")
+                    .then().statusCode(200).extract().asString());
+            assertTaskWarningsInSchedule(restoredProject, taskId, reactivated.get("staffingWarnings"));
         }
         finally
         {
@@ -326,6 +365,48 @@ class TaskControllerTest
         replaceEmployees(taskId, "[]", 400);
 
         assertEquals(1, getTask(taskId).get("assignedEmployees").size());
+    }
+
+    @ParameterizedTest(name = "[{index}] {2}")
+    @CsvFileSource(resources = "/testcases/task/task-controller/lost-competence.csv", numLinesToSkip = 1)
+    @DisplayName("Staffing eligibility - competence loss survives reload and restoration clears the warning")
+    void lostCompetenceRetainsAssignments(String status, int expectedWarnings, String reason)
+    {
+        long taskId = createEstimatedTask("Competence history", 30.0);
+        try
+        {
+            long employeeId = createEmployee("Competence history", taskId);
+            assignEmployee(taskId, employeeId, 204);
+            updateTaskStatus(taskId, status);
+            JsonNode before = getTask(taskId);
+            long competenceId = before.get("competence").get("id").asLong();
+
+            givenManager().body("{ \"competenceIds\": [] }")
+                    .when().put("/employee/" + employeeId + "/competences").then().statusCode(200);
+            JsonNode task = getTask(taskId);
+            assertEquals(before.get("assignedEmployees"), task.get("assignedEmployees"));
+            assertEquals(expectedWarnings, task.get("staffingWarnings").size());
+            if (expectedWarnings > 0)
+            {
+                JsonNode warning = task.get("staffingWarnings").get(0);
+                assertEquals("ASSIGNED_EMPLOYEE_MISSING_COMPETENCE", warning.get("warningType").asText());
+                assertEquals(employeeId, warning.get("employeeId").asLong());
+                assertEquals(taskId, warning.get("taskId").asLong());
+                assertEquals("NO_AVAILABLE_CAPACITY", task.get("staffingStatus").asText());
+                assertPlanningValues(task, null, null, null, null);
+            }
+            else assertPlanningEquals(before, task);
+
+            givenManager().body("{ \"competenceIds\": [%d] }".formatted(competenceId))
+                    .when().put("/employee/" + employeeId + "/competences").then().statusCode(200);
+            JsonNode restored = getTask(taskId);
+            assertEquals(0, restored.get("staffingWarnings").size());
+            assertPlanningEquals(before, restored);
+        }
+        finally
+        {
+            givenManager().when().delete("/tasks/" + taskId).then().statusCode(204);
+        }
     }
 
     @Test
@@ -810,6 +891,16 @@ class TaskControllerTest
             }
         }
         throw new AssertionError("Task not found in project: " + taskId);
+    }
+
+    private void assertTaskWarningsInSchedule(JsonNode project, long taskId, JsonNode expected)
+    {
+        var actual = JsonNodeFactory.instance.arrayNode();
+        for (JsonNode warning : project.get("schedule").get("staffingWarnings"))
+        {
+            if (warning.get("taskId").asLong() == taskId) actual.add(warning);
+        }
+        assertEquals(expected, actual);
     }
 
     private JsonNode findTask(JsonNode tasks, long taskId)

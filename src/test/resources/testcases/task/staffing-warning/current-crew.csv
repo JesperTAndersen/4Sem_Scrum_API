@@ -1,0 +1,11 @@
+status,active,eligible,activeColleague,expectedStatus,expectedLabor,expectedWarningType,reason
+NOT_STARTED,true,true,false,STAFFED,4.0,NULL,EP: eligible active assignee needs no warning
+NOT_STARTED,false,true,false,NO_AVAILABLE_CAPACITY,NULL,INACTIVE_ASSIGNED_EMPLOYEE,DT: fully inactive crew has no assumed worker
+IN_PROGRESS,false,true,false,NO_AVAILABLE_CAPACITY,NULL,INACTIVE_ASSIGNED_EMPLOYEE,DT: in progress fully inactive crew has no dates
+NOT_STARTED,false,true,true,STAFFED,4.0,INACTIVE_ASSIGNED_EMPLOYEE,DT: partial deactivation retains warning despite usable capacity
+IN_PROGRESS,false,true,true,STAFFED,4.0,INACTIVE_ASSIGNED_EMPLOYEE,DT: in progress partial crew uses the whole estimate
+NOT_STARTED,true,false,false,NO_AVAILABLE_CAPACITY,NULL,ASSIGNED_EMPLOYEE_MISSING_COMPETENCE,DT: lost competence contributes no capacity
+IN_PROGRESS,true,false,true,STAFFED,4.0,ASSIGNED_EMPLOYEE_MISSING_COMPETENCE,DT: eligible colleague supplies all capacity
+NOT_STARTED,false,false,false,NO_AVAILABLE_CAPACITY,NULL,INACTIVE_ASSIGNED_EMPLOYEE,DT: inactivity takes warning precedence over competence
+DONE,false,true,false,STAFFED,2.0,NULL,DT: completed snapshot has no future staffing warning
+DONE,true,false,false,STAFFED,2.0,NULL,DT: completed snapshot survives competence loss

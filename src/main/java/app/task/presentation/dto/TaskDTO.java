@@ -25,7 +25,8 @@ public record TaskDTO(
         List<Long> predecessorIds,
         Double dependencyStartOffsetInDays,
         Double dependencyFinishOffsetInDays,
-        List<EmployeeReferenceDTO> assignedEmployees
+        List<EmployeeReferenceDTO> assignedEmployees,
+        List<StaffingWarning> staffingWarnings
 )
 {
 }

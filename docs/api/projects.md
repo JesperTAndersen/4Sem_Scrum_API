@@ -27,7 +27,7 @@ Projects are top-level work containers. A project detail includes its stages and
 | `totalEstimatedHours` | number | Sum of estimates in all stages |
 | `totalCost` | number | Sum of costs in all stages |
 | `stages` | [Stage](stages.md#stage-object)[] | Full nested stage hierarchy |
-| `schedule` | object | Calculated schedule: `calculatedFinishDate` and `feasible`; both `null` when the schedule is undetermined |
+| `schedule` | object | `calculatedFinishDate` and `feasible` (both `null` when undetermined), plus `staffingWarnings` |
 
 Unfinished task dates are recalculated whenever a project is read. Scheduling starts at the project start date,
 excludes Saturday and Sunday, respects predecessor dependencies, and does not prevent saving an infeasible plan.
@@ -43,6 +43,10 @@ and the fallback for legacy tasks without snapshots.
   (see [Staffing and duration](tasks.md#staffing-and-duration)); completed tasks with snapshots use recorded values.
 - If any task has undetermined dates, `calculatedFinishDate` and `feasible` are both `null`.
   This includes recorded null dates in a completed snapshot. The project can still be saved.
+- `schedule.staffingWarnings` identifies affected task and employee IDs using the
+  [task warning contract](tasks.md#staffing-warnings). It is present in project detail, summary, and save responses,
+  even when finish/feasibility are undetermined. An empty array means no staffing warnings.
+  Warnings are ordered by task ID then employee ID and clear on reload after active eligible capacity is restored.
 
 ## GET /projects
 

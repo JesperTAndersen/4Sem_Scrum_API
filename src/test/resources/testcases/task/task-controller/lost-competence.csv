@@ -1,0 +1,4 @@
+status,expectedWarnings,reason
+NOT_STARTED,1,DT: not started task loses eligible capacity after competence removal
+IN_PROGRESS,1,DT: in progress task retains assignment with an eligibility warning
+DONE,0,DT: completed snapshot remains unchanged after competence removal
