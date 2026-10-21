@@ -6,6 +6,7 @@ import app.competence.domain.Competence;
 import app.employee.domain.Employee;
 import app.exceptions.BadRequestException;
 import app.exceptions.NotFoundException;
+import app.project.domain.WorkingDaySchedule;
 import app.shared.data.IReadDAO;
 import app.stage.domain.Stage;
 import app.task.data.ITaskDAO;
@@ -32,7 +33,8 @@ public class TaskService implements ITaskService
         this.employeeReader = employeeReader;
     }
 
-    @Override public TaskDTO create(TaskCreateDTO dto)
+    @Override
+    public TaskDTO create(TaskCreateDTO dto)
     {
         ValidationUtil.validateNotNull(dto, "Task");
         ValidationUtil.validateId(dto.stageId());
@@ -54,14 +56,20 @@ public class TaskService implements ITaskService
         return TaskMapper.toDTO(taskDAO.create(task));
     }
 
-    @Override public TaskDTO get(Long id) { return TaskMapper.toDTO(getExistingTask(id)); }
+    @Override
+    public TaskDTO get(Long id)
+    {
+        return TaskMapper.toDTO(getExistingTask(id));
+    }
 
-    @Override public List<TaskDTO> getAll()
+    @Override
+    public List<TaskDTO> getAll()
     {
         return taskDAO.getAll().stream().map(TaskMapper::toDTO).toList();
     }
 
-    @Override public TaskDTO update(TaskDTO dto)
+    @Override
+    public TaskDTO update(TaskDTO dto)
     {
         ValidationUtil.validateNotNull(dto, "Task");
         return update(dto.id(),
@@ -74,51 +82,91 @@ public class TaskService implements ITaskService
         );
     }
 
-    @Override public TaskDTO update(Long id, TaskUpdateDTO dto)
+    @Override
+    public TaskDTO update(Long id, TaskUpdateDTO dto)
+    {
+        validateUpdateRequest(id, dto);
+        Task task = getExistingTask(id);
+        validateStatusChange(task, dto.status());
+
+        task.update(dto.name(), dto.minimumDurationInDays());
+        updateCompetence(task, dto);
+        updateStatus(task, dto.status());
+
+        taskDAO.update(task);
+        return get(id);
+    }
+
+    private void validateUpdateRequest(Long id, TaskUpdateDTO dto)
     {
         ValidationUtil.validateId(id);
         ValidationUtil.validateNotNull(dto, "Task");
         if (dto.name() != null) validateName(dto.name());
         if (dto.minimumDurationInDays() != null) validateMinimumDuration(dto.minimumDurationInDays());
+    }
 
-        Task task = getExistingTask(id);
-        if (dto.status() != null && dto.status() != Task.TaskStatus.NOT_STARTED)
+    private void validateStatusChange(Task task, Task.TaskStatus status)
+    {
+        if (status == null) return;
+
+        if (status != Task.TaskStatus.NOT_STARTED)
         {
             validateCanProgress(task);
         }
-        if (dto.status() != null && dto.status() != Task.TaskStatus.DONE && task.getStatus() == Task.TaskStatus.DONE)
+        if (status != Task.TaskStatus.DONE && task.getStatus() == Task.TaskStatus.DONE)
         {
             validateCanReopen(task);
         }
-        task.update(dto.name(), dto.minimumDurationInDays());
-        if (dto.status() != null)
-        {
-            task.changeStatus(dto.status());
-        }
-        if (dto.competenceId() != null)
-        {
-            if (dto.competenceId() == 0)
-            {
-                task.setCompetence(null, 0.0);
-            }
-            else
-            {
-                validateEstimate(dto.estimate());
-                Competence competence = getExistingCompetence(dto.competenceId());
-                validateCanBeAssigned(competence);
-                validateAssignedEmployeesHaveCompetence(task, competence);
-                task.setCompetence(competence, dto.estimate());
-            }
-        }
-        else if (dto.estimate() != null)
-        {
-            throw new BadRequestException("A competence id is required when updating a task estimate");
-        }
-        taskDAO.update(task);
-        return get(id);
     }
 
-    @Override public void delete(Long id) { getExistingTask(id); taskDAO.delete(id); }
+    private void updateCompetence(Task task, TaskUpdateDTO dto)
+    {
+        if (dto.competenceId() == null)
+        {
+            if (dto.estimate() != null)
+            {
+                throw new BadRequestException("A competence id is required when updating a task estimate");
+            }
+            return;
+        }
+
+        if (dto.competenceId() == 0)
+        {
+            task.setCompetence(null, 0.0);
+            return;
+        }
+
+        validateEstimate(dto.estimate());
+        Competence competence = getExistingCompetence(dto.competenceId());
+        validateCanBeAssigned(competence);
+        validateAssignedEmployeesHaveCompetence(task, competence);
+        task.setCompetence(competence, dto.estimate());
+    }
+
+    private void updateStatus(Task task, Task.TaskStatus status)
+    {
+        if (status == null) return;
+
+        if (status == Task.TaskStatus.DONE && task.getStatus() != Task.TaskStatus.DONE)
+        {
+            WorkingDaySchedule.TaskDates dates = WorkingDaySchedule.calculateTaskDates(
+                    task,
+                    task.getStage().getProject().getStartDate());
+            task.recordPlanningSnapshot(
+                    dates.startDate(),
+                    dates.endDate(),
+                    task.getLaborDurationInDays(),
+                    task.getScheduledDurationInDays());
+        }
+        task.changeStatus(status);
+    }
+
+    @Override
+    public void delete(Long id)
+    {
+        getExistingTask(id);
+        taskDAO.delete(id);
+    }
 
     @Override
     public void addPredecessor(Long taskId, Long predecessorId)
@@ -269,16 +317,21 @@ public class TaskService implements ITaskService
         }
     }
 
-    private void validateName(String name) { ValidationUtil.validateNotBlank(name, "Task name"); }
+    private void validateName(String name)
+    {
+        ValidationUtil.validateNotBlank(name, "Task name");
+    }
 
     private void validateMinimumDuration(Integer duration)
     {
-        if (duration == null || duration < 0) throw new BadRequestException("Task minimum duration must be a non-negative number of days");
+        if (duration == null || duration < 0)
+            throw new BadRequestException("Task minimum duration must be a non-negative number of days");
     }
 
     private void validateEstimate(Double estimate)
     {
-        if (estimate == null || !Double.isFinite(estimate) || estimate < 0) throw new BadRequestException("Task estimate must be a non-negative number of hours");
+        if (estimate == null || !Double.isFinite(estimate) || estimate < 0)
+            throw new BadRequestException("Task estimate must be a non-negative number of hours");
     }
 
     private void validateCanBeAssigned(Competence competence)
@@ -291,14 +344,26 @@ public class TaskService implements ITaskService
 
     private Competence getExistingCompetence(Long id)
     {
-        try { return competenceReader.get(id); }
-        catch (EntityNotFoundException e) { throw new NotFoundException("Competence not found with id: " + id); }
+        try
+        {
+            return competenceReader.get(id);
+        }
+        catch (EntityNotFoundException e)
+        {
+            throw new NotFoundException("Competence not found with id: " + id);
+        }
     }
 
     private Task getExistingTask(Long id)
     {
-        try { return taskDAO.get(id); }
-        catch (EntityNotFoundException e) { throw new NotFoundException("Task not found with id: " + id); }
+        try
+        {
+            return taskDAO.get(id);
+        }
+        catch (EntityNotFoundException e)
+        {
+            throw new NotFoundException("Task not found with id: " + id);
+        }
     }
 
     private void validateAssignmentsCanChange(Task task)
