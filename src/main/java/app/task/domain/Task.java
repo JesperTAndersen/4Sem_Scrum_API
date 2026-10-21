@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +13,7 @@ import app.competence.domain.Competence;
 import app.employee.domain.Employee;
 import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
+import app.task.presentation.dto.StaffingWarning;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -259,9 +261,30 @@ public class Task implements IEntity
     private double getAvailableDailyCapacity()
     {
         return employees.stream()
-                .filter(employee -> employee.isActive() || status == TaskStatus.DONE)
+                .filter(employee -> status == TaskStatus.DONE || (employee.isActive() && isEligible(employee)))
                 .mapToDouble(Employee::getDailyCapacity)
                 .sum();
+    }
+
+    private boolean isEligible(Employee employee)
+    {
+        return competence == null || employee.getCompetences().contains(competence);
+    }
+
+    public List<StaffingWarning> getStaffingWarnings()
+    {
+        if (status == TaskStatus.DONE) return List.of();
+
+        return employees.stream()
+                .filter(employee -> !employee.isActive() || !isEligible(employee))
+                .sorted(Comparator.comparing(Employee::getId,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(employee -> new StaffingWarning(
+                        employee.isActive() ?
+                                StaffingWarning.WarningType.INELIGIBLE_ASSIGNED_EMPLOYEE
+                                : StaffingWarning.WarningType.INACTIVE_ASSIGNED_EMPLOYEE,
+                        id, employee.getId()))
+                .toList();
     }
 
     public StaffingStatus getStaffingStatus()
