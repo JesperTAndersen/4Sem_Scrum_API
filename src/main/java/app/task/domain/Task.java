@@ -133,6 +133,11 @@ public class Task implements IEntity
 
     public Double getLaborDurationInDays()
     {
+        if (status == TaskStatus.DONE && hasPlanningSnapshot())
+        {
+            return this.completedLaborDurationInDays;
+        }
+
         return switch (getStaffingStatus())
         {
             case STAFFED -> estimate / getAvailableDailyCapacity();
@@ -143,6 +148,11 @@ public class Task implements IEntity
 
     public Double getScheduledDurationInDays()
     {
+        if (status == TaskStatus.DONE && hasPlanningSnapshot())
+        {
+            return this.completedScheduledDurationInDays;
+        }
+
         Double labor = getLaborDurationInDays();
         return labor == null ? null : Math.max(labor, minimumDurationInDays);
     }
