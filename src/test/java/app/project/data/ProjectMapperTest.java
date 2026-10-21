@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -84,6 +85,6 @@ class ProjectMapperTest
 
     private ScheduleDTO schedule()
     {
-        return new ScheduleDTO(LocalDate.of(2026, 1, 31), true);
+        return new ScheduleDTO(LocalDate.of(2026, 1, 31), true, List.of());
     }
 }
