@@ -114,12 +114,13 @@ class DashboardServiceTest
         assertThat(dashboardService.getSummary().upcomingDeadlines().size(), is(expectedSize));
     }
 
-    @ParameterizedTest(name = "[{index}] {5}")
+    @ParameterizedTest(name = "[{index}] {6}")
     @CsvFileSource(resources = "/testcases/dashboard/dashboard-service/get-summary-active-totals.csv", numLinesToSkip = 1, nullValues = "NULL")
-    @DisplayName("Get summary - totals and remaining hours only count active projects and unfinished tasks")
+    @DisplayName("Get summary - totals, remaining hours and task counts only count active projects")
     void getSummaryCountsActiveProjectsInTotals(ProjectStatus projectStatus, Task.TaskStatus taskStatus,
                                                 double expectedTotalHours, double expectedRemainingHours,
-                                                BigDecimal expectedTotalCost, String reason)
+                                                BigDecimal expectedTotalCost, int expectedTaskCount,
+                                                String reason)
     {
         Project project = project(1L, projectStatus, FINISH_DATE);
         task(stage(project), new Competence("carpenter", new BigDecimal("850.00")), 7.5, taskStatus);
@@ -130,6 +131,8 @@ class DashboardServiceTest
         assertThat(summary.totalEstimatedHours(), is(expectedTotalHours));
         assertThat(summary.remainingHours(), is(expectedRemainingHours));
         assertThat(summary.totalCost(), comparesEqualTo(expectedTotalCost));
+        assertThat(summary.tasks().notStarted() + summary.tasks().inProgress() + summary.tasks().done(),
+                is(expectedTaskCount));
     }
 
     @Test
@@ -198,7 +201,6 @@ class DashboardServiceTest
         projectDAO.seed(garage);
 
         DashboardSummaryDTO summary = dashboardService.getSummary();
-        List<ProjectDTO> projects = List.of(projectService.get(1L), projectService.get(2L), projectService.get(3L));
         List<ProjectDTO> activeProjects = List.of(projectService.get(1L), projectService.get(2L));
 
         assertAll(
@@ -221,11 +223,11 @@ class DashboardServiceTest
                         .sum())),
                 () -> assertThat(summary.remainingHours(), is(37.5)),
                 () -> assertThat(summary.tasks().notStarted(),
-                        is(projects.stream().mapToInt(project -> project.tasks().tasksNotStarted()).sum())),
+                        is(activeProjects.stream().mapToInt(project -> project.tasks().tasksNotStarted()).sum())),
                 () -> assertThat(summary.tasks().inProgress(),
-                        is(projects.stream().mapToInt(project -> project.tasks().tasksInProgress()).sum())),
+                        is(activeProjects.stream().mapToInt(project -> project.tasks().tasksInProgress()).sum())),
                 () -> assertThat(summary.tasks().done(),
-                        is(projects.stream().mapToInt(project -> project.tasks().taskDone()).sum()))
+                        is(activeProjects.stream().mapToInt(project -> project.tasks().taskDone()).sum()))
         );
 
         for (UpcomingDeadlineDTO upcoming : summary.upcomingDeadlines())

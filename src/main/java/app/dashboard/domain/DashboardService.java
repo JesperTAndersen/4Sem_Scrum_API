@@ -48,7 +48,7 @@ public class DashboardService implements IDashboardService
                 getTotalHours(activeProjects),
                 getTotalCost(activeProjects),
                 getRemainingHours(activeProjects),
-                getTaskStatistics(projects),
+                getTaskStatistics(activeProjects),
                 getCapacity(),
                 atRisk,
                 getUpcomingDeadlines(activeProjectsByDeadline)

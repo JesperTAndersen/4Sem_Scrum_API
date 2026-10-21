@@ -40,7 +40,7 @@ See [authentication and errors](../API.md).
 | `totalEstimatedHours` | number | Sum of `totalEstimatedHours` of active projects |
 | `totalCost` | number | Sum of `totalCost` of active projects |
 | `remainingHours` | number | Sum of `estimate` of tasks that are not `DONE` in active projects |
-| `tasks` | object | Number of tasks per status across every project |
+| `tasks` | object | Number of tasks per status in active projects |
 | `capacity.activeEmployees` | number | Number of active employees |
 | `capacity.dailyCapacity` | number | Sum of the daily hours of active employees |
 | `atRisk` | object[] | Active projects whose plan cannot meet the deadline, ordered by deadline |
@@ -51,9 +51,9 @@ Rules:
 
 - The statistics are calculated from persisted data on every request. Totals, task counts, `calculatedFinishDate`
   and `feasible` are the same values as `GET /projects/{id}` returns for the same project.
-- An active project is a project whose status is not `COMPLETED`. Completed projects are counted in `projects` and
-  `tasks`, but are left out of `totalEstimatedHours`, `totalCost`, `remainingHours`, `atRisk`, `infeasible` and
-  `upcomingDeadlines`. The totals therefore describe the work that is planned or in progress.
+- An active project is a project whose status is not `COMPLETED`. Completed projects are counted in `projects`, but
+  are left out of `totalEstimatedHours`, `totalCost`, `remainingHours`, `tasks`, `atRisk`, `infeasible` and
+  `upcomingDeadlines`. The totals and task counts therefore describe the work that is planned or in progress.
 - `remainingHours` is the estimated work that is not finished yet. Dividing it by `capacity.dailyCapacity` gives an
   estimate of how many working days of work the active employees have ahead of them.
 - `atRisk` and `upcomingDeadlines` are ordered by deadline, then by project ID. `upcomingDeadlines` is not filtered by
