@@ -33,6 +33,7 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | `scheduledDurationInDays` | number\|null | Recorded scheduled duration for completed tasks with a snapshot; otherwise the greater of live labor duration and minimum duration. `null` when undetermined |
 | `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
 | `staffingStatus` | enum | `STAFFED`, `STAFFING_REQUIRED`, or `NO_AVAILABLE_CAPACITY` (see [Staffing and duration](#staffing-and-duration)) |
+| `staffingWarnings` | object[] | Current warnings identifying the task and affected employee; empty for completed tasks (see [Staffing warnings](#staffing-warnings)) |
 | `predecessorIds` | number[] | IDs of tasks that must finish before this task can start |
 | `dependencyStartOffsetInDays` | number\|null | Earliest start offset based on predecessor durations; `0` when there are no predecessors; `null` when a predecessor is undetermined |
 | `dependencyFinishOffsetInDays` | number\|null | Start offset plus the task scheduled duration; `null` when undetermined |
@@ -54,6 +55,7 @@ Example completed task for a project starting on `2030-01-07`:
   "scheduledDurationInDays": 5.0,
   "status": "DONE",
   "staffingStatus": "STAFFED",
+  "staffingWarnings": [],
   "predecessorIds": [],
   "dependencyStartOffsetInDays": 0.0,
   "dependencyFinishOffsetInDays": 5.0,
@@ -307,16 +309,16 @@ These rules apply to every endpoint that changes assignments (`PUT /tasks/{id}/e
 For an unfinished task (`NOT_STARTED` or `IN_PROGRESS`), labor duration is calculated from the employees assigned to it:
 
 ```
-laborDurationInDays = estimate / combined daily capacity of the active assigned employees
+laborDurationInDays = estimate / combined daily capacity of the active eligible assigned employees
 ```
 
 Each employee contributes their effective daily capacity once (custom capacity, or the company standard capacity when `standardCapacity` is `true`), regardless of how many competences they hold. The scheduled duration is the greater of the labor duration and `minimumDurationInDays`; working-day rounding and dependency ordering are unchanged.
 
 | `staffingStatus` | When | Labor duration |
 |---|---|---|
-| `STAFFED` | At least one assigned employee is active | `estimate / combined capacity` |
+| `STAFFED` | Active eligible assignees provide positive combined capacity | `estimate / combined capacity` |
 | `STAFFING_REQUIRED` | No employees are assigned | `estimate / 7.5` (one assumed worker; no named employee is allocated) |
-| `NO_AVAILABLE_CAPACITY` | Employees are assigned, but none is active | `null` (undetermined) |
+| `NO_AVAILABLE_CAPACITY` | Employees are assigned, but none provides usable capacity | `null` (undetermined) |
 
 Examples:
 
@@ -329,6 +331,36 @@ Unfinished tasks that depend on it, directly or through a predecessor stage, are
 Affected stage end dates and the project's `calculatedFinishDate` and `feasible` become `null` as well
 (see [stages](stages.md) and [projects](projects.md)). The plan can still be saved; restoring active capacity
 recalculates unfinished work. Completed tasks with snapshots keep their recorded values.
+
+## Staffing warnings
+
+Every task response includes `staffingWarnings`, including tasks nested in stage and project responses.
+Warnings are derived from current assignments on each read and are ordered by employee ID:
+
+```json
+{
+  "staffingStatus": "STAFFED",
+  "staffingWarnings": [
+    { "warningType": "INACTIVE_ASSIGNED_EMPLOYEE", "taskId": 12, "employeeId": 42 }
+  ]
+}
+```
+
+| `warningType` | Meaning |
+|---|---|
+| `INACTIVE_ASSIGNED_EMPLOYEE` | An unfinished task retains an inactive employee; that employee contributes zero capacity |
+| `INELIGIBLE_ASSIGNED_EMPLOYEE` | An active assignee no longer holds the task's required competence and contributes zero capacity |
+
+Eligibility means holding the task's required competence; tasks without a competence accept any active employee.
+Assignments are retained after competence loss. `IN_PROGRESS` uses the whole estimate because remaining hours
+are not tracked. An inactive assignee receives only the inactive warning, even if they also lack the competence.
+A partially active crew can be `STAFFED` and still have warnings. Reactivation clears the inactive warning;
+capacity resumes if the employee is eligible. Restoring a missing competence clears the eligibility warning.
+Unassigned tasks and `DONE` tasks return an empty array. Completed assignments and snapshots remain visible.
+Warnings do not block saving a plan and are not persisted separately. The project `schedule.staffingWarnings`
+aggregates warnings from all unfinished tasks, ordered by task ID then employee ID, in both detail and list responses.
+Dependent tasks can have undetermined dates without their own staffing warning; the originating task's warning
+remains visible in the project schedule.
 
 ## Completed planning snapshots
 
