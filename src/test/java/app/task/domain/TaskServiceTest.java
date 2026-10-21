@@ -37,7 +37,7 @@ import app.project.domain.ProjectStatus;
 import app.stage.domain.Stage;
 import app.task.data.ITaskDAO;
 import app.task.presentation.dto.TaskCreateDTO;
-import app.task.presentation.dto.EmployeeReferenceDTO;
+import app.employee.presentation.dto.EmployeeReferenceDTO;
 import app.task.presentation.dto.TaskDTO;
 import app.task.presentation.dto.TaskEmployeesDTO;
 import app.task.presentation.dto.TaskUpdateDTO;

@@ -1,4 +1,4 @@
-package app.task.presentation.dto;
+package app.employee.presentation.dto;
 
 public record EmployeeReferenceDTO(
         Long id,
