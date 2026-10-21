@@ -389,7 +389,7 @@ class TaskControllerTest
             if (expectedWarnings > 0)
             {
                 JsonNode warning = task.get("staffingWarnings").get(0);
-                assertEquals("INELIGIBLE_ASSIGNED_EMPLOYEE", warning.get("warningType").asText());
+                assertEquals("ASSIGNED_EMPLOYEE_MISSING_COMPETENCE", warning.get("warningType").asText());
                 assertEquals(employeeId, warning.get("employeeId").asLong());
                 assertEquals(taskId, warning.get("taskId").asLong());
                 assertEquals("NO_AVAILABLE_CAPACITY", task.get("staffingStatus").asText());

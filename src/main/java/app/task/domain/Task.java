@@ -281,7 +281,7 @@ public class Task implements IEntity
                         Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(employee -> new StaffingWarning(
                         employee.isActive() ?
-                                StaffingWarning.WarningType.INELIGIBLE_ASSIGNED_EMPLOYEE
+                                StaffingWarning.WarningType.ASSIGNED_EMPLOYEE_MISSING_COMPETENCE
                                 : StaffingWarning.WarningType.INACTIVE_ASSIGNED_EMPLOYEE,
                         id, employee.getId()))
                 .toList();

@@ -5,6 +5,6 @@ public record StaffingWarning(WarningType warningType, Long taskId, Long employe
     public enum WarningType
     {
         INACTIVE_ASSIGNED_EMPLOYEE,
-        INELIGIBLE_ASSIGNED_EMPLOYEE
+        ASSIGNED_EMPLOYEE_MISSING_COMPETENCE
     }
 }

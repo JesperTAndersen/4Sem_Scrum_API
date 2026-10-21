@@ -349,7 +349,7 @@ Warnings are derived from current assignments on each read and are ordered by em
 | `warningType` | Meaning |
 |---|---|
 | `INACTIVE_ASSIGNED_EMPLOYEE` | An unfinished task retains an inactive employee; that employee contributes zero capacity |
-| `INELIGIBLE_ASSIGNED_EMPLOYEE` | An active assignee no longer holds the task's required competence and contributes zero capacity |
+| `ASSIGNED_EMPLOYEE_MISSING_COMPETENCE` | An active assignee no longer holds the task's required competence and contributes zero capacity |
 
 Eligibility means holding the task's required competence; tasks without a competence accept any active employee.
 Assignments are retained after competence loss. `IN_PROGRESS` uses the whole estimate because remaining hours
