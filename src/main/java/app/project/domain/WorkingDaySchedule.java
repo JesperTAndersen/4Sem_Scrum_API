@@ -5,8 +5,10 @@ import app.task.domain.Task;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -59,7 +61,7 @@ public final class WorkingDaySchedule
 
         if (!visiting.add(task)) throw new IllegalStateException("Cyclic schedule dependency");
         LocalDate startDate = projectStartDate;
-        for (Task predecessor : task.getPredecessors())
+        for (Task predecessor : getPredecessorTasks(task))
         {
             TaskDates predecessorDates = calculate(predecessor, projectStartDate, calculated, visiting);
             if (!predecessorDates.isDetermined())
@@ -72,23 +74,6 @@ public final class WorkingDaySchedule
             if (availableDate.isAfter(startDate)) startDate = availableDate;
         }
 
-        if (task.getStage() != null)
-        {
-            for (Stage stage : task.getStage().getPredecessors())
-            {
-                for (Task predecessor : stage.getTasks())
-                {
-                    TaskDates dates = calculate(predecessor, projectStartDate, calculated, visiting);
-                    if (!dates.isDetermined())
-                    {
-                        return remember(task, TaskDates.UNDETERMINED, calculated, visiting);
-                    }
-                    LocalDate available = predecessor.getScheduledDurationInDays() == 0
-                            ? dates.startDate() : nextWorkingDay(dates.endDate().plusDays(1));
-                    if (available.isAfter(startDate)) startDate = available;
-                }
-            }
-        }
         Double duration = task.getScheduledDurationInDays();
         if (duration == null)
         {
@@ -97,6 +82,19 @@ public final class WorkingDaySchedule
         long workingDays = requiredWorkingDays(duration);
         LocalDate endDate = workingDays == 0 ? startDate : addWorkingDays(startDate, workingDays - 1);
         return remember(task, new TaskDates(startDate, endDate), calculated, visiting);
+    }
+
+    private static List<Task> getPredecessorTasks(Task task)
+    {
+        List<Task> predecessors = new ArrayList<>(task.getPredecessors());
+        if (task.getStage() != null)
+        {
+            for (Stage stage : task.getStage().getPredecessors())
+            {
+                predecessors.addAll(stage.getTasks());
+            }
+        }
+        return predecessors;
     }
 
     private static TaskDates remember(Task task, TaskDates dates, Map<Task, TaskDates> calculated, Set<Task> visiting)
