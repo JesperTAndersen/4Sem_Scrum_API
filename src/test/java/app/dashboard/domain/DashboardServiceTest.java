@@ -18,6 +18,7 @@ import app.project.domain.ScheduleService;
 import app.project.presentation.dto.ProjectDTO;
 import app.stage.domain.Stage;
 import app.task.domain.Task;
+import app.task.presentation.dto.TaskDTO;
 import app.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -113,6 +114,24 @@ class DashboardServiceTest
         assertThat(dashboardService.getSummary().upcomingDeadlines().size(), is(expectedSize));
     }
 
+    @ParameterizedTest(name = "[{index}] {5}")
+    @CsvFileSource(resources = "/testcases/dashboard/dashboard-service/get-summary-active-totals.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Get summary - totals and remaining hours only count active projects and unfinished tasks")
+    void getSummaryCountsActiveProjectsInTotals(ProjectStatus projectStatus, Task.TaskStatus taskStatus,
+                                                double expectedTotalHours, double expectedRemainingHours,
+                                                BigDecimal expectedTotalCost, String reason)
+    {
+        Project project = project(1L, projectStatus, FINISH_DATE);
+        task(stage(project), new Competence("carpenter", new BigDecimal("850.00")), 7.5, taskStatus);
+        projectDAO.seed(project);
+
+        DashboardSummaryDTO summary = dashboardService.getSummary();
+
+        assertThat(summary.totalEstimatedHours(), is(expectedTotalHours));
+        assertThat(summary.remainingHours(), is(expectedRemainingHours));
+        assertThat(summary.totalCost(), comparesEqualTo(expectedTotalCost));
+    }
+
     @Test
     @DisplayName("Get summary - should order at-risk projects and upcoming deadlines by deadline")
     void getSummaryOrdersProjectsByDeadline()
@@ -145,6 +164,7 @@ class DashboardServiceTest
                 () -> assertThat(summary.projects().infeasible(), is(0)),
                 () -> assertThat(summary.totalEstimatedHours(), is(0.0)),
                 () -> assertThat(summary.totalCost(), comparesEqualTo(BigDecimal.ZERO)),
+                () -> assertThat(summary.remainingHours(), is(0.0)),
                 () -> assertThat(summary.tasks().notStarted(), is(0)),
                 () -> assertThat(summary.tasks().inProgress(), is(0)),
                 () -> assertThat(summary.tasks().done(), is(0)),
@@ -179,6 +199,7 @@ class DashboardServiceTest
 
         DashboardSummaryDTO summary = dashboardService.getSummary();
         List<ProjectDTO> projects = List.of(projectService.get(1L), projectService.get(2L), projectService.get(3L));
+        List<ProjectDTO> activeProjects = List.of(projectService.get(1L), projectService.get(2L));
 
         assertAll(
                 () -> assertThat(summary.projects().total(), is(3)),
@@ -188,10 +209,17 @@ class DashboardServiceTest
                         ProjectStatus.IN_PROGRESS, 1,
                         ProjectStatus.COMPLETED, 1))),
                 () -> assertThat(summary.totalEstimatedHours(),
-                        is(projects.stream().mapToDouble(ProjectDTO::totalEstimatedHours).sum())),
-                () -> assertThat(summary.totalCost(), comparesEqualTo(projects.stream()
+                        is(activeProjects.stream().mapToDouble(ProjectDTO::totalEstimatedHours).sum())),
+                () -> assertThat(summary.totalCost(), comparesEqualTo(activeProjects.stream()
                         .map(ProjectDTO::totalCost)
                         .reduce(BigDecimal.ZERO, BigDecimal::add))),
+                () -> assertThat(summary.remainingHours(), is(activeProjects.stream()
+                        .flatMap(project -> project.stages().stream())
+                        .flatMap(stage -> stage.tasks().stream())
+                        .filter(task -> task.status() != Task.TaskStatus.DONE)
+                        .mapToDouble(TaskDTO::estimate)
+                        .sum())),
+                () -> assertThat(summary.remainingHours(), is(37.5)),
                 () -> assertThat(summary.tasks().notStarted(),
                         is(projects.stream().mapToInt(project -> project.tasks().tasksNotStarted()).sum())),
                 () -> assertThat(summary.tasks().inProgress(),

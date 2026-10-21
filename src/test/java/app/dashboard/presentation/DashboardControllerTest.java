@@ -40,7 +40,7 @@ class DashboardControllerTest
     }
 
     @Test
-    @DisplayName("Get summary - should match the totals and schedules returned by the project endpoints")
+    @DisplayName("Get summary - should match the active totals and schedules returned by the project endpoints")
     void getSummaryMatchesProjectEndpoints()
     {
         long projectId = createInfeasibleProjectWithTask();
@@ -49,15 +49,31 @@ class DashboardControllerTest
         JsonNode projects = getJson("/projects");
 
         double expectedHours = 0;
+        double expectedRemainingHours = 0;
         BigDecimal expectedCost = BigDecimal.ZERO;
         Map<String, Integer> expectedByStatus = new HashMap<>();
         for (JsonNode slimProject : projects)
         {
             JsonNode project = getJson("/projects/" + slimProject.get("id").asLong());
-            expectedHours += project.get("totalEstimatedHours").asDouble();
-            expectedCost = expectedCost.add(project.get("totalCost").decimalValue());
             String status = project.get("status").asText();
             expectedByStatus.put(status, expectedByStatus.getOrDefault(status, 0) + 1);
+            if (status.equals("COMPLETED"))
+            {
+                continue;
+            }
+
+            expectedHours += project.get("totalEstimatedHours").asDouble();
+            expectedCost = expectedCost.add(project.get("totalCost").decimalValue());
+            for (JsonNode stage : project.get("stages"))
+            {
+                for (JsonNode task : stage.get("tasks"))
+                {
+                    if (!task.get("status").asText().equals("DONE"))
+                    {
+                        expectedRemainingHours += task.get("estimate").asDouble();
+                    }
+                }
+            }
         }
 
         assertEquals(projects.size(), summary.at("/projects/total").asInt());
@@ -67,6 +83,8 @@ class DashboardControllerTest
         }
         assertEquals(expectedHours, summary.get("totalEstimatedHours").asDouble(), 0.0001);
         assertEquals(0, expectedCost.compareTo(summary.get("totalCost").decimalValue()));
+        assertEquals(expectedRemainingHours, summary.get("remainingHours").asDouble(), 0.0001);
+        assertTrue(expectedRemainingHours > 0);
 
         for (JsonNode upcoming : summary.get("upcomingDeadlines"))
         {

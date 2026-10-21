@@ -9,6 +9,7 @@ import app.project.domain.IScheduleService;
 import app.project.domain.Project;
 import app.project.domain.ProjectStatus;
 import app.project.presentation.dto.ScheduleDTO;
+import app.task.domain.Task;
 import app.task.presentation.dto.TaskCountDTO;
 
 import java.math.BigDecimal;
@@ -38,18 +39,27 @@ public class DashboardService implements IDashboardService
     public DashboardSummaryDTO getSummary()
     {
         List<Project> projects = projectDAO.getAll();
-        List<ScheduledProject> activeProjects = getActiveProjectsByDeadline(projects);
-        List<AtRiskProjectDTO> atRisk = getAtRisk(activeProjects);
+        List<Project> activeProjects = getActiveProjects(projects);
+        List<ScheduledProject> activeProjectsByDeadline = getProjectsByDeadline(activeProjects);
+        List<AtRiskProjectDTO> atRisk = getAtRisk(activeProjectsByDeadline);
 
         return new DashboardSummaryDTO(
                 getProjectStatistics(projects, atRisk.size()),
-                getTotalHours(projects),
-                getTotalCost(projects),
+                getTotalHours(activeProjects),
+                getTotalCost(activeProjects),
+                getRemainingHours(activeProjects),
                 getTaskStatistics(projects),
                 getCapacity(),
                 atRisk,
-                getUpcomingDeadlines(activeProjects)
+                getUpcomingDeadlines(activeProjectsByDeadline)
         );
+    }
+
+    private List<Project> getActiveProjects(List<Project> projects)
+    {
+        return projects.stream()
+                .filter(project -> project.getStatus() != ProjectStatus.COMPLETED)
+                .toList();
     }
 
     private ProjectStatisticsDTO getProjectStatistics(List<Project> projects, int infeasible)
@@ -83,10 +93,19 @@ public class DashboardService implements IDashboardService
                 .sum();
     }
 
-    private List<ScheduledProject> getActiveProjectsByDeadline(List<Project> projects)
+    private double getRemainingHours(List<Project> projects)
     {
         return projects.stream()
-                .filter(project -> project.getStatus() != ProjectStatus.COMPLETED)
+                .flatMap(project -> project.getStages().stream())
+                .flatMap(stage -> stage.getTasks().stream())
+                .filter(task -> task.getStatus() != Task.TaskStatus.DONE)
+                .mapToDouble(Task::getEstimate)
+                .sum();
+    }
+
+    private List<ScheduledProject> getProjectsByDeadline(List<Project> projects)
+    {
+        return projects.stream()
                 .map(project -> new ScheduledProject(project,
                         scheduleService.calculateFinishDate(project)))
                 .sorted(Comparator.comparing((ScheduledProject scheduled) -> scheduled.project().getDeadline())

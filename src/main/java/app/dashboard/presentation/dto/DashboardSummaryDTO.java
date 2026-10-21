@@ -7,6 +7,7 @@ public record DashboardSummaryDTO(
         ProjectStatisticsDTO projects,
         double totalEstimatedHours,
         BigDecimal totalCost,
+        double remainingHours,
         TaskStatisticsDTO tasks,
         CapacitySummaryDTO capacity,
         List<AtRiskProjectDTO> atRisk,
