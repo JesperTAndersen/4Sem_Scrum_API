@@ -28,6 +28,11 @@ Stages divide a project into named phases. A stage response always contains its 
 | `completed` | boolean | True when nonempty and all tasks are `DONE` |
 | `predecessorIds` | number[] | IDs of stages that must finish before this stage starts |
 
+Stage dates are aggregated from task dates. Unfinished tasks use live planning calculations; completed tasks with
+snapshots use recorded dates and durations. The same values appear in task endpoints and project responses.
+See [Completed planning snapshots](tasks.md#completed-planning-snapshots) for completion, reopening, and the
+fallback for legacy tasks without snapshots.
+
 ## GET /stages
 
 **Success response:** `200 OK` with `Stage[]`.

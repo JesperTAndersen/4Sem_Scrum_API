@@ -5,7 +5,7 @@ import app.competence.domain.Competence;
 import app.employee.domain.Employee;
 import app.employee.presentation.dto.EmployeeCreateDTO;
 import app.employee.presentation.dto.EmployeeDTO;
-import app.task.presentation.dto.EmployeeReferenceDTO;
+import app.employee.presentation.dto.EmployeeReferenceDTO;
 
 import java.util.Comparator;
 

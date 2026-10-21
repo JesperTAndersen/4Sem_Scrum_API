@@ -1,6 +1,7 @@
 # Projects
 
-Projects are top-level work containers. A project detail includes its stages and slim task summaries. Use `/tasks/{id}` for a task's full assignment, estimate, cost, and duration details.
+Projects are top-level work containers. A project detail includes its stages and their full
+[Task objects](tasks.md#task-object).
 
 **Base path:** `/api/v1/projects`  
 **Access:** `PROJECT_MANAGER`
@@ -25,17 +26,23 @@ Projects are top-level work containers. A project detail includes its stages and
 | `createdAt`, `updatedAt` | date-time | Audit timestamps |
 | `totalEstimatedHours` | number | Sum of estimates in all stages |
 | `totalCost` | number | Sum of costs in all stages |
-| `stages` | Stage[] | Full nested stage hierarchy |
+| `stages` | [Stage](stages.md#stage-object)[] | Full nested stage hierarchy |
 | `schedule` | object | Calculated schedule: `calculatedFinishDate` and `feasible`; both `null` when the schedule is undetermined |
 
-Task dates are recalculated whenever a project is read. Scheduling starts at the project start date, excludes Saturday and Sunday, respects predecessor dependencies, and does not prevent saving a project whose plan is infeasible.
+Unfinished task dates are recalculated whenever a project is read. Scheduling starts at the project start date,
+excludes Saturday and Sunday, respects predecessor dependencies, and does not prevent saving an infeasible plan.
+Completed tasks with snapshots retain their recorded dates and durations, including when the project start date
+changes. See [Completed planning snapshots](tasks.md#completed-planning-snapshots) for completion, reopening,
+and the fallback for legacy tasks without snapshots.
 
 - A task occupies whole working days: a fractional duration rounds up (0.5 days takes one day).
 - A task with a duration of 0 starts and ends on the same day, and its successors can start that day.
 - `calculatedFinishDate` is the latest task end date, or the project start date when the project has no tasks.
 - `feasible` is `true` when `calculatedFinishDate` is on or before the `deadline`.
-- Task durations are based on the capacity of the assigned employees (see [Staffing and duration](tasks.md#staffing-and-duration)).
-- If any task has an undetermined schedule (`staffingStatus` is `NO_AVAILABLE_CAPACITY`, or it depends on such a task), `calculatedFinishDate` and `feasible` are both `null`: the plan cannot be evaluated against the deadline until the missing capacity is resolved. The project can still be saved.
+- Unfinished task durations use current assigned employee capacity
+  (see [Staffing and duration](tasks.md#staffing-and-duration)); completed tasks with snapshots use recorded values.
+- If any task has undetermined dates, `calculatedFinishDate` and `feasible` are both `null`.
+  This includes recorded null dates in a completed snapshot. The project can still be saved.
 
 ## GET /projects
 

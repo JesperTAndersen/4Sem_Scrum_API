@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import app.competence.domain.Competence;
 import app.employee.domain.Employee;
@@ -36,7 +37,7 @@ import app.project.domain.ProjectStatus;
 import app.stage.domain.Stage;
 import app.task.data.ITaskDAO;
 import app.task.presentation.dto.TaskCreateDTO;
-import app.task.presentation.dto.EmployeeReferenceDTO;
+import app.employee.presentation.dto.EmployeeReferenceDTO;
 import app.task.presentation.dto.TaskDTO;
 import app.task.presentation.dto.TaskEmployeesDTO;
 import app.task.presentation.dto.TaskUpdateDTO;
@@ -91,6 +92,92 @@ class TaskServiceTest
         taskService = new TaskService(taskDAO, stageDAO, competenceDAO, employeeDAO);
     }
 
+
+    @ParameterizedTest
+    @EnumSource(value = Task.TaskStatus.class, names = {"NOT_STARTED", "IN_PROGRESS"})
+    @DisplayName("Completion records the updated estimate and minimum duration from either unfinished status")
+    void completionRecordsUpdatedPlan(Task.TaskStatus initialStatus)
+    {
+        taskService.update(1L, new TaskUpdateDTO(null, null, null, null, initialStatus));
+        taskService.assignEmployee(1L, 1L);
+
+        taskService.update(1L, new TaskUpdateDTO(null, 5, 1L, 30.0, Task.TaskStatus.DONE));
+
+        Task stored = taskDAO.getStored(1L);
+        assertThat(stored.getStatus(), is(Task.TaskStatus.DONE));
+        assertThat(stored.hasPlanningSnapshot(), is(true));
+        assertThat(stored.getCompletedStartDate(), is(LocalDate.of(2030, 1, 7)));
+        assertThat(stored.getCompletedEndDate(), is(LocalDate.of(2030, 1, 11)));
+        assertThat(stored.getCompletedLaborDurationInDays(), is(4.0));
+        assertThat(stored.getCompletedScheduledDurationInDays(), is(5.0));
+    }
+
+    @Test
+    @DisplayName("Repeated DONE and ordinary edits preserve the original snapshot")
+    void completedTaskUpdatesDoNotOverwriteSnapshot()
+    {
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
+        taskService.update(1L, done);
+        Task stored = taskDAO.getStored(1L);
+        var recordedAt = stored.getPlanningSnapshotRecordedAt();
+        LocalDate originalEnd = stored.getCompletedEndDate();
+        Double originalLabor = stored.getCompletedLaborDurationInDays();
+        Double originalScheduled = stored.getCompletedScheduledDurationInDays();
+
+        taskService.update(1L, new TaskUpdateDTO("Renamed", 10, 1L, 75.0, null));
+        taskService.update(1L, done);
+
+        assertThat(stored.getPlanningSnapshotRecordedAt(), is(recordedAt));
+        assertThat(stored.getCompletedEndDate(), is(originalEnd));
+        assertThat(stored.getCompletedLaborDurationInDays(), is(originalLabor));
+        assertThat(stored.getCompletedScheduledDurationInDays(), is(originalScheduled));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Task.TaskStatus.class, names = {"NOT_STARTED", "IN_PROGRESS"})
+    @DisplayName("Completing a reopened task replaces its snapshot with the new plan")
+    void recompletingReopenedTaskRecordsNewPlan(Task.TaskStatus reopenedStatus)
+    {
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
+        taskService.update(1L, done);
+
+        taskService.update(1L, new TaskUpdateDTO(null, 5, 1L, 30.0, reopenedStatus));
+        assertThat(taskDAO.getStored(1L).getStatus(), is(reopenedStatus));
+        taskService.update(1L, done);
+
+        Task stored = taskDAO.getStored(1L);
+        assertThat(stored.getCompletedEndDate(), is(LocalDate.of(2030, 1, 11)));
+        assertThat(stored.getCompletedLaborDurationInDays(), is(4.0));
+        assertThat(stored.getCompletedScheduledDurationInDays(), is(5.0));
+    }
+
+    @Test
+    @DisplayName("Completion captures unavailable capacity before DONE includes inactive employees")
+    void completionRecordsUndeterminedLivePlan()
+    {
+        taskService.assignEmployee(1L, 1L);
+        employees.setActive(1L, false);
+
+        taskService.update(1L, new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE));
+
+        Task stored = taskDAO.getStored(1L);
+        assertThat(stored.hasPlanningSnapshot(), is(true));
+        assertThat(stored.getCompletedStartDate(), nullValue());
+        assertThat(stored.getCompletedEndDate(), nullValue());
+        assertThat(stored.getCompletedLaborDurationInDays(), nullValue());
+        assertThat(stored.getCompletedScheduledDurationInDays(), nullValue());
+    }
+
+    @Test
+    @DisplayName("Invalid completion does not change status or create a snapshot")
+    void invalidCompletionDoesNotRecordSnapshot()
+    {
+        assertThrows(BadRequestException.class,
+                () -> taskService.update(1L, new TaskUpdateDTO(null, null, null, 30.0, Task.TaskStatus.DONE)));
+
+        assertThat(taskDAO.getStored(1L).getStatus(), is(Task.TaskStatus.NOT_STARTED));
+        assertThat(taskDAO.getStored(1L).hasPlanningSnapshot(), is(false));
+    }
 
     @Test
     @DisplayName("Cross-stage task dependencies are invalid even inside the same project")

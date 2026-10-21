@@ -27,9 +27,10 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days |
 | `competence` | object\|null | Assigned competence with only `id` and `name`; `null` when none is assigned |
 | `estimate` | number | Estimated labor hours |
-| `startDate`, `endDate` | date\|null | Calculated Monday-Friday schedule dates; `endDate` is inclusive. `null` when the schedule is undetermined |
-| `laborDurationInDays` | number\|null | `estimate` divided by the daily capacity of the assigned employees (see [Staffing and duration](#staffing-and-duration)); `null` when no assigned employee is available |
-| `scheduledDurationInDays` | number\|null | Greater of labor duration and minimum duration; `null` when the labor duration is undetermined |
+| `cost` | number | Current estimate multiplied by the assigned competence's rate; `0` without a competence |
+| `startDate`, `endDate` | date\|null | Monday-Friday planning dates; `endDate` is inclusive. Recorded for completed tasks with a snapshot, otherwise calculated live. `null` when undetermined (see [Completed planning snapshots](#completed-planning-snapshots)) |
+| `laborDurationInDays` | number\|null | Recorded labor duration for completed tasks with a snapshot; otherwise calculated from current staffing (see [Staffing and duration](#staffing-and-duration)). `null` when undetermined |
+| `scheduledDurationInDays` | number\|null | Recorded scheduled duration for completed tasks with a snapshot; otherwise the greater of live labor duration and minimum duration. `null` when undetermined |
 | `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
 | `staffingStatus` | enum | `STAFFED`, `STAFFING_REQUIRED`, or `NO_AVAILABLE_CAPACITY` (see [Staffing and duration](#staffing-and-duration)) |
 | `predecessorIds` | number[] | IDs of tasks that must finish before this task can start |
@@ -37,20 +38,25 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 | `dependencyFinishOffsetInDays` | number\|null | Start offset plus the task scheduled duration; `null` when undetermined |
 | `assignedEmployees` | [Employee reference](#employee-reference-object)[] | Employees assigned to the task, ordered by ID; empty when none are assigned |
 
+Example completed task for a project starting on `2030-01-07`:
+
 ```json
 {
   "id": 1,
   "name": "Requirements",
-  "minimumDurationInDays": 2,
+  "minimumDurationInDays": 5,
   "competence": { "id": 1, "name": "carpenter" },
-  "estimate": 16.0,
-  "laborDurationInDays": 2.1333333333333333,
-  "scheduledDurationInDays": 2.1333333333333333,
-  "status": "NOT_STARTED",
-  "staffingStatus": "STAFFING_REQUIRED",
+  "estimate": 30.0,
+  "cost": 25500.00,
+  "startDate": "2030-01-07",
+  "endDate": "2030-01-11",
+  "laborDurationInDays": 4.0,
+  "scheduledDurationInDays": 5.0,
+  "status": "DONE",
+  "staffingStatus": "STAFFED",
   "predecessorIds": [],
   "dependencyStartOffsetInDays": 0.0,
-  "dependencyFinishOffsetInDays": 2.1333333333333333,
+  "dependencyFinishOffsetInDays": 5.0,
   "assignedEmployees": [
     { "id": 1, "firstName": "Alice", "lastName": "Worker", "active": true, "dailyCapacity": 7.5 }
   ]
@@ -68,9 +74,10 @@ A compact view of an assigned employee. It does not include the employee's compe
 | `active` | boolean | Whether the employee is currently active |
 | `dailyCapacity` | number | Effective hours per working day |
 
-## Slim task object
+## Tasks in stage and project responses
 
-Tasks nested in a stage or project response include only `id`, `name`, calculated `startDate` and `endDate`, `status`, dependency fields (`predecessorIds`, `dependencyStartOffsetInDays`, and `dependencyFinishOffsetInDays`), and `assignedEmployees`.
+Tasks nested in a stage or project response use the same [Task object](#task-object) as task endpoints,
+including the recorded dates and durations described in [Completed planning snapshots](#completed-planning-snapshots).
 
 ---
 
@@ -126,6 +133,11 @@ Creates a task in an existing stage. The assigned competence must be active. New
 
 Updates supplied task fields. To assign or change a competence, provide both `competenceId` and `estimate`. Set `competenceId` to `0` to remove the current competence; this also sets the estimate to `0`. The task status can be changed to `NOT_STARTED`, `IN_PROGRESS`, or `DONE`.
 
+Entering `DONE` records the calculated planning dates and durations in the same transaction as the status change.
+Estimate, competence, and minimum-duration changes in that request are applied before the snapshot is calculated.
+Sending `DONE` for an already completed task preserves its existing snapshot. See
+[Completed planning snapshots](#completed-planning-snapshots) and [reopening rules](#task-start-and-completion-rules).
+
 **Path parameters**
 
 | Parameter | Type | Description |
@@ -152,7 +164,7 @@ Updates supplied task fields. To assign or change a competence, provide both `co
 
 | Status | When |
 |---|---|
-| `400` | `id` or supplied field values are invalid, an estimate is supplied without a competence ID, the competence is inactive, or an assigned employee lacks the new competence |
+| `400` | `id` or supplied field values are invalid, an estimate is supplied without a competence ID, the competence is inactive, an assigned employee lacks the new competence, predecessors are unfinished when starting/completing, or reopening is blocked by started dependents |
 | `404` | The task or supplied competence does not exist |
 
 ## DELETE /tasks/{id}
@@ -178,7 +190,8 @@ Replaces the complete set of employees assigned to a task. Send every employee t
 
 The whole request is validated before anything is saved, so an invalid request leaves the existing assignments unchanged.
 
-Assignments do not affect task duration yet; see #156. See [Assignment rules](#assignment-rules) for which employees can be assigned.
+Assignment changes recalculate unfinished task duration and scheduling; see [Staffing and duration](#staffing-and-duration).
+See [Assignment rules](#assignment-rules) for which employees can be assigned.
 
 **Path parameters**
 
@@ -291,7 +304,7 @@ These rules apply to every endpoint that changes assignments (`PUT /tasks/{id}/e
 
 ## Staffing and duration
 
-A task's labor duration is calculated from the employees assigned to it:
+For an unfinished task (`NOT_STARTED` or `IN_PROGRESS`), labor duration is calculated from the employees assigned to it:
 
 ```
 laborDurationInDays = estimate / combined daily capacity of the active assigned employees
@@ -311,20 +324,66 @@ Examples:
 - 30 hours, employees at 7.5 and 2.5 hours/day: 30 / 10 = **3 days**.
 - 30 hours, no employees assigned: 30 / 7.5 = **4 days**, `STAFFING_REQUIRED`.
 
-**Undetermined schedules.** A task with `NO_AVAILABLE_CAPACITY` has no duration and no dates. Every task that depends on it, directly or through a predecessor stage, is also undetermined. Stage end dates and the project's `schedule` become `null` as well (see [stages](stages.md) and [projects](projects.md)). The plan can still be saved; assigning an active employee recalculates everything.
+**Undetermined schedules.** An unfinished task with `NO_AVAILABLE_CAPACITY` has no duration and no dates.
+Unfinished tasks that depend on it, directly or through a predecessor stage, are also undetermined.
+Affected stage end dates and the project's `calculatedFinishDate` and `feasible` become `null` as well
+(see [stages](stages.md) and [projects](projects.md)). The plan can still be saved; restoring active capacity
+recalculates unfinished work. Completed tasks with snapshots keep their recorded values.
 
-**Completed tasks.** Until completed tasks store their historical values (#152), all assigned employees count for a `DONE` task, including deactivated employees, so completed work keeps its dates.
+## Completed planning snapshots
+
+When an unfinished task transitions to `DONE`, its calculated `startDate`, `endDate`, `laborDurationInDays`,
+and `scheduledDurationInDays` are recorded atomically with the status change. These are planning values at
+completion, not actual work dates or tracked hours. A failed save commits neither the snapshot nor the status change.
+
+While the task remains `DONE`, reads use these recorded values. Employee deactivation, custom or company-standard
+capacity changes, project start-date changes, and recalculation do not replace them. Updating an already completed
+task's estimate or minimum duration also leaves the snapshot unchanged.
+
+Task endpoints and tasks nested in stage/project responses use the same recorded values. Stage dates and project
+finish/feasibility calculations include the recorded task dates. A completed predecessor supplies its recorded dates
+and scheduled duration when an unfinished task is scheduled, including dependencies through predecessor stages.
+Successors start on the next working day after its inclusive end date; a zero-duration predecessor allows the same day.
+
+Completion is allowed when planning values are undetermined. The snapshot records those `null` values and keeps
+them on subsequent reads, even if capacity later becomes available. Reopening resumes live calculation.
+
+Only the four planning fields are snapshotted. Employee references, staffing status, estimates, and costs continue
+to reflect current data. For `DONE` tasks, the current staffing-status calculation counts assigned employees even
+when inactive; their assignments remain visible, but they contribute no capacity to unfinished work.
+Snapshot storage fields and the recording timestamp are internal and are not separate request or response fields.
+
+### Existing DONE tasks without snapshots
+
+The compatibility policy is a live-calculation fallback for legacy `DONE` tasks without a recorded snapshot.
+Their dates and durations are calculated from current data, counting all assigned employees, including inactive
+employees. Those values may change when capacity or the surrounding plan changes; they are not reliable historical values.
+
+There is no automatic backfill on deployment or on reads. Reading a legacy task or sending `DONE` again does not
+create a snapshot. If reopening is allowed, reopening and completing it again records a new snapshot from that
+current plan. Original completion-time values cannot be reconstructed reliably from the available data.
 
 ## Dependency scheduling
 
 Dependency offsets are calculated from the task graph. A task without predecessors starts at offset `0`. A dependent task starts after the predecessor with the latest calculated finish, so multiple tasks with the same predecessor can still run in parallel.
 
-The offsets are relative planning values. Converting them into actual Monday-Friday calendar dates is handled by the working-day scheduling story (US-14).
+Offsets are calculated from the current dependency graph, using recorded durations for completed tasks with snapshots.
+The offsets themselves are not snapshotted and may change when the graph changes. Use `startDate` and `endDate`
+for recorded calendar planning dates; scheduling uses a completed predecessor's recorded dates rather than
+reconstructing them from these offsets.
 
 ## Task start and completion rules
 
 Task predecessors must be in the **same stage**. Stage predecessors order work across stages. Both `IN_PROGRESS` and `DONE` status transitions reject unfinished task predecessors or predecessor stages (`400`), including direct `NOT_STARTED` to `DONE` attempts. Adding task predecessors after a task has started is rejected.
 
-`predecessorIds` continues to describe task dependencies only. Stage-level dependencies are returned in the owning Stage object. Changes to any predecessor's duration or stage dependencies are reflected in computed task schedule responses.
+`predecessorIds` describes task dependencies only. Stage-level dependencies are returned in the owning Stage object.
+Live predecessor-duration and stage-dependency changes affect unfinished task schedules. Completed tasks with
+snapshots retain their recorded dates and durations.
 
-**Reopening:** reopening a `DONE` task is rejected if a dependent task or a dependent stage has already started. Adding a new unfinished task to a completed stage is rejected when dependent stage work has begun. Directly updating completed tasks with `DONE` is subject to predecessor validation.
+**Reopening:** returning a `DONE` task to `NOT_STARTED` or `IN_PROGRESS` resumes live date and duration calculations
+using current staffing, project dates, and dependencies. Its previous snapshot remains stored but is ignored while
+the task is unfinished. Completing it again replaces the snapshot with the newly calculated planning values.
+
+Reopening is rejected if a dependent task or a dependent stage has already started. Adding a new unfinished task
+to a completed stage is rejected when dependent stage work has begun. Directly updating completed tasks with
+`DONE` remains subject to predecessor validation and does not refresh a snapshot.

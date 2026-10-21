@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import app.competence.presentation.dto.SlimCompetenceDTO;
+import app.employee.presentation.dto.EmployeeReferenceDTO;
 import app.task.domain.Task.StaffingStatus;
 import app.task.domain.Task.TaskStatus;
 
