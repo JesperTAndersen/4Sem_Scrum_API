@@ -1,14 +1,14 @@
 package app.project.domain;
 
+import app.stage.domain.Stage;
 import app.task.domain.Task;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
-import app.stage.domain.Stage;
 import java.util.Map;
+import java.util.Set;
 
 public final class WorkingDaySchedule
 {
@@ -47,6 +47,14 @@ public final class WorkingDaySchedule
         if (existing != null)
         {
             return existing;
+        }
+        if (task.getStatus() == Task.TaskStatus.DONE && task.hasPlanningSnapshot())
+        {
+            TaskDates dates = new TaskDates(
+                    task.getCompletedStartDate(),
+                    task.getCompletedEndDate()
+            );
+            return remember(task, dates, calculated, visiting);
         }
 
         if (!visiting.add(task)) throw new IllegalStateException("Cyclic schedule dependency");
