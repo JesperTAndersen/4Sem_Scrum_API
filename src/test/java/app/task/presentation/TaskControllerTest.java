@@ -7,6 +7,7 @@ import static app.config.ApiTestExtension.givenToken;
 import static app.config.ApiTestExtension.readJson;
 import static app.config.ApiTestExtension.tokenFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import app.config.ApiTestExtension;
@@ -553,6 +554,198 @@ class TaskControllerTest
         JsonNode task = findTaskInProject(readJson(response), taskId);
         assertEquals(predecessorId, task.get("predecessorIds").get(0).asLong());
         assertEquals(2.0, task.get("dependencyStartOffsetInDays").asDouble());
+    }
+
+    @ParameterizedTest(name = "[{index}] {6}")
+    @CsvFileSource(resources = "/testcases/task/task-controller/planning-snapshots.csv", numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Planning history - reloads preserve completed values while unfinished tasks recalculate")
+    void planningValuesAfterReload(String status, String change, Double expectedLabor, Double expectedScheduled,
+                                  String expectedStart, String expectedEnd, String reason)
+    {
+        long projectId = createSnapshotProject();
+        long stageId = createAsManager("/stages", """
+                { "projectId": %d, "name": "Snapshot stage" }
+                """.formatted(projectId));
+        long taskId = createTask("Snapshot task", 0, stageId);
+        long employeeId = createEmployee("Snapshot", taskId);
+        assignEmployee(taskId, employeeId, 204);
+        JsonNode originalCapacity = readJson(givenManager().when().get("/company-capacities")
+                .then().statusCode(200).extract().asString());
+        try
+        {
+            if (change.equals("COMPANY_CAPACITY"))
+            {
+                updateCompanyCapacity(7.5);
+                givenManager().body("{ \"firstName\": \"Snapshot\", \"lastName\": \"Worker\", \"standardCapacity\": true }")
+                        .when().put("/employee/" + employeeId).then().statusCode(200);
+            }
+            long competenceId = getTask(taskId).get("competence").get("id").asLong();
+            // Estimate and minimum duration supplied with DONE must be included in the snapshot.
+            givenManager().body("""
+                    { "competenceId": %d, "estimate": 30.0, "minimumDurationInDays": 5, "status": "%s" }
+                    """.formatted(competenceId, status))
+                    .when().put("/tasks/" + taskId).then().statusCode(200);
+            JsonNode before = getTask(taskId);
+            assertPlanningValues(before, 4.0, 5.0, "2030-01-07", "2030-01-11");
+
+            switch (change)
+            {
+                case "CUSTOM_CAPACITY" -> updateEmployeeCapacity(employeeId, 3.0);
+                case "COMPANY_CAPACITY" -> updateCompanyCapacity(3.0);
+                case "DEACTIVATION" -> givenManager().when().patch("/employee/" + employeeId + "/deactivate")
+                        .then().statusCode(204);
+                case "PROJECT_START" -> givenManager().body("""
+                        { "title": "Snapshot project", "description": "Changed start",
+                          "startDate": "2030-01-14", "deadline": "2030-12-31", "status": "PLANNED" }
+                        """).when().put("/projects/" + projectId).then().statusCode(200);
+                default -> throw new AssertionError("Unknown planning change: " + change);
+            }
+
+            JsonNode task = getTask(taskId);
+            assertPlanningValues(task, expectedLabor, expectedScheduled, expectedStart, expectedEnd);
+            assertEquals(status, task.get("status").asText());
+            assertEquals(employeeId, task.get("assignedEmployees").get(0).get("id").asLong());
+            if (change.equals("DEACTIVATION"))
+            {
+                assertEquals(false, task.get("assignedEmployees").get(0).get("active").asBoolean());
+            }
+
+            JsonNode stage = readJson(givenManager().when().get("/stages/" + stageId)
+                    .then().statusCode(200).extract().asString());
+            JsonNode project = readJson(givenManager().when().get("/projects/" + projectId)
+                    .then().statusCode(200).extract().asString());
+            assertEquals(task, findTask(stage.get("tasks"), taskId));
+            assertEquals(task, findTaskInProject(project, taskId));
+            assertEquals(task, findTask(readJson(givenManager().when().get("/tasks")
+                    .then().statusCode(200).extract().asString()), taskId));
+            assertEquals(task.get("startDate"), stage.get("startDate"));
+            assertEquals(task.get("endDate"), stage.get("endDate"));
+            assertEquals(task.get("endDate"), project.get("schedule").get("calculatedFinishDate"));
+        }
+        finally
+        {
+            if (change.equals("COMPANY_CAPACITY"))
+            {
+                updateCompanyCapacity(originalCapacity.get("dailyCapacity").asDouble());
+            }
+        }
+    }
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @CsvFileSource(resources = "/testcases/task/task-controller/reopen-snapshot.csv", numLinesToSkip = 1)
+    @DisplayName("Reopening - reloads use live capacity and completing again records a new plan")
+    void reopenedTaskResumesLiveCalculation(String reopenedStatus, String reason)
+    {
+        long taskId = createEstimatedTask("Reopened snapshot", 30.0);
+        long employeeId = createEmployee("Reopened", taskId);
+        assignEmployee(taskId, employeeId, 204);
+        updateTaskStatus(taskId, "DONE");
+        JsonNode firstCompletion = getTask(taskId);
+        updateEmployeeCapacity(employeeId, 3.0);
+        assertPlanningEquals(firstCompletion, getTask(taskId));
+
+        updateTaskStatus(taskId, reopenedStatus);
+        JsonNode reopened = getTask(taskId);
+        assertEquals(10.0, reopened.get("laborDurationInDays").asDouble());
+        assertEquals(10.0, reopened.get("scheduledDurationInDays").asDouble());
+        assertNotEquals(firstCompletion.get("endDate"), reopened.get("endDate"));
+
+        updateTaskStatus(taskId, "DONE");
+        assertPlanningEquals(reopened, getTask(taskId));
+        updateEmployeeCapacity(employeeId, 15.0);
+        givenManager().when().patch("/employee/" + employeeId + "/deactivate").then().statusCode(204);
+        assertPlanningEquals(reopened, getTask(taskId));
+    }
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @CsvFileSource(resources = "/testcases/task/task-controller/completed-predecessor.csv", numLinesToSkip = 1)
+    @DisplayName("Completed predecessor - task and stage dependencies retain their recorded boundary after reload")
+    void completedPredecessorControlsScheduleAfterReload(String dependency, String reason)
+    {
+        long projectId = createSnapshotProject();
+        long firstStageId = createAsManager("/stages", """
+                { "projectId": %d, "name": "Completed predecessor stage" }
+                """.formatted(projectId));
+        long nextStageId = dependency.equals("STAGE")
+                ? createAsManager("/stages", """
+                        { "projectId": %d, "name": "Successor stage" }
+                        """.formatted(projectId)) : firstStageId;
+        long predecessorId = createTask("Completed predecessor", 0, firstStageId);
+        long successorId = createTask("Unfinished successor", 1, nextStageId);
+        if (dependency.equals("STAGE"))
+        {
+            givenManager().when().post("/stages/" + nextStageId + "/predecessors/" + firstStageId)
+                    .then().statusCode(204);
+        }
+        else addPredecessor(successorId, predecessorId, 204);
+        long employeeId = createEmployee("Predecessor", predecessorId);
+        assignEmployee(predecessorId, employeeId, 204);
+        long competenceId = getTask(predecessorId).get("competence").get("id").asLong();
+        givenManager().body("{ \"competenceId\": %d, \"estimate\": 37.5, \"status\": \"DONE\" }".formatted(competenceId))
+                .when().put("/tasks/" + predecessorId).then().statusCode(200);
+        JsonNode completed = getTask(predecessorId);
+        JsonNode successor = getTask(successorId);
+        assertEquals("2030-01-11", completed.get("endDate").asText());
+        assertEquals("2030-01-14", successor.get("startDate").asText());
+
+        updateEmployeeCapacity(employeeId, 1.0);
+        givenManager().when().patch("/employee/" + employeeId + "/deactivate").then().statusCode(204);
+
+        assertPlanningEquals(completed, getTask(predecessorId));
+        assertPlanningEquals(successor, getTask(successorId));
+        JsonNode project = readJson(givenManager().when().get("/projects/" + projectId)
+                .then().statusCode(200).extract().asString());
+        assertPlanningEquals(completed, findTaskInProject(project, predecessorId));
+        assertPlanningEquals(successor, findTaskInProject(project, successorId));
+        assertEquals("2030-01-14", project.get("schedule").get("calculatedFinishDate").asText());
+    }
+
+    private long createSnapshotProject()
+    {
+        return createAsManager("/projects", """
+                { "title": "Snapshot project", "description": "Planning history",
+                  "startDate": "2030-01-07", "deadline": "2030-12-31" }
+                """);
+    }
+
+    private void updateEmployeeCapacity(long employeeId, double capacity)
+    {
+        givenManager().body("""
+                { "firstName": "Snapshot", "lastName": "Worker", "standardCapacity": false, "dailyCapacity": %s }
+                """.formatted(capacity))
+                .when().put("/employee/" + employeeId).then().statusCode(200);
+    }
+
+    private void updateCompanyCapacity(double capacity)
+    {
+        givenManager().body("{ \"dailyCapacity\": %s }".formatted(capacity))
+                .when().put("/company-capacities").then().statusCode(200);
+    }
+
+    private void updateTaskStatus(long taskId, String status)
+    {
+        givenManager().body("{ \"status\": \"%s\" }".formatted(status))
+                .when().put("/tasks/" + taskId).then().statusCode(200);
+    }
+
+    private void assertPlanningValues(JsonNode task, Double labor, Double scheduled, String start, String end)
+    {
+        if (labor == null) assertTrue(isNull(task.get("laborDurationInDays")));
+        else assertEquals(labor, task.get("laborDurationInDays").asDouble());
+        if (scheduled == null) assertTrue(isNull(task.get("scheduledDurationInDays")));
+        else assertEquals(scheduled, task.get("scheduledDurationInDays").asDouble());
+        if (start == null) assertTrue(isNull(task.get("startDate")));
+        else assertEquals(start, task.get("startDate").asText());
+        if (end == null) assertTrue(isNull(task.get("endDate")));
+        else assertEquals(end, task.get("endDate").asText());
+    }
+
+    private void assertPlanningEquals(JsonNode expected, JsonNode actual)
+    {
+        for (String field : new String[]{"startDate", "endDate", "laborDurationInDays", "scheduledDurationInDays"})
+        {
+            assertEquals(expected.get(field), actual.get(field), field);
+        }
     }
 
     private JsonNode getTask(long taskId)
