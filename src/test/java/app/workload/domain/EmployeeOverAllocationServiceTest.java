@@ -8,6 +8,7 @@ import app.persistence.testdoubles.EntityIds;
 import app.persistence.testdoubles.InMemoryTaskReader;
 import app.persistence.testdoubles.InMemoryEmployeeDAO;
 import app.workload.presentation.dto.TaskHoursDTO;
+import app.workload.presentation.dto.UnassessedTaskDTO;
 import app.project.domain.Project;
 import app.stage.domain.Stage;
 import app.task.domain.Task;
@@ -122,11 +123,12 @@ class EmployeeOverAllocationServiceTest
         }
     }
 
-    @ParameterizedTest(name = "[{index}] {3}")
+    @ParameterizedTest(name = "[{index}] {4}")
     @CsvFileSource(resources = "/testcases/planning/employee-over-allocation-service/calculate-staffing.csv",
-            numLinesToSkip = 1)
+            numLinesToSkip = 1, nullValues = "NULL")
     @DisplayName("Find conflicts - lists unassessed tasks and excludes completed or zero-effort demand")
-    void reportsUnassessedTasks(String scenario, int unassessedCount, int conflictCount, String reason)
+    void reportsUnassessedTasks(String scenario, int unassessedCount, int conflictCount, String expectedReason,
+                                String reason)
     {
         Employee first = employee(7.5);
         Employee second = employee(2.5);
@@ -168,15 +170,45 @@ class EmployeeOverAllocationServiceTest
         }
         var result = service.findConflicts(MONDAY, MONDAY.plusDays(4));
         assertEquals(unassessedCount, result.unassessedTaskIds().size());
+        assertEquals(result.unassessedTaskIds(), result.unassessedTasks().stream()
+                .map(UnassessedTaskDTO::taskId).toList());
         if (unassessedCount > 0)
         {
             assertTrue(result.unassessedTaskIds().contains(work.getId()));
+            UnassessedTaskDTO unassessed = result.unassessedTasks().stream()
+                    .filter(task -> task.taskId().equals(work.getId()))
+                    .findFirst()
+                    .orElseThrow();
+            assertEquals(expectedReason, unassessed.reason());
+            assertEquals(work.getName(), unassessed.taskName());
+            assertEquals(project.getId(), unassessed.projectId());
+            assertEquals(project.getTitle(), unassessed.projectTitle());
         }
         assertEquals(conflictCount, result.conflicts().size());
         if (conflictCount > 0)
         {
             assertEquals(7.5, result.conflicts().getFirst().excessHours());
         }
+    }
+
+    @org.junit.jupiter.api.Test
+    @DisplayName("Find conflicts - task hours include the competence the task requires")
+    void includesCompetenceInTaskHours()
+    {
+        Competence carpenter = EntityIds.assign(new Competence("Carpenter", BigDecimal.ONE), 1L);
+        Employee shared = employee(7.5);
+        shared.addCompetence(carpenter);
+        task(project(1, MONDAY), 7.5, 1, shared).setCompetence(carpenter, 7.5);
+        task(project(2, MONDAY), 7.5, 1, shared);
+
+        var conflict = service.findConflicts(MONDAY, MONDAY).conflicts().getFirst();
+
+        TaskHoursDTO withCompetence = conflict.taskHours().getFirst();
+        assertEquals(carpenter.getId(), withCompetence.competenceId());
+        assertEquals("Carpenter", withCompetence.competenceName());
+        TaskHoursDTO withoutCompetence = conflict.taskHours().get(1);
+        assertEquals(null, withoutCompetence.competenceId());
+        assertEquals(null, withoutCompetence.competenceName());
     }
 
     @ParameterizedTest(name = "[{index}] {4}")

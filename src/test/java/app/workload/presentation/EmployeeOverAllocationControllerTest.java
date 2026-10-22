@@ -132,11 +132,11 @@ class EmployeeOverAllocationControllerTest
         assertEquals(resolved, getConflicts("2030-01-07", "2030-01-11"));
     }
 
-    @ParameterizedTest(name = "[{index}] {1}")
+    @ParameterizedTest(name = "[{index}] {2}")
     @CsvFileSource(resources = "/testcases/planning/employee-over-allocation-controller/get-unassessed.csv",
             numLinesToSkip = 1)
-    @DisplayName("Get conflicts - exposes unassessed task IDs without fabricating allocations")
-    void reportsUnassessedTasks(String staffing, String reason)
+    @DisplayName("Get conflicts - exposes unassessed tasks with context without fabricating allocations")
+    void reportsUnassessedTasks(String staffing, String expectedReason, String reason)
     {
         long competenceId = createCompetence();
         long taskId = createTask(createProject("Unassessed project"), competenceId, 37.5);
@@ -150,6 +150,12 @@ class EmployeeOverAllocationControllerTest
         assertEquals(0, result.get("conflicts").size());
         assertEquals(1, result.get("unassessedTaskIds").size());
         assertEquals(taskId, result.get("unassessedTaskIds").get(0).asLong());
+
+        JsonNode unassessed = result.get("unassessedTasks").get(0);
+        assertEquals(taskId, unassessed.get("taskId").asLong());
+        assertEquals("Planned work", unassessed.get("taskName").asText());
+        assertEquals("Unassessed project", unassessed.get("projectTitle").asText());
+        assertEquals(expectedReason, unassessed.get("reason").asText());
     }
 
     @ParameterizedTest(name = "[{index}] {3}")

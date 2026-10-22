@@ -7,6 +7,7 @@ public record OverAllocationResultDTO(
         LocalDate startDate,
         LocalDate endDate,
         List<EmployeeOverAllocationDTO> conflicts,
-        List<Long> unassessedTaskIds
+        List<Long> unassessedTaskIds,
+        List<UnassessedTaskDTO> unassessedTasks
 )
 {}

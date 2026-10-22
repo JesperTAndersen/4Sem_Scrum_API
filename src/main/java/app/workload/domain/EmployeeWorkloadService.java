@@ -1,5 +1,6 @@
 package app.workload.domain;
 
+import app.competence.domain.Competence;
 import app.employee.domain.Employee;
 import app.workload.presentation.dto.AvailabilityResultDTO;
 import app.workload.presentation.dto.EmployeeAvailabilityDTO;
@@ -7,6 +8,7 @@ import app.exceptions.BadRequestException;
 import app.workload.presentation.dto.EmployeeOverAllocationDTO;
 import app.workload.presentation.dto.OverAllocationResultDTO;
 import app.workload.presentation.dto.TaskHoursDTO;
+import app.workload.presentation.dto.UnassessedTaskDTO;
 import app.project.domain.Project;
 import app.project.domain.WorkingDaySchedule;
 import app.shared.data.IReadDAO;
@@ -21,6 +23,7 @@ import java.util.List;
 public class EmployeeWorkloadService implements IEmployeeWorkloadService
 {
     private static final double OVER_ALLOCATION_TOLERANCE = 0.000001;
+    private static final String UNDETERMINED_SCHEDULE = "UNDETERMINED_SCHEDULE";
 
     private final IReadDAO<Task> taskReader;
     private final IReadDAO<Employee> employeeReader;
@@ -37,8 +40,8 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
         validateDates(startDate, endDate);
 
         List<Employee> employees = new ArrayList<>();
-        List<Long> unassessedTaskIds = new ArrayList<>();
-        List<TaskWorkload> taskWorkloads = getTaskWorkloads(startDate, endDate, unassessedTaskIds);
+        List<UnassessedTaskDTO> unassessedTasks = new ArrayList<>();
+        List<TaskWorkload> taskWorkloads = getTaskWorkloads(startDate, endDate, unassessedTasks);
 
         for (TaskWorkload taskWorkload : taskWorkloads)
         {
@@ -71,8 +74,9 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
             }
         }
 
-        unassessedTaskIds.sort(Long::compareTo);
-        return new OverAllocationResultDTO(startDate, endDate, List.copyOf(conflicts), List.copyOf(unassessedTaskIds));
+        unassessedTasks.sort(Comparator.comparing(UnassessedTaskDTO::taskId));
+        return new OverAllocationResultDTO(startDate, endDate, List.copyOf(conflicts),
+                getTaskIds(unassessedTasks), List.copyOf(unassessedTasks));
     }
 
     @Override
@@ -93,9 +97,9 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
         }
         employees.sort(Comparator.comparing(Employee::getId));
 
-        List<Long> unassessedTaskIds = new ArrayList<>();
+        List<UnassessedTaskDTO> unassessedTasks = new ArrayList<>();
         List<EmployeeAvailabilityDTO> availability = new ArrayList<>();
-        List<TaskWorkload> taskWorkloads = getTaskWorkloads(date, date, unassessedTaskIds);
+        List<TaskWorkload> taskWorkloads = getTaskWorkloads(date, date, unassessedTasks);
 
         boolean workingDay = WorkingDaySchedule.isWorkingDay(date);
         for (Employee employee : employees)
@@ -115,20 +119,28 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
             }
         }
 
-        unassessedTaskIds.sort(Long::compareTo);
-        return new AvailabilityResultDTO(date, List.copyOf(availability), List.copyOf(unassessedTaskIds));
+        unassessedTasks.sort(Comparator.comparing(UnassessedTaskDTO::taskId));
+        return new AvailabilityResultDTO(date, List.copyOf(availability),
+                getTaskIds(unassessedTasks), List.copyOf(unassessedTasks));
     }
 
     private List<TaskWorkload> getTaskWorkloads(LocalDate startDate, LocalDate endDate,
-                                               List<Long> unassessedTaskIds)
+                                               List<UnassessedTaskDTO> unassessedTasks)
     {
         List<TaskWorkload> taskWorkloads = new ArrayList<>();
         for (Task task : taskReader.getAll())
         {
             Project project = task.getStage().getProject();
-            calculateTaskWorkload(project, task, startDate, endDate, taskWorkloads, unassessedTaskIds);
+            calculateTaskWorkload(project, task, startDate, endDate, taskWorkloads, unassessedTasks);
         }
         return taskWorkloads;
+    }
+
+    private static List<Long> getTaskIds(List<UnassessedTaskDTO> unassessedTasks)
+    {
+        return unassessedTasks.stream()
+                .map(UnassessedTaskDTO::taskId)
+                .toList();
     }
 
     private static void validateDates(LocalDate startDate, LocalDate endDate)
@@ -144,7 +156,7 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
     }
 
     private void calculateTaskWorkload(Project project, Task task, LocalDate startDate, LocalDate endDate,
-                                       List<TaskWorkload> taskWorkloads, List<Long> unassessedTaskIds)
+                                       List<TaskWorkload> taskWorkloads, List<UnassessedTaskDTO> unassessedTasks)
     {
         if (task.getStatus() == Task.TaskStatus.DONE || task.getEstimate() == 0)
         {
@@ -159,7 +171,12 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
 
         if (!dates.isDetermined() || task.getStaffingStatus() != Task.StaffingStatus.STAFFED)
         {
-            unassessedTaskIds.add(task.getId());
+            unassessedTasks.add(new UnassessedTaskDTO(
+                    task.getId(),
+                    task.getName(),
+                    project.getId(),
+                    project.getTitle(),
+                    getUnassessedReason(task)));
             return;
         }
 
@@ -180,15 +197,27 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
             double employeeTaskHours = estimatedHours * employeeShare;
             double dailyTaskHours = employeeTaskHours / workingDays;
 
+            Competence competence = task.getCompetence();
             TaskHoursDTO taskHours = new TaskHoursDTO(
                     project.getId(),
                     project.getTitle(),
                     task.getId(),
                     task.getName(),
+                    competence == null ? null : competence.getId(),
+                    competence == null ? null : competence.getName(),
                     dailyTaskHours);
 
             taskWorkloads.add(new TaskWorkload(employee, dates.startDate(), dates.endDate(), taskHours));
         }
+    }
+
+    private static String getUnassessedReason(Task task)
+    {
+        if (task.getStaffingStatus() != Task.StaffingStatus.STAFFED)
+        {
+            return task.getStaffingStatus().name();
+        }
+        return UNDETERMINED_SCHEDULE;
     }
 
     private EmployeeOverAllocationDTO findDailyOverAllocation(Employee employee, LocalDate date,

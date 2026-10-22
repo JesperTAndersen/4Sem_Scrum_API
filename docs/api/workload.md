@@ -20,6 +20,7 @@ See [authentication and errors](../API.md). Paths below are relative to `/api/v1
 | `startDate`, `endDate` | date | Requested inclusive period |
 | `conflicts` | [Conflict](#conflict-object)[] | One entry per overloaded employee and working day, ordered by employee ID then date |
 | `unassessedTaskIds` | number[] | Sorted task IDs excluded from the calculation; see [unassessed tasks](#unassessed-tasks) |
+| `unassessedTasks` | [Unassessed task](#unassessed-task-object)[] | The same tasks as `unassessedTaskIds`, in the same order, with task and project context |
 
 ## Conflict object
 
@@ -41,7 +42,28 @@ See [authentication and errors](../API.md). Paths below are relative to `/api/v1
 | `projectTitle` | string | Project title |
 | `taskId` | number | Task identifier |
 | `taskName` | string | Task name |
+| `competenceId` | number\|null | Competence the task requires; `null` when the task has no competence |
+| `competenceName` | string\|null | Name of that competence; `null` when the task has no competence |
 | `allocatedHours` | number | This task's assigned hours for this employee on this day |
+
+Use `competenceId` as the `competenceId` filter on [availability](#get-employeeavailability) to find
+employees who could take over the task on the same day.
+
+## Unassessed task object
+
+| Field | Type | Description |
+|---|---|---|
+| `taskId` | number | Task identifier |
+| `taskName` | string | Task name |
+| `projectId` | number | Project identifier |
+| `projectTitle` | string | Project title |
+| `reason` | string | Why the task could not be assessed; see the table below |
+
+| `reason` | Meaning |
+|---|---|
+| `STAFFING_REQUIRED` | No employees are assigned to the task |
+| `NO_AVAILABLE_CAPACITY` | Employees are assigned, but none are active and hold the required competence |
+| `UNDETERMINED_SCHEDULE` | The task is staffed, but its dates depend on a predecessor whose schedule is undetermined |
 
 ## Availability result object
 
@@ -50,6 +72,7 @@ See [authentication and errors](../API.md). Paths below are relative to `/api/v1
 | `date` | date | Requested day |
 | `employees` | [Employee availability](#employee-availability-object)[] | Active employees matching the optional competence filter, ordered by employee ID |
 | `unassessedTaskIds` | number[] | Sorted task IDs excluded from the calculation across all projects; not filtered by competence |
+| `unassessedTasks` | [Unassessed task](#unassessed-task-object)[] | The same tasks as `unassessedTaskIds`, in the same order, with task and project context |
 
 ## Employee availability object
 
@@ -97,6 +120,8 @@ Authorization: Bearer <token>
                     "projectTitle": "Project A",
                     "taskId": 10,
                     "taskName": "Implementation",
+                    "competenceId": 3,
+                    "competenceName": "Backend development",
                     "allocatedHours": 7.5
                 },
                 {
@@ -104,12 +129,23 @@ Authorization: Bearer <token>
                     "projectTitle": "Project B",
                     "taskId": 20,
                     "taskName": "Review",
+                    "competenceId": null,
+                    "competenceName": null,
                     "allocatedHours": 2.5
                 }
             ]
         }
     ],
-    "unassessedTaskIds": []
+    "unassessedTaskIds": [30],
+    "unassessedTasks": [
+        {
+            "taskId": 30,
+            "taskName": "Testing",
+            "projectId": 2,
+            "projectTitle": "Project B",
+            "reason": "STAFFING_REQUIRED"
+        }
+    ]
 }
 ```
 
@@ -161,7 +197,8 @@ Authorization: Bearer <token>
             "remainingHours": 7.5
         }
     ],
-    "unassessedTaskIds": []
+    "unassessedTaskIds": [],
+    "unassessedTasks": []
 }
 ```
 
@@ -208,6 +245,10 @@ Both responses include IDs of unfinished tasks with positive estimates whose sta
 not be determined. An empty conflict list means no conflict was found among assessed tasks. Remaining
 hours are also based only on assessed tasks. When `unassessedTaskIds` is nonempty, show a warning that
 workload and availability may be incomplete.
+
+`unassessedTasks` lists the same tasks with their name, project and a [reason](#unassessed-task-object),
+so a client can name and link them without requesting each task. `unassessedTaskIds` is kept for
+existing clients.
 
 Tasks with known dates outside the requested day or period are excluded. Tasks with undetermined
 dates remain unassessed regardless of the requested period because their overlap cannot be established.
