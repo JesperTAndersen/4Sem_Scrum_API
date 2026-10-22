@@ -4,6 +4,7 @@ import app.capacity.domain.CompanyCapacity;
 import app.competence.domain.Competence;
 import app.config.HibernateTestConfig;
 import app.employee.domain.Employee;
+import app.employee.data.EmployeeDAO;
 import app.persistence.testutils.TestPopulator;
 import app.task.data.TaskDAO;
 import app.project.domain.Project;
@@ -89,7 +90,7 @@ class EmployeeOverAllocationPersistenceTest
             companyId = company.getId();
         }
 
-        EmployeeWorkloadService service = new EmployeeWorkloadService(new TaskDAO(emf));
+        EmployeeWorkloadService service = new EmployeeWorkloadService(new TaskDAO(emf), new EmployeeDAO(emf));
         var baseline = service.findConflicts(MONDAY.plusDays(1), MONDAY.plusDays(1));
         assertEquals(1, baseline.conflicts().size());
         try (EntityManager em = emf.createEntityManager())

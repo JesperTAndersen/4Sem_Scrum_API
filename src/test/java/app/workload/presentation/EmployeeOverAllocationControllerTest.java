@@ -152,6 +152,130 @@ class EmployeeOverAllocationControllerTest
         assertEquals(taskId, result.get("unassessedTaskIds").get(0).asLong());
     }
 
+    @ParameterizedTest(name = "[{index}] {3}")
+    @CsvFileSource(resources = "/testcases/planning/employee-over-allocation-controller/get-availability.csv",
+            numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Get availability - requires a project manager and a valid date")
+    void validatesAvailabilityRequest(String date, String token, int expected, String reason, String competenceId)
+    {
+        RequestSpecification request = givenToken(tokenFor(token));
+        if (date != null)
+        {
+            request.queryParam("date", date);
+        }
+        if (competenceId != null)
+        {
+            request.queryParam("competenceId", competenceId);
+        }
+        JsonNode result = readJson(request.when().get("/employee/availability")
+                .then().statusCode(expected).extract().asString());
+        if (expected == 200)
+        {
+            assertEquals(date, result.get("date").asText());
+            assertEquals(0, result.get("unassessedTaskIds").size());
+            if ("999999".equals(competenceId))
+            {
+                assertEquals(0, result.get("employees").size());
+            }
+            if (date.equals("2030-01-12") || date.equals("2030-01-13"))
+            {
+                assertEquals(0, result.get("employees").size());
+            }
+        }
+        else
+        {
+            assertEquals(expected, result.get("status").asInt());
+            assertEquals("/api/v1/employee/availability", result.get("path").asText());
+            assertFalse(result.get("message").asText().isBlank());
+        }
+    }
+
+    @org.junit.jupiter.api.Test
+    @DisplayName("Get availability - reads saved assignments across projects and includes idle employees")
+    void readsEmployeeAvailability()
+    {
+        long competenceId = createCompetence();
+        long employeeId = createEmployee(competenceId);
+        long idleId = createEmployee(competenceId);
+        long inactiveId = createEmployee(competenceId);
+        givenManager().when().patch("/employee/" + inactiveId + "/deactivate").then().statusCode(204);
+        long firstTask = createTask(createProject("Availability first"), competenceId, 12.5);
+        assignEmployee(firstTask, employeeId);
+
+        JsonNode initial = getAvailability();
+        JsonNode employee = availabilityFor(initial, employeeId);
+        assertEquals("Shared", employee.get("firstName").asText());
+        assertEquals("Worker", employee.get("lastName").asText());
+        assertEquals(7.5, employee.get("dailyCapacity").asDouble());
+        assertEquals(2.5, employee.get("allocatedHours").asDouble());
+        assertEquals(5, employee.get("remainingHours").asDouble());
+        assertEquals(0, availabilityFor(initial, idleId).get("allocatedHours").asDouble());
+        assertEquals(7.5, availabilityFor(initial, idleId).get("remainingHours").asDouble());
+        for (JsonNode row : initial.get("employees"))
+        {
+            org.junit.jupiter.api.Assertions.assertNotEquals(inactiveId, row.get("employeeId").asLong());
+        }
+
+        long secondTask = createTask(createProject("Availability second"), competenceId, 37.5);
+        assignEmployee(secondTask, employeeId);
+        JsonNode overloaded = getAvailability();
+        assertEquals(10, availabilityFor(overloaded, employeeId).get("allocatedHours").asDouble());
+        assertEquals(0, availabilityFor(overloaded, employeeId).get("remainingHours").asDouble());
+        assertEquals(overloaded, getAvailability());
+
+        givenManager().when().delete("/tasks/" + secondTask + "/employees/" + employeeId)
+                .then().statusCode(204);
+        JsonNode resolved = getAvailability();
+        assertEquals(5, availabilityFor(resolved, employeeId).get("remainingHours").asDouble());
+        assertEquals(1, resolved.get("unassessedTaskIds").size());
+        assertEquals(secondTask, resolved.get("unassessedTaskIds").get(0).asLong());
+    }
+
+    @org.junit.jupiter.api.Test
+    @DisplayName("Get availability - filters competence without hiding work requiring another competence")
+    void filtersAvailabilityByCompetence()
+    {
+        long requiredId = createCompetence();
+        long otherId = createCompetence();
+        long matchingId = createEmployee(requiredId);
+        givenManager().body("{ \"competenceIds\": [%d, %d] }".formatted(requiredId, otherId))
+                .when().put("/employee/" + matchingId + "/competences").then().statusCode(200);
+        long idleId = createEmployee(requiredId);
+        createEmployee(otherId);
+        long taskId = createTask(createProject("Work using other competence"), otherId, 12.5);
+        assignEmployee(taskId, matchingId);
+        long unassessedId = createTask(createProject("Unassigned work"), otherId, 7.5);
+
+        JsonNode result = readJson(givenManager().queryParam("date", "2030-01-07")
+                .queryParam("competenceId", requiredId).when().get("/employee/availability")
+                .then().statusCode(200).extract().asString());
+        assertEquals(2, result.get("employees").size());
+        JsonNode matching = availabilityFor(result, matchingId);
+        assertEquals(2.5, matching.get("allocatedHours").asDouble());
+        assertEquals(5, matching.get("remainingHours").asDouble());
+        assertEquals(7.5, availabilityFor(result, idleId).get("remainingHours").asDouble());
+        assertEquals(1, result.get("unassessedTaskIds").size());
+        assertEquals(unassessedId, result.get("unassessedTaskIds").get(0).asLong());
+    }
+
+    private JsonNode getAvailability()
+    {
+        return readJson(givenManager().queryParam("date", "2030-01-07").when()
+                .get("/employee/availability").then().statusCode(200).extract().asString());
+    }
+
+    private JsonNode availabilityFor(JsonNode result, long employeeId)
+    {
+        for (JsonNode employee : result.get("employees"))
+        {
+            if (employee.get("employeeId").asLong() == employeeId)
+            {
+                return employee;
+            }
+        }
+        throw new AssertionError("Missing availability for employee " + employeeId);
+    }
+
     private JsonNode getConflicts(String startDate, String endDate)
     {
         return readJson(givenManager().queryParam("startDate", startDate).queryParam("endDate", endDate)

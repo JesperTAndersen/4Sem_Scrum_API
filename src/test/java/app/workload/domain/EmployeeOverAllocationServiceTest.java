@@ -6,6 +6,7 @@ import app.employee.domain.Employee;
 import app.exceptions.ApiException;
 import app.persistence.testdoubles.EntityIds;
 import app.persistence.testdoubles.InMemoryTaskReader;
+import app.persistence.testdoubles.InMemoryEmployeeDAO;
 import app.workload.presentation.dto.TaskHoursDTO;
 import app.project.domain.Project;
 import app.stage.domain.Stage;
@@ -26,9 +27,9 @@ class EmployeeOverAllocationServiceTest
 {
     private static final LocalDate MONDAY = LocalDate.of(2030, 1, 7);
     private final InMemoryTaskReader tasks = new InMemoryTaskReader();
-    private final EmployeeWorkloadService service = new EmployeeWorkloadService(tasks);
+    private final InMemoryEmployeeDAO employees = new InMemoryEmployeeDAO();
+    private final EmployeeWorkloadService service = new EmployeeWorkloadService(tasks, employees);
     private long nextTaskId = 1;
-    private long nextEmployeeId = 1;
 
     @ParameterizedTest(name = "[{index}] {3}")
     @CsvFileSource(resources = "/testcases/planning/employee-over-allocation-service/calculate-range.csv",
@@ -261,6 +262,112 @@ class EmployeeOverAllocationServiceTest
         assertEquals(unassessedCount, result.unassessedTaskIds().size());
     }
 
+    @ParameterizedTest(name = "[{index}] {5}")
+    @CsvFileSource(resources = "/testcases/planning/employee-over-allocation-service/calculate-availability.csv",
+            numLinesToSkip = 1)
+    @DisplayName("Find availability - includes idle employees and shares the daily workload rules")
+    void calculatesAvailability(String scenario, int employeeCount, double allocatedHours,
+                               double remainingHours, int unassessedCount, String reason)
+    {
+        Employee employee = employee(7.5);
+        LocalDate date = MONDAY;
+        switch (scenario)
+        {
+            case "IDLE" -> { }
+            case "PARTIAL" -> task(project(1, MONDAY), 12.5, 5, employee);
+            case "FULL" -> task(project(1, MONDAY), 37.5, 5, employee);
+            case "CROSS_PROJECT" ->
+            {
+                task(project(1, MONDAY), 37.5, 5, employee);
+                task(project(2, MONDAY), 12.5, 5, employee);
+            }
+            case "INACTIVE" -> employee.setActive(false);
+            case "SATURDAY" -> date = MONDAY.plusDays(5);
+            case "SUNDAY" -> date = MONDAY.plusDays(6);
+            case "STANDARD_CAPACITY" ->
+            {
+                CompanyCapacity company = new CompanyCapacity();
+                company.update(10);
+                employee.configureCapacity(true, company);
+                task(project(1, MONDAY), 12.5, 5, employee);
+            }
+            case "UNASSESSED" -> task(project(1, MONDAY), 12.5, 5);
+            case "DONE" -> task(project(1, MONDAY), 12.5, 5, employee).changeStatus(Task.TaskStatus.DONE);
+            case "ZERO_ESTIMATE" -> task(project(1, MONDAY), 0, 5, employee);
+            case "OUTSIDE_DATES" -> task(project(1, MONDAY.plusDays(7)), 12.5, 5, employee);
+            default -> throw new AssertionError("Unknown scenario: " + scenario);
+        }
+
+        var result = service.findAvailability(date, null);
+        assertEquals(date, result.date());
+        assertEquals(employeeCount, result.employees().size());
+        assertEquals(unassessedCount, result.unassessedTaskIds().size());
+        if (employeeCount > 0)
+        {
+            var availability = result.employees().getFirst();
+            assertEquals(employee.getId(), availability.employeeId());
+            assertEquals(employee.getFirstName(), availability.firstName());
+            assertEquals(employee.getLastName(), availability.lastName());
+            assertEquals(employee.getDailyCapacity(), availability.dailyCapacity());
+            assertEquals(allocatedHours, availability.allocatedHours(), 0.000000001);
+            assertEquals(remainingHours, availability.remainingHours(), 0.000000001);
+        }
+        if (unassessedCount > 0)
+        {
+            assertEquals(List.of(1L), result.unassessedTaskIds());
+        }
+    }
+
+    @org.junit.jupiter.api.Test
+    void rejectsMissingAvailabilityDate()
+    {
+        assertThrows(app.exceptions.BadRequestException.class, () -> service.findAvailability(null, null));
+    }
+
+    @ParameterizedTest(name = "[{index}] {2}")
+    @CsvFileSource(resources = "/testcases/planning/employee-over-allocation-service/filter-availability.csv",
+            numLinesToSkip = 1, nullValues = "NULL")
+    @DisplayName("Find availability - filters employees while counting work requiring other competences")
+    void filtersAvailability(Long competenceId, int employeeCount, String reason)
+    {
+        Competence required = EntityIds.assign(new Competence("Required", BigDecimal.ONE), 1L);
+        Competence other = EntityIds.assign(new Competence("Other", BigDecimal.ONE), 2L);
+        Employee matching = employee(7.5);
+        matching.addCompetence(required);
+        matching.addCompetence(other);
+        Employee idle = employee(7.5);
+        idle.addCompetence(required);
+        Employee nonMatching = employee(7.5);
+        nonMatching.addCompetence(other);
+        Employee inactive = employee(7.5);
+        inactive.addCompetence(required);
+        inactive.setActive(false);
+        Task work = task(project(1, MONDAY), 12.5, 5, matching);
+        work.setCompetence(other, 12.5);
+
+        if (competenceId != null && competenceId <= 0)
+        {
+            assertThrows(app.exceptions.BadRequestException.class,
+                    () -> service.findAvailability(MONDAY, competenceId));
+            return;
+        }
+
+        var result = service.findAvailability(MONDAY, competenceId);
+        assertEquals(employeeCount, result.employees().size());
+        if (employeeCount > 0)
+        {
+            var first = result.employees().getFirst();
+            assertEquals(matching.getId(), first.employeeId());
+            assertEquals(2.5, first.allocatedHours(), 0.000000001);
+            assertEquals(5, first.remainingHours(), 0.000000001);
+        }
+        if (Long.valueOf(1).equals(competenceId))
+        {
+            assertEquals(idle.getId(), result.employees().get(1).employeeId());
+            assertEquals(7.5, result.employees().get(1).remainingHours());
+        }
+    }
+
     private Project project(long id, LocalDate start)
     {
         Project project = Project.builder().id(id).title("Project " + id).startDate(start)
@@ -281,6 +388,6 @@ class EmployeeOverAllocationServiceTest
 
     private Employee employee(double capacity)
     {
-        return EntityIds.assign(new Employee("Employee", "Name", capacity), nextEmployeeId++);
+        return employees.create(new Employee("Employee", "Name", capacity));
     }
 }

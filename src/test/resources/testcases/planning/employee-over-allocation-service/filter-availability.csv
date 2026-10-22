@@ -1,0 +1,7 @@
+competenceId,employeeCount,reason
+NULL,3,"EP: omitted competence returns all active employees"
+1,2,"Decision table: matching active employees including idle employees"
+2,2,"EP: a different competence selects its matching employees"
+999999,0,"EP: unknown competence returns an empty list"
+0,0,"BVA: zero competence ID is invalid"
+-1,0,"BVA: negative competence ID is invalid"
