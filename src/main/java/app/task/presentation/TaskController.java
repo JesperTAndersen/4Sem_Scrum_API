@@ -30,7 +30,9 @@ public class TaskController implements ICrudController
                 .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
                 .check(task -> task.minimumDurationInDays() != null, "Task minimum duration is required")
                 .check(task -> task.competenceId() != null, "Competence is required")
-                .check(task -> task.estimate() != null, "Task estimate is required")
+                .check(task -> task.bestEstimate() != null, "Task best estimate is required")
+                .check(task -> task.likelyEstimate() != null, "Task likely estimate is required")
+                .check(task -> task.worstEstimate() != null, "Task worst estimate is required")
                 .get();
         ctx.status(201).json(taskService.create(dto));
     }

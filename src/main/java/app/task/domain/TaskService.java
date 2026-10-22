@@ -38,7 +38,9 @@ public class TaskService implements ITaskService
         ValidationUtil.validateId(dto.stageId());
         ValidationUtil.validateId(dto.competenceId());
         validateName(dto.name());
-        validateEstimate(dto.estimate());
+        validateEstimate(dto.bestEstimate());
+        validateEstimate(dto.likelyEstimate());
+        validateEstimate(dto.worstEstimate());
         validateMinimumDuration(dto.minimumDurationInDays());
         Stage stage = stageReader.get(dto.stageId());
         Competence competence = getExistingCompetence(dto.competenceId());
@@ -50,7 +52,7 @@ public class TaskService implements ITaskService
             throw new BadRequestException("Cannot add unfinished task to completed stage with started dependents");
         }
         Task task = new Task(stage, dto.name().trim(), dto.minimumDurationInDays());
-        task.setCompetence(competence, dto.estimate());
+        task.setCompetence(competence, dto.bestEstimate(), dto.likelyEstimate(), dto.worstEstimate());
         return TaskMapper.toDTO(taskDAO.create(task));
     }
 
@@ -103,14 +105,16 @@ public class TaskService implements ITaskService
             }
             else
             {
-                validateEstimate(dto.estimate());
+                validateEstimate(dto.bestEstimate());
+                validateEstimate(dto.likelyEstimate());
+                validateEstimate(dto.worstEstimate());
                 Competence competence = getExistingCompetence(dto.competenceId());
                 validateCanBeAssigned(competence);
                 validateAssignedEmployeesHaveCompetence(task, competence);
-                task.setCompetence(competence, dto.estimate());
+                task.setCompetence(competence, dto.bestEstimate(), dto.likelyEstimate(), dto.worstEstimate());
             }
         }
-        else if (dto.estimate() != null)
+        else if (dto.bestEstimate() != null || dto.likelyEstimate() != null || dto.worstEstimate() != null)
         {
             throw new BadRequestException("A competence id is required when updating a task estimate");
         }

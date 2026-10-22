@@ -11,6 +11,7 @@ import app.competence.domain.Competence;
 import app.employee.domain.Employee;
 import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -49,7 +50,9 @@ public class Task implements IEntity
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Competence competence;
-    private double estimate;
+    private double bestEstimate;
+    private double likelyEstimate;
+    private double worstEstimate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Stage stage;
@@ -94,14 +97,29 @@ public class Task implements IEntity
     public void setCompetence(Competence competence, double estimate)
     {
         this.competence = competence;
-        this.estimate = estimate;
+        this.bestEstimate = estimate;
+        this.likelyEstimate = estimate;
+        this.worstEstimate = estimate;
+    }
+
+    public void setCompetence(Competence competence, double best, double likely, double worst)
+    {
+        this.competence = competence;
+        this.bestEstimate = best;
+        this.likelyEstimate = likely;
+        this.worstEstimate = worst;
+    }
+
+    public double calcEstimate()
+    {
+        return Math.round((bestEstimate + likelyEstimate + worstEstimate) / 3);
     }
 
     public BigDecimal getCost()
     {
         if (competence != null)
         {
-            return competence.getRate().multiply(new BigDecimal(estimate));
+            return competence.getRate().multiply(new BigDecimal(calcEstimate()));
         }
         return new BigDecimal(0);
     }
@@ -110,8 +128,8 @@ public class Task implements IEntity
     {
         return switch (getStaffingStatus())
         {
-            case STAFFED -> estimate / getAvailableDailyCapacity();
-            case STAFFING_REQUIRED -> estimate / ASSUMED_WORKING_HOURS_PER_DAY;
+            case STAFFED -> calcEstimate() / getAvailableDailyCapacity();
+            case STAFFING_REQUIRED -> calcEstimate() / ASSUMED_WORKING_HOURS_PER_DAY;
             case NO_AVAILABLE_CAPACITY -> null;
         };
     }
