@@ -154,7 +154,7 @@ public final class DependencyContainer
         this.taskDAO = new TaskDAO(entityManagerFactory);
         this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO, employeeDAO);
         this.taskController = new TaskController(taskService);
-        this.employeeWorkloadService = new EmployeeWorkloadService(taskDAO);
+        this.employeeWorkloadService = new EmployeeWorkloadService(taskDAO, employeeDAO);
         this.workloadController = new WorkloadController(employeeWorkloadService);
     }
 

@@ -25,6 +25,7 @@ public class EmployeeRoutes
             get(employeeController::getAll, Role.PROJECT_MANAGER);
             get("/capacity", employeeController::getCapacity, Role.PROJECT_MANAGER);
             get("/over-allocations", workloadController::getConflicts, Role.PROJECT_MANAGER);
+            get("/availability", workloadController::getAvailability, Role.PROJECT_MANAGER);
             get("/{id}", employeeController::get, Role.PROJECT_MANAGER);
             post(employeeController::create, Role.PROJECT_MANAGER);
             put("/{id}", employeeController::update, Role.PROJECT_MANAGER);
