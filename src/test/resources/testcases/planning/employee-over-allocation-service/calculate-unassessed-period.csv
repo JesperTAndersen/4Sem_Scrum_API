@@ -1,0 +1,5 @@
+inactive,start,from,to,unassessedCount,reason
+false,2030-01-07,2030-01-07,2030-01-07,1,"Decision table: overlapping unassigned task is unassessed"
+false,2030-01-08,2030-01-07,2030-01-07,0,"BVA: determined task starts one day after period"
+false,2030-01-07,2030-01-08,2030-01-08,0,"BVA: determined task finishes one day before period"
+true,2030-01-08,2030-01-07,2030-01-07,1,"Decision table: unknown dates cannot safely be excluded from requested period"

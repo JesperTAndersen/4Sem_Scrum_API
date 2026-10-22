@@ -1,0 +1,8 @@
+change,allocatedHours,excessHours,unassessedCount,reason
+NONE,10,2.5,0,"EP: saved cross-project assignments retain conflict after reload"
+STANDARD_CAPACITY,5,2.5,0,"Decision table: persisted company capacity updates shares and availability"
+INACTIVE,0,0,1,"Decision table: persisted deactivation excludes employee and leaves other task unassessed"
+COMPETENCE_REMOVED,0,0,0,"Decision table: persisted eligibility loss clears resolved conflict"
+ASSIGNMENT_REMOVED,10,2.5,0,"Decision table: persisted assignment removal updates crew and schedule"
+DONE,0,0,0,"Decision table: completing the task clears resolved conflict after reload"
+DATES_MOVED,0,0,0,"Decision table: moving the other project clears resolved conflict after reload"
