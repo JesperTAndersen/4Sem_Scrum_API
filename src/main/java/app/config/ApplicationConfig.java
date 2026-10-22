@@ -87,7 +87,8 @@ public class ApplicationConfig
                 new CompetenceRoutes(dependencyContainer.getCompetenceController()),
                 new ProjectRoutes((dependencyContainer.getProjectController())),
                 new SecurityRoutes(dependencyContainer.getSecurityController()),
-                new EmployeeRoutes(dependencyContainer.getEmployeeController()),
+                new EmployeeRoutes(dependencyContainer.getEmployeeController(),
+                        dependencyContainer.getWorkloadController()),
                 new CompanyCapacityRoutes(dependencyContainer.getCompanyCapacityController())
         );
     }

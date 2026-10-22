@@ -24,6 +24,10 @@ import app.employee.domain.EmployeeService;
 import app.employee.domain.IEmployeeService;
 import app.employee.presentation.EmployeeController;
 import app.employee.presentation.IEmployeeController;
+import app.workload.domain.IEmployeeWorkloadService;
+import app.workload.domain.EmployeeWorkloadService;
+import app.workload.presentation.WorkloadController;
+import app.workload.presentation.IWorkloadController;
 import app.presentation.health.HealthCheckController;
 import app.presentation.health.IHealthCheckController;
 import app.project.data.IProjectDAO;
@@ -108,6 +112,10 @@ public final class DependencyContainer
     private final IEmployeeService employeeService;
     @Getter
     private final IEmployeeController employeeController;
+    @Getter
+    private final IEmployeeWorkloadService employeeWorkloadService;
+    @Getter
+    private final IWorkloadController workloadController;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {
@@ -143,10 +151,11 @@ public final class DependencyContainer
         this.employeeDAO = new EmployeeDAO(entityManagerFactory);
         this.employeeService = new EmployeeService(employeeDAO, companyCapacityDAO, competenceDAO);
         this.employeeController = new EmployeeController(employeeService);
-
         this.taskDAO = new TaskDAO(entityManagerFactory);
         this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO, employeeDAO);
         this.taskController = new TaskController(taskService);
+        this.employeeWorkloadService = new EmployeeWorkloadService(taskDAO);
+        this.workloadController = new WorkloadController(employeeWorkloadService);
     }
 
     public static DependencyContainer getInstance()
