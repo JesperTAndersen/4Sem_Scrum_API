@@ -61,6 +61,7 @@ Client errors contain a message suitable for display. Server errors use `Interna
 | Employees | `/employee` | Employees, competencies, and daily availability | [employee.md](api/employee.md) |
 | Employee workload | `/employee` | Daily cross-project conflicts and employee availability | [workload.md](api/workload.md) |
 | Company capacities | `/company-capacities` | Standard daily hours per employee | [company-capacities.md](api/company-capacities.md) |
+| Dashboard | `/dashboard` | Aggregated planning statistics | [dashboard.md](api/dashboard.md) |
 | Health | `/health` | Database readiness check | [health.md](api/health.md) |
 
 The public welcome endpoint is `GET /` (outside the API base URL).

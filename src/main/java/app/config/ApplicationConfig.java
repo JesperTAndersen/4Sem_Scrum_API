@@ -2,6 +2,7 @@ package app.config;
 
 import app.capacity.presentation.CompanyCapacityRoutes;
 import app.competence.presentation.CompetenceRoutes;
+import app.dashboard.presentation.DashboardRoutes;
 import app.employee.presentation.EmployeeRoutes;
 import app.exceptions.ApiException;
 import app.exceptions.ConfigurationException;
@@ -87,7 +88,8 @@ public class ApplicationConfig
                 new SecurityRoutes(dependencyContainer.getSecurityController()),
                 new EmployeeRoutes(dependencyContainer.getEmployeeController(),
                         dependencyContainer.getWorkloadController()),
-                new CompanyCapacityRoutes(dependencyContainer.getCompanyCapacityController())
+                new CompanyCapacityRoutes(dependencyContainer.getCompanyCapacityController()),
+                new DashboardRoutes(dependencyContainer.getDashboardController())
         );
     }
 

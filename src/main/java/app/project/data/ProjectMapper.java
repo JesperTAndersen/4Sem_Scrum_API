@@ -135,7 +135,7 @@ public class ProjectMapper
                 .size();
     }
 
-    private static TaskCountDTO buildTaskCountDTO(Project project)
+    public static TaskCountDTO buildTaskCountDTO(Project project)
     {
         int totalNumOfTasks = totalNumOfTasks(project);
         int notStartedTasks = numOfNotStartedTasks(project);

@@ -1,5 +1,9 @@
 package app.config;
 
+import app.dashboard.domain.DashboardService;
+import app.dashboard.domain.IDashboardService;
+import app.dashboard.presentation.DashboardController;
+import app.dashboard.presentation.IDashboardController;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -116,6 +120,10 @@ public final class DependencyContainer
     private final IEmployeeWorkloadService employeeWorkloadService;
     @Getter
     private final IWorkloadController workloadController;
+    @Getter
+    private final IDashboardService dashboardService;
+    @Getter
+    private final IDashboardController dashboardController;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {
@@ -156,6 +164,9 @@ public final class DependencyContainer
         this.taskController = new TaskController(taskService);
         this.employeeWorkloadService = new EmployeeWorkloadService(taskDAO, employeeDAO);
         this.workloadController = new WorkloadController(employeeWorkloadService);
+
+        this.dashboardService = new DashboardService(projectDAO, scheduleService, employeeService);
+        this.dashboardController = new DashboardController(dashboardService);
     }
 
     public static DependencyContainer getInstance()
