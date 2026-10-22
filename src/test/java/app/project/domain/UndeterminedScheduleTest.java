@@ -6,11 +6,15 @@ import static org.hamcrest.Matchers.nullValue;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
 
 import app.employee.domain.Employee;
+import app.persistence.testdoubles.EntityIds;
 import app.project.presentation.dto.ScheduleDTO;
 import app.stage.data.StageMapper;
 import app.stage.domain.Stage;
@@ -22,6 +26,51 @@ class UndeterminedScheduleTest
     // 2030-01-07 is a Monday.
     private static final LocalDate MONDAY = LocalDate.of(2030, 1, 7);
     private static final LocalDate FRIDAY = LocalDate.of(2030, 1, 4);
+
+    @ParameterizedTest(name = "[{index}] {2}")
+    @CsvFileSource(resources = "/testcases/project/schedule-service/crew-reactivation.csv", numLinesToSkip = 1)
+    @DisplayName("Crew changes - deactivation propagates and reactivation restores dependent dates")
+    void crewChangesRestoreDependentSchedules(Task.TaskStatus status, String dependency, String reason)
+    {
+        Project project = project(MONDAY);
+        Stage first = stage(project, "First");
+        Stage next = dependency.equals("STAGE") ? stage(project, "Next") : first;
+        Task work = EntityIds.assign(new Task(first, "Crew work", 0), 10L);
+        work.setCompetence(null, 30.0);
+        work.changeStatus(status);
+        Employee firstWorker = EntityIds.assign(new Employee("First", "Worker", 7.5), 1L);
+        Employee secondWorker = EntityIds.assign(new Employee("Second", "Worker", 7.5), 2L);
+        // Reverse insertion order verifies warnings are returned in employee ID order.
+        work.assignEmployee(secondWorker);
+        work.assignEmployee(firstWorker);
+        Task successor = staffedTask(next, "Successor", 7.5, 7.5);
+        if (dependency.equals("STAGE")) next.getPredecessors().add(first);
+        else successor.addPredecessor(work);
+
+        ScheduleService service = new ScheduleService();
+        assertThat(service.calculateFinishDate(project).calculatedFinishDate(), is(MONDAY.plusDays(2)));
+        firstWorker.setActive(false);
+        assertThat(work.getLaborDurationInDays(), is(4.0));
+        assertThat(WorkingDaySchedule.calculateTaskDates(successor, MONDAY).startDate(), is(MONDAY.plusDays(4)));
+        assertThat(service.calculateFinishDate(project).staffingWarnings().size(), is(1));
+
+        secondWorker.setActive(false);
+        ScheduleDTO unavailable = service.calculateFinishDate(project);
+        assertThat(unavailable.calculatedFinishDate(), is(nullValue()));
+        assertThat(unavailable.feasible(), is(nullValue()));
+        assertThat(WorkingDaySchedule.calculateTaskDates(successor, MONDAY).isDetermined(), is(false));
+        assertThat(unavailable.staffingWarnings().stream().map(w -> w.employeeId()).toList(),
+                is(List.of(1L, 2L)));
+
+        firstWorker.setActive(true);
+        assertThat(service.calculateFinishDate(project).calculatedFinishDate(), is(MONDAY.plusDays(4)));
+        secondWorker.setActive(true);
+        ScheduleDTO restored = service.calculateFinishDate(project);
+        assertThat(restored.calculatedFinishDate(), is(MONDAY.plusDays(2)));
+        assertThat(restored.feasible(), is(true));
+        assertThat(restored.staffingWarnings().isEmpty(), is(true));
+        assertThat(work.getEmployees().size(), is(2));
+    }
 
     @Test
     @DisplayName("Task dates - undetermined when the task has no available capacity")

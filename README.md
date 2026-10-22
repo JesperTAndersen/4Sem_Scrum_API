@@ -54,8 +54,13 @@ are preserved. These references describe current employee details, not a snapsho
 
 `dailyCapacity` is the employee's configured capacity, not their available contribution.
 Inactive employees contribute no capacity to unfinished tasks or to `GET /api/v1/employee/capacity`.
+Active assignees who have lost the task's required competence also contribute no unfinished-task capacity.
+Task responses include `staffingWarnings` identifying affected task/employee IDs; project schedules aggregate
+these warnings in detail and list responses. Warnings clear after reactivation/restored eligibility and reload.
+See [Staffing warnings](docs/api/tasks.md#staffing-warnings). In-progress calculations use the whole estimate.
 An unfinished task with only inactive assignees has `staffingStatus: "NO_AVAILABLE_CAPACITY"`
-and null durations/dates. Completed tasks retain the existing duration calculation using
-all their assignees. Filtering employees for new staffing must not filter `assignedEmployees`.
+and null durations/dates. Completed tasks retain their recorded planning dates and durations and return no future
+staffing warnings. Legacy completed tasks without snapshots use the documented fallback with all assignees.
+Filtering employees for new staffing must not filter `assignedEmployees`.
 New assignments reject inactive employees; replacing an unfinished task's assignments may
 retain an already assigned inactive employee. Completed task assignments cannot be changed.

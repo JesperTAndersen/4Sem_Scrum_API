@@ -1,0 +1,5 @@
+status,dependency,reason
+NOT_STARTED,TASK,DT: not started task propagates crew changes to task successors
+IN_PROGRESS,TASK,DT: in progress task uses whole estimate through deactivation and reactivation
+NOT_STARTED,STAGE,DT: not started task propagates crew changes across stages
+IN_PROGRESS,STAGE,DT: in progress task restores project feasibility across stages

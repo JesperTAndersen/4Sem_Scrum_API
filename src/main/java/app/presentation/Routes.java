@@ -2,6 +2,7 @@ package app.presentation;
 
 import app.capacity.presentation.CompanyCapacityRoutes;
 import app.competence.presentation.CompetenceRoutes;
+import app.dashboard.presentation.DashboardRoutes;
 import app.employee.presentation.EmployeeRoutes;
 import app.presentation.health.HealthCheckRoute;
 import app.project.presentation.ProjectRoutes;
@@ -31,11 +32,12 @@ public class Routes
     private final SecurityRoutes securityRoutes;
     private final EmployeeRoutes employeeRoutes;
     private final CompanyCapacityRoutes companyCapacityRoutes;
+    private final DashboardRoutes dashboardRoutes;
 
     public Routes(HealthCheckRoute healthCheckRoute, UserRoutes userRoutes, StageRoutes stageRoutes,
                   TaskRoutes taskRoutes, CompetenceRoutes competenceRoutes, ProjectRoutes projectRoutes,
                   SecurityRoutes securityRoutes, EmployeeRoutes employeeRoutes,
-                  CompanyCapacityRoutes companyCapacityRoutes)
+                  CompanyCapacityRoutes companyCapacityRoutes, DashboardRoutes dashboardRoutes)
     {
         this.healthCheckRoute = healthCheckRoute;
         this.userRoutes = userRoutes;
@@ -46,6 +48,7 @@ public class Routes
         this.securityRoutes = securityRoutes;
         this.employeeRoutes = employeeRoutes;
         this.companyCapacityRoutes = companyCapacityRoutes;
+        this.dashboardRoutes = dashboardRoutes;
     }
 
     public EndpointGroup getRoutes()
@@ -65,6 +68,7 @@ public class Routes
                 securityRoutes.getRoutes().addEndpoints();
                 employeeRoutes.getRoutes().addEndpoints();
                 companyCapacityRoutes.getRoutes().addEndpoints();
+                dashboardRoutes.getRoutes().addEndpoints();
             });
         };
     }

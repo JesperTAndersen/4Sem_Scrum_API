@@ -1,0 +1,7 @@
+dependency,estimate,recordedEnd,expectedStart,reason
+TASK,15.0,2030-01-08,2030-01-09,AC: task successor uses the recorded predecessor finish
+STAGE,15.0,2030-01-08,2030-01-09,AC: stage successor uses the recorded predecessor finish
+TASK,37.5,2030-01-11,2030-01-14,AC: task successor skips weekend after a recorded Friday finish
+STAGE,37.5,2030-01-11,2030-01-14,AC: stage successor skips weekend after a recorded Friday finish
+TASK,0.0,2030-01-07,2030-01-07,AC: zero duration completed task allows same day successor
+STAGE,0.0,2030-01-07,2030-01-07,AC: zero duration completed stage task allows same day successor

@@ -11,7 +11,7 @@ import app.employee.data.EmployeeMapper;
 import app.employee.domain.Employee;
 import app.project.domain.WorkingDaySchedule;
 import app.task.domain.Task;
-import app.task.presentation.dto.EmployeeReferenceDTO;
+import app.employee.presentation.dto.EmployeeReferenceDTO;
 import app.task.presentation.dto.TaskDTO;
 
 public final class TaskMapper
@@ -49,7 +49,8 @@ public final class TaskMapper
                 task.getPredecessors().stream().map(Task::getId).sorted().toList(),
                 task.getDependencyStartOffsetInDays(),
                 task.getDependencyFinishOffsetInDays(),
-                mapToEmployeeReferenceDTOs(task.getEmployees())
+                mapToEmployeeReferenceDTOs(task.getEmployees()),
+                task.getStaffingWarnings()
         );
     }
 

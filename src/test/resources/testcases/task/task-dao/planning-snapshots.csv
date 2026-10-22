@@ -1,0 +1,5 @@
+start,end,labor,scheduled,reason
+2030-01-07,2030-01-11,4.0,5.0,AC: all four planning fields and DONE status persist together
+2030-01-07,2030-01-10,3.25,3.25,AC: fractional durations survive database reload
+2030-01-07,2030-01-07,0.0,0.0,AC: zero duration snapshot survives database reload
+NULL,NULL,NULL,NULL,AC: recorded undetermined values remain distinguishable from a missing snapshot

@@ -1,8 +1,10 @@
 package app.task.domain;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +13,7 @@ import app.competence.domain.Competence;
 import app.employee.domain.Employee;
 import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
-import jakarta.persistence.CascadeType;
+import app.task.presentation.dto.StaffingWarning;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -58,6 +60,30 @@ public class Task implements IEntity
     private Stage stage;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private LocalDate completedStartDate;
+    private LocalDate completedEndDate;
+    private Double completedLaborDurationInDays;
+    private Double completedScheduledDurationInDays;
+    private LocalDateTime planningSnapshotRecordedAt;
+
+    public void recordPlanningSnapshot(
+            LocalDate startDate,
+            LocalDate endDate,
+            Double laborDurationInDays,
+            Double scheduledDurationInDays)
+    {
+        this.completedStartDate = startDate;
+        this.completedEndDate = endDate;
+        this.completedLaborDurationInDays = laborDurationInDays;
+        this.completedScheduledDurationInDays = scheduledDurationInDays;
+        this.planningSnapshotRecordedAt = LocalDateTime.now();
+    }
+
+    public boolean hasPlanningSnapshot()
+    {
+        return planningSnapshotRecordedAt != null;
+    }
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -126,6 +152,11 @@ public class Task implements IEntity
 
     public Double getLaborDurationInDays()
     {
+        if (status == TaskStatus.DONE && hasPlanningSnapshot())
+        {
+            return this.completedLaborDurationInDays;
+        }
+
         return switch (getStaffingStatus())
         {
             case STAFFED -> calcEstimate() / getAvailableDailyCapacity();
@@ -136,6 +167,11 @@ public class Task implements IEntity
 
     public Double getScheduledDurationInDays()
     {
+        if (status == TaskStatus.DONE && hasPlanningSnapshot())
+        {
+            return this.completedScheduledDurationInDays;
+        }
+
         Double labor = getLaborDurationInDays();
         return labor == null ? null : Math.max(labor, minimumDurationInDays);
     }
@@ -242,9 +278,30 @@ public class Task implements IEntity
     private double getAvailableDailyCapacity()
     {
         return employees.stream()
-                .filter(employee -> employee.isActive() || status == TaskStatus.DONE)
+                .filter(employee -> status == TaskStatus.DONE || (employee.isActive() && isEligible(employee)))
                 .mapToDouble(Employee::getDailyCapacity)
                 .sum();
+    }
+
+    private boolean isEligible(Employee employee)
+    {
+        return competence == null || employee.getCompetences().contains(competence);
+    }
+
+    public List<StaffingWarning> getStaffingWarnings()
+    {
+        if (status == TaskStatus.DONE) return List.of();
+
+        return employees.stream()
+                .filter(employee -> !employee.isActive() || !isEligible(employee))
+                .sorted(Comparator.comparing(Employee::getId,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(employee -> new StaffingWarning(
+                        employee.isActive() ?
+                                StaffingWarning.WarningType.ASSIGNED_EMPLOYEE_MISSING_COMPETENCE
+                                : StaffingWarning.WarningType.INACTIVE_ASSIGNED_EMPLOYEE,
+                        id, employee.getId()))
+                .toList();
     }
 
     public StaffingStatus getStaffingStatus()

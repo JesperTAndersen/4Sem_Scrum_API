@@ -1,0 +1,3 @@
+reopenedStatus,reason
+NOT_STARTED,AC: reopening as not started resumes live calculation and allows a fresh snapshot
+IN_PROGRESS,AC: reopening as in progress resumes live calculation and allows a fresh snapshot
