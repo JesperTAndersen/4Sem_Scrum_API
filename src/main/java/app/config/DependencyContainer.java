@@ -28,6 +28,10 @@ import app.employee.domain.EmployeeService;
 import app.employee.domain.IEmployeeService;
 import app.employee.presentation.EmployeeController;
 import app.employee.presentation.IEmployeeController;
+import app.workload.domain.IEmployeeWorkloadService;
+import app.workload.domain.EmployeeWorkloadService;
+import app.workload.presentation.WorkloadController;
+import app.workload.presentation.IWorkloadController;
 import app.presentation.health.HealthCheckController;
 import app.presentation.health.IHealthCheckController;
 import app.project.data.IProjectDAO;
@@ -113,6 +117,10 @@ public final class DependencyContainer
     @Getter
     private final IEmployeeController employeeController;
     @Getter
+    private final IEmployeeWorkloadService employeeWorkloadService;
+    @Getter
+    private final IWorkloadController workloadController;
+    @Getter
     private final IDashboardService dashboardService;
     @Getter
     private final IDashboardController dashboardController;
@@ -151,10 +159,11 @@ public final class DependencyContainer
         this.employeeDAO = new EmployeeDAO(entityManagerFactory);
         this.employeeService = new EmployeeService(employeeDAO, companyCapacityDAO, competenceDAO);
         this.employeeController = new EmployeeController(employeeService);
-
         this.taskDAO = new TaskDAO(entityManagerFactory);
         this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO, employeeDAO);
         this.taskController = new TaskController(taskService);
+        this.employeeWorkloadService = new EmployeeWorkloadService(taskDAO, employeeDAO);
+        this.workloadController = new WorkloadController(employeeWorkloadService);
 
         this.dashboardService = new DashboardService(projectDAO, scheduleService, employeeService);
         this.dashboardController = new DashboardController(dashboardService);

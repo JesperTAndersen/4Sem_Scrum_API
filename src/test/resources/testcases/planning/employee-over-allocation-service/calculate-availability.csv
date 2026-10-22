@@ -1,0 +1,13 @@
+scenario,employeeCount,allocatedHours,remainingHours,unassessedCount,reason
+IDLE,1,0,7.5,0,"EP: active employee without assignments has full capacity"
+PARTIAL,1,2.5,5,0,"EP: partial allocation leaves spare hours"
+FULL,1,7.5,0,0,"BVA: allocation equal to capacity leaves zero hours"
+CROSS_PROJECT,1,10,0,0,"Decision table: cross-project hours combine and spare hours cannot be negative"
+INACTIVE,0,0,0,0,"EP: inactive employees are excluded"
+SATURDAY,0,0,0,0,"BVA: Saturday has no working availability"
+SUNDAY,0,0,0,0,"BVA: Sunday has no working availability"
+STANDARD_CAPACITY,1,2.5,7.5,0,"EP: availability uses configured company capacity"
+UNASSESSED,1,0,7.5,1,"Decision table: unknown workload remains visible alongside calculated availability"
+DONE,1,0,7.5,0,"EP: completed tasks do not consume future capacity"
+ZERO_ESTIMATE,1,0,7.5,0,"BVA: zero estimate does not consume capacity"
+OUTSIDE_DATES,1,0,7.5,0,"EP: later tasks do not consume the requested day"

@@ -1,0 +1,3 @@
+resolution,reason
+REMOVE_ASSIGNMENT,"Decision table: overlapping saves succeed and removing an assignment clears conflict after reload"
+MOVE_DATES,"Decision table: overlapping saves succeed and moving project dates clears conflict after reload"

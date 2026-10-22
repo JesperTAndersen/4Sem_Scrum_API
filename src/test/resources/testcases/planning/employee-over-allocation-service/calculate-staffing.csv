@@ -1,0 +1,10 @@
+scenario,unassessedCount,conflictCount,reason
+PARTIAL_INACTIVE,0,0,"Decision table: remaining eligible employee carries whole estimate"
+ALL_INACTIVE,1,0,"Decision table: fully inactive crew cannot be assessed"
+UNASSIGNED,1,0,"Decision table: provisional worker creates no named allocation"
+INELIGIBLE,1,0,"Decision table: missing competence leaves task unassessed"
+DONE,0,0,"EP: completed snapshot creates no future conflict"
+DONE_LEGACY,0,0,"EP: legacy completed task creates no future conflict"
+IN_PROGRESS,0,3,"EP: in-progress task uses whole estimate across three days"
+ZERO,0,0,"BVA: zero estimate creates no conflict"
+BLOCKED_SUCCESSOR,2,0,"Decision table: staffed successor also has undetermined dates"

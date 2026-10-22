@@ -59,7 +59,10 @@ public final class WorkingDaySchedule
             return remember(task, dates, calculated, visiting);
         }
 
-        if (!visiting.add(task)) throw new IllegalStateException("Cyclic schedule dependency");
+        if (!visiting.add(task))
+        {
+            throw new IllegalStateException("Cyclic schedule dependency");
+        }
         LocalDate startDate = projectStartDate;
         for (Task predecessor : getPredecessorTasks(task))
         {
@@ -71,7 +74,10 @@ public final class WorkingDaySchedule
             LocalDate availableDate = predecessor.getScheduledDurationInDays() == 0
                     ? predecessorDates.startDate()
                     : nextWorkingDay(predecessorDates.endDate().plusDays(1));
-            if (availableDate.isAfter(startDate)) startDate = availableDate;
+            if (availableDate.isAfter(startDate))
+            {
+                startDate = availableDate;
+            }
         }
 
         Double duration = task.getScheduledDurationInDays();
@@ -122,10 +128,33 @@ public final class WorkingDaySchedule
     private static LocalDate nextWorkingDay(LocalDate date)
     {
         LocalDate result = date;
-        while (result.getDayOfWeek() == DayOfWeek.SATURDAY || result.getDayOfWeek() == DayOfWeek.SUNDAY)
+        while (!isWorkingDay(result))
         {
             result = result.plusDays(1);
         }
         return result;
+    }
+
+    public static boolean isWorkingDay(LocalDate date)
+    {
+        return date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY;
+    }
+
+
+    public static long countWorkingDays(LocalDate from, LocalDate to)
+    {
+        long count = 0;
+        for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1))
+        {
+            if (isWorkingDay(date))
+            {
+                count++;
+            }
+            if (date.equals(to))
+            {
+                break;
+            }
+        }
+        return count;
     }
 }

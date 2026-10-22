@@ -25,8 +25,6 @@ import jakarta.persistence.EntityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 public class ApplicationConfig
 {
     private static final Logger log = LoggerFactory.getLogger(ApplicationConfig.class);
@@ -88,7 +86,8 @@ public class ApplicationConfig
                 new CompetenceRoutes(dependencyContainer.getCompetenceController()),
                 new ProjectRoutes((dependencyContainer.getProjectController())),
                 new SecurityRoutes(dependencyContainer.getSecurityController()),
-                new EmployeeRoutes(dependencyContainer.getEmployeeController()),
+                new EmployeeRoutes(dependencyContainer.getEmployeeController(),
+                        dependencyContainer.getWorkloadController()),
                 new CompanyCapacityRoutes(dependencyContainer.getCompanyCapacityController()),
                 new DashboardRoutes(dependencyContainer.getDashboardController())
         );

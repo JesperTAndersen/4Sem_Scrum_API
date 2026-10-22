@@ -1,0 +1,4 @@
+secondStart,secondEstimate,conflictCount,expectedExcess,reason
+2030-01-07,2.5,1,2.5,"Decision table: overlapping projects conflict despite spare capacity on other days"
+2030-01-08,7.5,0,0,"Decision table: non-overlapping projects do not conflict"
+2030-01-14,7.5,0,0,"BVA: other project outside requested period contributes nothing"

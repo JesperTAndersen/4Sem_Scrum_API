@@ -260,10 +260,16 @@ public class Task implements IEntity
 
     private double getAvailableDailyCapacity()
     {
-        return employees.stream()
-                .filter(employee -> status == TaskStatus.DONE || (employee.isActive() && isEligible(employee)))
+        return (status == TaskStatus.DONE ? employees.stream() : getAvailableEmployees().stream())
                 .mapToDouble(Employee::getDailyCapacity)
                 .sum();
+    }
+
+    public List<Employee> getAvailableEmployees()
+    {
+        return employees.stream()
+                .filter(employee -> employee.isActive() && isEligible(employee))
+                .toList();
     }
 
     private boolean isEligible(Employee employee)

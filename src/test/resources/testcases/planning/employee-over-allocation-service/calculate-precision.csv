@@ -1,0 +1,8 @@
+dailyCapacity,extraHours,overAllocated,excess,reason
+7.5,0,false,0,"BVA: allocation equal to capacity"
+7.5,0.0000001,false,0,"BVA: difference below tolerance"
+7.5,0.000001,true,0.000001,"BVA: difference at tolerance"
+7.5,0.0000011,true,0.0000011,"BVA: difference above tolerance"
+7.5,0.5,true,0.5,"EP: meaningful over-allocation"
+7.7,0.000001,true,0.000001,"BVA: decimal capacity retains conflict at tolerance despite subtraction error"
+0.1,0.000001,true,0.000001,"BVA: small decimal capacity retains conflict at tolerance"

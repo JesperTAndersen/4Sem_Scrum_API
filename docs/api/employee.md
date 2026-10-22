@@ -11,6 +11,8 @@ See [authentication and errors](../API.md). The existing singular `/employee` pa
 | PUT | `/employee/{id}` | Update employee information and daily capacity |
 | PUT | `/employee/{id}/competences` | Replace employee competencies |
 | GET | `/employee/capacity` | Calculate daily capacity of active employees |
+| GET | `/employee/over-allocations` | Find daily capacity conflicts; see [workload](workload.md#get-employeeover-allocations) |
+| GET | `/employee/availability` | Read daily remaining hours; see [workload](workload.md#get-employeeavailability) |
 | PATCH | `/employee/{id}/activate` | Activate an employee |
 | PATCH | `/employee/{id}/deactivate` | Deactivate an employee |
 | DELETE | `/employee/{id}` | Delete an employee |
