@@ -1,6 +1,8 @@
 package app.workload.domain;
 
 import app.employee.domain.Employee;
+import app.workload.presentation.dto.AvailabilityResultDTO;
+import app.workload.presentation.dto.EmployeeAvailabilityDTO;
 import app.exceptions.BadRequestException;
 import app.workload.presentation.dto.EmployeeOverAllocationDTO;
 import app.workload.presentation.dto.OverAllocationResultDTO;
@@ -9,6 +11,7 @@ import app.project.domain.Project;
 import app.project.domain.WorkingDaySchedule;
 import app.shared.data.IReadDAO;
 import app.task.domain.Task;
+import app.utils.ValidationUtil;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -20,10 +23,12 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
     private static final double OVER_ALLOCATION_TOLERANCE = 0.000001;
 
     private final IReadDAO<Task> taskReader;
+    private final IReadDAO<Employee> employeeReader;
 
-    public EmployeeWorkloadService(IReadDAO<Task> taskReader)
+    public EmployeeWorkloadService(IReadDAO<Task> taskReader, IReadDAO<Employee> employeeReader)
     {
         this.taskReader = taskReader;
+        this.employeeReader = employeeReader;
     }
 
     @Override
@@ -68,6 +73,50 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
 
         unassessedTaskIds.sort(Long::compareTo);
         return new OverAllocationResultDTO(startDate, endDate, List.copyOf(conflicts), List.copyOf(unassessedTaskIds));
+    }
+
+    @Override
+    public AvailabilityResultDTO findAvailability(LocalDate date, Long competenceId)
+    {
+        if (date == null)
+        {
+            throw new BadRequestException("Availability date is required");
+        }
+
+        List<Employee> employees = new ArrayList<>(employeeReader.getAll());
+
+        if (competenceId != null)
+        {
+            ValidationUtil.validateId(competenceId);
+            employees.removeIf(employee -> employee.getCompetences().stream()
+                    .noneMatch(competence -> competenceId.equals(competence.getId())));
+        }
+        employees.sort(Comparator.comparing(Employee::getId));
+
+        List<Long> unassessedTaskIds = new ArrayList<>();
+        List<EmployeeAvailabilityDTO> availability = new ArrayList<>();
+        List<TaskWorkload> taskWorkloads = getTaskWorkloads(date, date, unassessedTaskIds);
+
+        boolean workingDay = WorkingDaySchedule.isWorkingDay(date);
+        for (Employee employee : employees)
+        {
+            if (employee.isActive() && workingDay)
+            {
+                double allocatedHours = totalHours(getDailyTaskHours(employee, date, taskWorkloads));
+                double dailyCapacity = employee.getDailyCapacity();
+                double remainingHours = Math.max(0, dailyCapacity - allocatedHours);
+                availability.add(new EmployeeAvailabilityDTO(
+                        employee.getId(),
+                        employee.getFirstName(),
+                        employee.getLastName(),
+                        dailyCapacity,
+                        allocatedHours,
+                        remainingHours));
+            }
+        }
+
+        unassessedTaskIds.sort(Long::compareTo);
+        return new AvailabilityResultDTO(date, List.copyOf(availability), List.copyOf(unassessedTaskIds));
     }
 
     private List<TaskWorkload> getTaskWorkloads(LocalDate startDate, LocalDate endDate,
