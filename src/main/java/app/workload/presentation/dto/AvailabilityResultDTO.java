@@ -6,5 +6,6 @@ import java.util.List;
 public record AvailabilityResultDTO(
         LocalDate date,
         List<EmployeeAvailabilityDTO> employees,
-        List<Long> unassessedTaskIds)
+        List<Long> unassessedTaskIds,
+        List<UnassessedTaskDTO> unassessedTasks)
 {}

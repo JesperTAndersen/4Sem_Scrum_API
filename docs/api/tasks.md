@@ -20,24 +20,24 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 
 ## Task object
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | number | Unique identifier |
-| `name` | string | Task name |
-| `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days |
-| `competence` | object\|null | Assigned competence with only `id` and `name`; `null` when none is assigned |
-| `estimate` | number | Estimated labor hours |
-| `cost` | number | Current estimate multiplied by the assigned competence's rate; `0` without a competence |
+| Field | Type | Description                                                                                                                                                                                                                 |
+|---|---|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `id` | number | Unique identifier                                                                                                                                                                                                           |
+| `name` | string | Task name                                                                                                                                                                                                                   |
+| `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days                                                                                                                                                                     |
+| `competence` | object\|null | Assigned competence with only `id` and `name`; `null` when none is assigned                                                                                                                                                 |
+| `estimate` | number | Estimated labor hours                                                                                                                                                                                                       |
+| `cost` | number | Current estimate multiplied by the assigned competence's rate; `0` without a competence                                                                                                                                     |
 | `startDate`, `endDate` | date\|null | Monday-Friday planning dates; `endDate` is inclusive. Recorded for completed tasks with a snapshot, otherwise calculated live. `null` when undetermined (see [Completed planning snapshots](#completed-planning-snapshots)) |
-| `laborDurationInDays` | number\|null | Recorded labor duration for completed tasks with a snapshot; otherwise calculated from current staffing (see [Staffing and duration](#staffing-and-duration)). `null` when undetermined |
-| `scheduledDurationInDays` | number\|null | Recorded scheduled duration for completed tasks with a snapshot; otherwise the greater of live labor duration and minimum duration. `null` when undetermined |
-| `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE` |
-| `staffingStatus` | enum | `STAFFED`, `STAFFING_REQUIRED`, or `NO_AVAILABLE_CAPACITY` (see [Staffing and duration](#staffing-and-duration)) |
-| `staffingWarnings` | object[] | Current warnings identifying the task and affected employee; empty for completed tasks (see [Staffing warnings](#staffing-warnings)) |
-| `predecessorIds` | number[] | IDs of tasks that must finish before this task can start |
-| `dependencyStartOffsetInDays` | number\|null | Earliest start offset based on predecessor durations; `0` when there are no predecessors; `null` when a predecessor is undetermined |
-| `dependencyFinishOffsetInDays` | number\|null | Start offset plus the task scheduled duration; `null` when undetermined |
-| `assignedEmployees` | [Employee reference](#employee-reference-object)[] | Employees assigned to the task, ordered by ID; empty when none are assigned |
+| `laborDurationInDays` | number\|null | Recorded labor duration for completed tasks with a snapshot; otherwise calculated from current staffing (see [Staffing and duration](#staffing-and-duration)). `null` when undetermined                                     |
+| `scheduledDurationInDays` | number\|null | Recorded scheduled duration for completed tasks with a snapshot; otherwise the greater of live labor duration and minimum duration. `null` when undetermined                                                                |
+| `status` | enum | `NOT_STARTED`, `IN_PROGRESS`, or `DONE`                                                                                                                                                                                     |
+| `staffingStatus` | enum | `STAFFED`, `STAFFING_REQUIRED`, or `NO_AVAILABLE_CAPACITY` (see [Staffing and duration](#staffing-and-duration))                                                                                                            |
+| `staffingWarnings` | object[] | Current warnings identifying the task and affected employee; empty for completed tasks (see [Staffing warnings](#staffing-warnings))                                                                                        |
+| `predecessorIds` | number[] | IDs of tatasks that must finish before this task can start                                                                                                                                                                  |
+| `dependencyStartOffsetInDays` | number\|null | Earliest start offset based on predecessor durations; `0` when there are no predecessors; `null` when a predecessor is undetermined                                                                                         |
+| `dependencyFinishOffsetInDays` | number\|null | Start offset plus the task scheduled duration; `null` when undetermined                                                                                                                                                     |
+| `assignedEmployees` | [Employee reference](#employee-reference-object)[] | Employees assigned to the task, ordered by ID; empty when none are assigned                                                                                                                                                 |
 
 Example completed task for a project starting on `2030-01-07`:
 

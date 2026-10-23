@@ -5,6 +5,8 @@ public record TaskHoursDTO(
         String projectTitle,
         Long taskId,
         String taskName,
+        Long competenceId,
+        String competenceName,
         double allocatedHours
 )
 {}
