@@ -9,6 +9,7 @@ import java.util.Set;
 import app.shared.domain.IEntity;
 import app.stage.domain.Stage;
 import app.user.domain.User;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -67,7 +68,7 @@ public class Project implements IEntity
     @JoinColumn(name = "updated_by", nullable = false)
     private User updatedBy;
 
-    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @Builder.Default
     private Set<Stage> stages = new HashSet<>();
 

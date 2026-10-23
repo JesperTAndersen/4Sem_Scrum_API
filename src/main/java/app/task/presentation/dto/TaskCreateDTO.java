@@ -4,7 +4,9 @@ public record TaskCreateDTO(
         Long stageId,
         String name,
         Long competenceId,
-        Double estimate,
+        Double bestEstimate,
+        Double likelyEstimate,
+        Double worstEstimate,
         Integer minimumDurationInDays)
 {
 }

@@ -6,7 +6,9 @@ public record TaskUpdateDTO(
         String name,
         Integer minimumDurationInDays,
         Long competenceId,
-        Double estimate,
+        Double bestEstimate,
+        Double likelyEstimate,
+        Double worstEstimate,
         TaskStatus status)
 {
 }

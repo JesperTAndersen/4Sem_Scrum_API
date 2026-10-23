@@ -18,7 +18,7 @@ public class JWTUtil
 
     private static final String ISSUER = System.getenv("JWT_ISSUER");
     private static final String SECRET = System.getenv("JWT_SECRET");
-    private static final int EXPIRY = 1000 * 60 * 30; // 30 minutes
+    private static final int EXPIRY = 1000 * 60 * 120; // 120 minutes
     private static final JWSSigner SIGNER;
     private static final JWSVerifier VERIFIER;
 

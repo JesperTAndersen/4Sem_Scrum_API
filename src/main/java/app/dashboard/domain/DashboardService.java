@@ -99,7 +99,7 @@ public class DashboardService implements IDashboardService
                 .flatMap(project -> project.getStages().stream())
                 .flatMap(stage -> stage.getTasks().stream())
                 .filter(task -> task.getStatus() != Task.TaskStatus.DONE)
-                .mapToDouble(Task::getEstimate)
+                .mapToDouble(Task::calcEstimate)
                 .sum();
     }
 
