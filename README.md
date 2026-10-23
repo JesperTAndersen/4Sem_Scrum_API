@@ -1,5 +1,9 @@
 ﻿# Estimo - Project Estimation & Resource Planning
 
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=coverage)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
+[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
+
 Estimo helps project managers estimate work, plan schedules, and understand whether their team has enough time to deliver a project.
 
 This repository contains the backend API used by the Estimo frontend. It manages project plans, employees, skills, and the calculations behind schedules, workload, and estimated labor costs.
@@ -59,8 +63,4 @@ The server runs at `http://localhost:7070`, with API endpoints under `/api/v1`.
 - [Dependency migration and deployment](docs/dependency-migration.md) — guidance for existing dependency data and rollout.
 
 ## Project quality
-
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=coverage)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
-[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
 [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-dark.svg)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
