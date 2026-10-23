@@ -158,7 +158,6 @@ public class EmployeeDAO implements IEmployeeDAO
                 if (e.isActive() != active) {
                     em.getTransaction().begin();
                     e.setActive(active);
-                    em.merge(e);
                     em.getTransaction().commit();
                 }
             }

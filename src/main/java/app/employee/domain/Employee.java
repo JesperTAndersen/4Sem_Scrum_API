@@ -111,13 +111,13 @@ public class Employee
         updatedAt = LocalDateTime.now();
     }
 
-    @Override public final boolean equals(Object o)
+    @Override public boolean equals(Object o)
     {
         return this == o || (o instanceof Employee && id != null && id.equals(((Employee) o).getId()));
     }
 
     @Override
-    public final int hashCode()
+    public int hashCode()
     {
         return getClass().hashCode();
     }

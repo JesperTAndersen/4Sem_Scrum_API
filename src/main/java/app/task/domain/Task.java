@@ -146,7 +146,7 @@ public class Task implements IEntity
     {
         if (competence != null)
         {
-            return competence.getRate().multiply(new BigDecimal(calcEstimate()));
+            return competence.getRate().multiply(BigDecimal.valueOf(calcEstimate()));
         }
         return new BigDecimal(0);
     }
@@ -335,13 +335,13 @@ public class Task implements IEntity
     }
 
     @Override
-    public final boolean equals(Object o)
+    public boolean equals(Object o)
     {
         return this == o || (o instanceof Task && id != null && id.equals(((Task) o).getId()));
     }
 
     @Override
-    public final int hashCode()
+    public int hashCode()
     {
         return getClass().hashCode();
     }

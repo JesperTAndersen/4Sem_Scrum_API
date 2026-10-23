@@ -137,7 +137,7 @@ public final class WorkingDaySchedule
 
     public static boolean isWorkingDay(LocalDate date)
     {
-        return date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY;
+        return !date.getDayOfWeek().equals(DayOfWeek.SATURDAY) && !date.getDayOfWeek().equals(DayOfWeek.SUNDAY);
     }
 
 
