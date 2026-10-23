@@ -1,70 +1,66 @@
-# Project Estimation & Resource Planner
+﻿# Estimo - Project Estimation & Resource Planning
 
-A web application for estimating projects and planning available resource capacity.
+Estimo helps project managers estimate work, plan schedules, and understand whether their team has enough time to deliver a project.
 
-The application is designed for a project/resource manager to create projects with deadlines, divide them into dependent subprojects, estimate required manpower, and determine whether a project is feasible within the available time and quarterly resource capacity.
+This repository contains the backend API used by the Estimo frontend. It manages project plans, employees, skills, and the calculations behind schedules, workload, and estimated labor costs.
 
-## Core Features
+## What Estimo supports
 
-- Create and manage projects and subprojects
-- Plan backwards from a project deadline
-- Define dependencies between subprojects
-- Calculate minimum project duration using working days
-- Manage employees and competency labels
-- Track available resource capacity per quarter
-- Compare project requirements with available capacity
-- Flag scheduling and resource-capacity conflicts
-- Estimate project labor costs using hourly rates per competency
-- View resource usage both by project and across multiple projects
-- Simple user authentication
+- Organize projects into stages and tasks, with a start date and deadline.
+- Estimate task hours using best-case, most likely, and worst-case estimates.
+- Define which stages and tasks must finish before other work can begin.
+- Assign employees based on their skills and daily working hours.
+- Calculate working-day schedules and check whether plans meet their deadlines.
+- Find employees with available time and spot daily workload conflicts across projects.
+- Estimate labor costs using the hourly rate for each skill.
+- Track progress, upcoming deadlines, and project risks through a dashboard overview.
+- Control access through user accounts and roles.
 
-## Planning Model
+## How planning works
 
-The planner evaluates a project from three perspectives:
+A **project** contains **stages**, and each stage contains **tasks**. Tasks describe the work to be done, its estimated hours, the skill it requires, and the employees assigned to it.
 
-1. **Schedule** — Can the dependency chain be completed before the deadline?
-2. **Capacity** — Are enough resource hours available for the required competencies?
-3. **Cost** — What is the estimated labor cost of the project?
+Schedules calculate forward from the project start date, using Monday to Friday as working days. The order of work, assigned employees' capacity, and each task's minimum duration determine the planned dates. The calculated finish date is then compared with the project deadline.
 
-Projects that are not feasible are still allowed in the system but are clearly flagged, allowing the manager to adjust the deadline or project plan.
+Estimo helps managers answer three questions:
 
-## Task assignment response contract
+- **Schedule:** Can the planned work finish before the deadline?
+- **Capacity:** Do employees have enough available hours, including work on other projects?
+- **Cost:** What is the estimated labor cost based on the work and required skills?
 
-Task responses (`GET /api/v1/tasks`, `GET /api/v1/tasks/{id}`, task update responses,
-and tasks nested in project/stage responses) include `assignedEmployees`, sorted by employee ID:
+A plan can still be saved when it exceeds its deadline. Workload conflicts are reported separately so managers can adjust assignments, timing, or scope. These checks highlight problems; they do not automatically resolve conflicting assignments.
 
-```json
-{
-  "assignedEmployees": [
-    {
-      "id": 42,
-      "firstName": "Alex",
-      "lastName": "Jensen",
-      "active": false,
-      "dailyCapacity": 7.5
-    }
-  ]
-}
-```
+When a task has no available, eligible employees, its schedule may remain undetermined until staffing is resolved. Inactive employees and employees who no longer have the required skill do not contribute capacity to unfinished work. Existing assignments remain visible, with warnings where relevant. Completed tasks retain their recorded planning dates and durations when available.
 
-An unassigned task returns an empty array. Deactivating an employee preserves existing
-assignments on both unfinished and completed tasks. Their identity and current active
-status remain visible; task estimates, competencies, and project/stage relationships
-are preserved. These references describe current employee details, not a snapshot at assignment time.
+## Running locally
 
-`dailyCapacity` is the employee's configured capacity, not their available contribution.
-Inactive employees contribute no capacity to unfinished tasks or to `GET /api/v1/employee/capacity`.
-Active assignees who have lost the task's required competence also contribute no unfinished-task capacity.
-Task responses include `staffingWarnings` identifying affected task/employee IDs; project schedules aggregate
-these warnings in detail and list responses. Warnings clear after reactivation/restored eligibility and reload.
-See [Staffing warnings](docs/api/tasks.md#staffing-warnings). In-progress calculations use the whole estimate.
-An unfinished task with only inactive assignees has `staffingStatus: "NO_AVAILABLE_CAPACITY"`
-and null durations/dates. Completed tasks retain their recorded planning dates and durations and return no future
-staffing warnings. Legacy completed tasks without snapshots use the documented fallback with all assignees.
-Filtering employees for new staffing must not filter `assignedEmployees`.
-New assignments reject inactive employees; replacing an unfinished task's assignments may
-retain an already assigned inactive employee. Completed task assignments cannot be changed.
+The backend uses Java 25, Maven, Javalin, Hibernate, and PostgreSQL.
 
+1. Install Java 25 and Maven, and create a local PostgreSQL database on port `5432`.
+2. Set `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD` as environment variables for that database.
+3. Set `JWT_ISSUER` and `JWT_SECRET` for authentication. The secret must be at least 32 characters long. See [.env.example](.env.example) for example variable names; configure these in your shell or IDE before running.
+4. With Docker running for the database-backed tests, build and check the project, then start the API:
+
+   ```sh
+   mvn verify
+   java -jar target/app.jar
+   ```
+
+The server runs at `http://localhost:7070`, with API endpoints under `/api/v1`.
+
+## Further documentation
+
+- [API overview](docs/API.md) — authentication, roles, endpoints, and request examples.
+- [Projects and scheduling](docs/api/projects.md) — project structure and deadline checks.
+- [Tasks and staffing](docs/api/tasks.md) — estimates, assignments, warnings, and completed planning records.
+- [Employee workload](docs/api/workload.md) — daily availability and conflicts across projects.
+- [Coding standards](docs/coding-standards.md) — development conventions and testing guidance.
+- [Definition of Done](docs/definition-of-done.md) — requirements for completing a user story.
+- [Dependency migration and deployment](docs/dependency-migration.md) — guidance for existing dependency data and rollout.
+
+## Project quality
+
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=coverage)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=JesperTAndersen_4Sem_Scrum_API)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
-[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
+[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-dark.svg)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
