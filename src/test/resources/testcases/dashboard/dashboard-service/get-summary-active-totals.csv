@@ -1,0 +1,6 @@
+projectStatus,taskStatus,expectedTotalHours,expectedRemainingHours,expectedTotalCost,expectedTaskCount,reason
+DRAFT,NOT_STARTED,7.5,7.5,6375,1,"DT R1: not started task in an active project counts as remaining"
+PLANNED,IN_PROGRESS,7.5,7.5,6375,1,"DT R1: task in progress in an active project counts as remaining"
+IN_PROGRESS,DONE,7.5,0.0,6375,1,"DT R2: done task counts in the totals and task counts but not as remaining"
+COMPLETED,NOT_STARTED,0.0,0.0,0,0,"DT R3: unfinished task in a completed project is left out of every total"
+COMPLETED,DONE,0.0,0.0,0,0,"DT R3: done task in a completed project is left out of every total and task count"

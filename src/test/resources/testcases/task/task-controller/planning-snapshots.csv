@@ -1,0 +1,13 @@
+status,change,expectedLabor,expectedScheduled,expectedStart,expectedEnd,reason
+DONE,CUSTOM_CAPACITY,4.0,5.0,2030-01-07,2030-01-11,AC: completed task ignores changed custom capacity after reload
+DONE,COMPANY_CAPACITY,4.0,5.0,2030-01-07,2030-01-11,AC: completed task ignores changed company standard after reload
+DONE,DEACTIVATION,4.0,5.0,2030-01-07,2030-01-11,AC: completed task keeps its planning values after deactivation
+DONE,PROJECT_START,4.0,5.0,2030-01-07,2030-01-11,AC: project recalculation cannot move completed dates
+NOT_STARTED,CUSTOM_CAPACITY,10.0,10.0,2030-01-07,2030-01-18,AC: not started task uses current custom capacity
+IN_PROGRESS,CUSTOM_CAPACITY,10.0,10.0,2030-01-07,2030-01-18,AC: in progress task uses current custom capacity
+NOT_STARTED,COMPANY_CAPACITY,10.0,10.0,2030-01-07,2030-01-18,AC: not started task uses current company standard
+IN_PROGRESS,COMPANY_CAPACITY,10.0,10.0,2030-01-07,2030-01-18,AC: in progress task uses current company standard
+NOT_STARTED,DEACTIVATION,NULL,NULL,NULL,NULL,AC: not started task loses unavailable capacity
+IN_PROGRESS,DEACTIVATION,NULL,NULL,NULL,NULL,AC: in progress task loses unavailable capacity
+NOT_STARTED,PROJECT_START,4.0,5.0,2030-01-14,2030-01-18,AC: not started task follows the new project start
+IN_PROGRESS,PROJECT_START,4.0,5.0,2030-01-14,2030-01-18,AC: in progress task follows the new project start

@@ -1,0 +1,6 @@
+body,expected,reason
+NULL,400,"EP: request body is missing"
+"{",400,"EP: request body is malformed JSON"
+"{""firstName"":""Ada"",""lastName"":""Lovelace"",""email"":""weak.password@example.com"",""password"":""password""}",400,"EP: password is too weak (representative of register)"
+"{""firstName"":""   "",""lastName"":""Lovelace"",""email"":""blank.name@example.com"",""password"":""Password1!""}",400,"EP: firstName is whitespace only"
+"{""firstName"":""Alice"",""lastName"":""Manager"",""email"":""alice@example.com"",""password"":""Password1!""}",409,"EP: email is already registered"

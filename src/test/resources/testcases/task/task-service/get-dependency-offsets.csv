@@ -1,0 +1,6 @@
+firstPredecessorDays,secondPredecessorDays,expected,reason
+NULL,NULL,0.0,"EP: no predecessors, so the task starts at offset 0"
+2,NULL,2.0,"EP: one predecessor, so the task starts when it finishes"
+2,3,3.0,"BVA: the second predecessor finishes later"
+3,2,3.0,"BVA: the first predecessor finishes later"
+2,2,2.0,"BVA: both predecessors finish at the same offset"

@@ -1,32 +1,67 @@
 package app.config;
 
-import app.config.hibernate.HibernateConfig;
-import app.controllers.implementations.*;
-import app.controllers.interfaces.IHealthCheckController;
-import app.controllers.interfaces.ISecurityController;
-import app.controllers.interfaces.IUserController;
-import app.controllers.interfaces.generic.ICrudController;
-import app.persistence.implementations.CompetenceDAO;
-import app.persistence.implementations.ProjectDAO;
-import app.persistence.implementations.StageDAO;
-import app.persistence.implementations.UserDAO;
-import app.persistence.interfaces.specific.ICompetenceDAO;
-import app.persistence.interfaces.specific.IProjectDAO;
-import app.persistence.interfaces.specific.IStageDAO;
-import app.persistence.interfaces.specific.IUserDAO;
-import app.services.implementations.CompetenceService;
-import app.services.implementations.SecurityService;
-import app.services.implementations.ProjectService;
-import app.services.implementations.StageService;
-import app.services.implementations.UserService;
-import app.services.interfaces.ICompetenceService;
-import app.services.interfaces.ISecurityService;
-import app.services.interfaces.IProjectService;
-import app.services.interfaces.IStageService;
-import app.services.interfaces.IUserService;
+import app.dashboard.domain.DashboardService;
+import app.dashboard.domain.IDashboardService;
+import app.dashboard.presentation.DashboardController;
+import app.dashboard.presentation.IDashboardController;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import app.capacity.data.CompanyCapacityDAO;
+import app.capacity.data.ICompanyCapacityDAO;
+import app.capacity.domain.CompanyCapacityService;
+import app.capacity.domain.ICompanyCapacityService;
+import app.capacity.presentation.CompanyCapacityController;
+import app.capacity.presentation.ICompanyCapacityController;
+import app.competence.data.CompetenceDAO;
+import app.competence.data.ICompetenceDAO;
+import app.competence.domain.CompetenceService;
+import app.competence.domain.ICompetenceService;
+import app.competence.presentation.CompetenceController;
+import app.competence.presentation.ICompetenceController;
+import app.config.hibernate.HibernateConfig;
+import app.employee.data.EmployeeDAO;
+import app.employee.data.IEmployeeDAO;
+import app.employee.domain.EmployeeService;
+import app.employee.domain.IEmployeeService;
+import app.employee.presentation.EmployeeController;
+import app.employee.presentation.IEmployeeController;
+import app.workload.domain.IEmployeeWorkloadService;
+import app.workload.domain.EmployeeWorkloadService;
+import app.workload.presentation.WorkloadController;
+import app.workload.presentation.IWorkloadController;
+import app.presentation.health.HealthCheckController;
+import app.presentation.health.IHealthCheckController;
+import app.project.data.IProjectDAO;
+import app.project.data.ProjectDAO;
+import app.project.domain.IProjectService;
+import app.project.domain.IScheduleService;
+import app.project.domain.ProjectService;
+import app.project.domain.ScheduleService;
+import app.project.presentation.ProjectController;
+import app.security.domain.ISecurityService;
+import app.security.domain.SecurityService;
+import app.security.presentation.ISecurityController;
+import app.security.presentation.SecurityController;
+import app.shared.presentation.ICrudController;
+import app.stage.data.IStageDAO;
+import app.stage.data.StageDAO;
+import app.stage.domain.IStageService;
+import app.stage.domain.StageService;
+import app.stage.presentation.StageController;
+import app.task.data.ITaskDAO;
+import app.task.data.TaskDAO;
+import app.task.domain.ITaskService;
+import app.task.domain.TaskService;
+import app.task.presentation.TaskController;
+import app.user.data.IUserDAO;
+import app.user.data.UserDAO;
+import app.user.domain.IUserService;
+import app.user.domain.UserService;
+import app.user.presentation.IUserController;
+import app.user.presentation.UserController;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.Getter;
 
@@ -39,7 +74,15 @@ public final class DependencyContainer
     private final IUserDAO userDAO;
     private final ICompetenceDAO competenceDAO;
     private final IStageDAO stageDAO;
+    private final ITaskDAO taskDAO;
     private final IProjectDAO projectDAO;
+    private final IEmployeeDAO employeeDAO;
+    private final ICompanyCapacityDAO companyCapacityDAO;
+
+    @Getter
+    private final ICompanyCapacityService companyCapacityService;
+    @Getter
+    private final ICompanyCapacityController companyCapacityController;
 
     @Getter
     private final IUserService userService;
@@ -50,7 +93,7 @@ public final class DependencyContainer
     @Getter
     private final IUserController userController;
     @Getter
-    private final ICrudController competenceController;
+    private final ICompetenceController competenceController;
     @Getter
     private final IStageService stageService;
     @Getter
@@ -63,14 +106,37 @@ public final class DependencyContainer
     private final ISecurityController securityController;
     @Getter
     private final ISecurityService securityService;
+    @Getter
+    private final ITaskService taskService;
+    @Getter
+    private final TaskController taskController;
+    @Getter
+    private final IScheduleService scheduleService;
+    @Getter
+    private final IEmployeeService employeeService;
+    @Getter
+    private final IEmployeeController employeeController;
+    @Getter
+    private final IEmployeeWorkloadService employeeWorkloadService;
+    @Getter
+    private final IWorkloadController workloadController;
+    @Getter
+    private final IDashboardService dashboardService;
+    @Getter
+    private final IDashboardController dashboardController;
 
     public DependencyContainer(EntityManagerFactory entityManagerFactory)
     {
         this.entityManagerFactory = entityManagerFactory;
-
         this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT);
         this.healthCheckController = new HealthCheckController(entityManagerFactory);
+
+        this.companyCapacityDAO = new CompanyCapacityDAO(entityManagerFactory);
+        this.companyCapacityDAO.initialize();
+        this.companyCapacityService = new CompanyCapacityService(companyCapacityDAO);
+        this.companyCapacityController = new CompanyCapacityController(companyCapacityService);
 
         this.userDAO = new UserDAO(entityManagerFactory);
         this.userService = new UserService(userDAO);
@@ -84,12 +150,23 @@ public final class DependencyContainer
         this.projectDAO = new ProjectDAO(entityManagerFactory);
         this.stageService = new StageService(stageDAO, projectDAO);
         this.stageController = new StageController(stageService);
-
-        this.projectService = new ProjectService(projectDAO);
+        this.scheduleService = new ScheduleService();
+        this.projectService = new ProjectService(projectDAO, userDAO, scheduleService);
         this.projectController = new ProjectController(projectService);
-
         this.securityService = new SecurityService(userDAO);
         this.securityController = new SecurityController(securityService);
+
+        this.employeeDAO = new EmployeeDAO(entityManagerFactory);
+        this.employeeService = new EmployeeService(employeeDAO, companyCapacityDAO, competenceDAO);
+        this.employeeController = new EmployeeController(employeeService);
+        this.taskDAO = new TaskDAO(entityManagerFactory);
+        this.taskService = new TaskService(taskDAO, stageDAO, competenceDAO, employeeDAO);
+        this.taskController = new TaskController(taskService);
+        this.employeeWorkloadService = new EmployeeWorkloadService(taskDAO, employeeDAO);
+        this.workloadController = new WorkloadController(employeeWorkloadService);
+
+        this.dashboardService = new DashboardService(projectDAO, scheduleService, employeeService);
+        this.dashboardController = new DashboardController(dashboardService);
     }
 
     public static DependencyContainer getInstance()

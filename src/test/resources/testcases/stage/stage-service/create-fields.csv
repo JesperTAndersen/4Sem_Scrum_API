@@ -1,0 +1,10 @@
+projectId,name,expected,reason
+1,Planning,ACCEPT,"EP: valid project id and name"
+NULL,Planning,BadRequestException,"EP: projectId is null"
+99,Planning,NotFoundException,"EP: projectId is positive but unknown"
+1,NULL,BadRequestException,"EP: name is null"
+1,"",BadRequestException,"EP + BVA: name is empty (length 0)"
+1,"   ",BadRequestException,"EP: name is whitespace only"
+1,A,ACCEPT,"BVA: name length 1 (minimum)"
+1,AB,ACCEPT,"BVA: name length 2"
+1,"  Planning  ",ACCEPT,"EP: surrounding whitespace is trimmed"

@@ -1,0 +1,11 @@
+method,path,expected,reason
+GET,/competences/abc,400,"EP: non-numeric competence id"
+GET,/competences/0,400,"EP + BVA: competence id 0"
+PUT,/competences/abc,400,"EP: non-numeric competence id"
+PUT,/competences/0,400,"EP + BVA: competence id 0"
+PATCH,/competences/abc/activate,400,"EP: non-numeric competence id"
+PATCH,/competences/0/activate,400,"EP + BVA: competence id 0"
+PATCH,/competences/abc/deactivate,400,"EP: non-numeric competence id"
+PATCH,/competences/0/deactivate,400,"EP + BVA: competence id 0"
+DELETE,/competences/abc,400,"EP: non-numeric competence id"
+DELETE,/competences/0,400,"EP + BVA: competence id 0"

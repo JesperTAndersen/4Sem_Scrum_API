@@ -1,0 +1,13 @@
+authUserId,targetUserId,email,expected,reason
+1,1,ada.byron@example.com,ACCEPT,"DT: own account with a new valid email"
+1,2,ada.byron@example.com,ForbiddenException,"DT: another user's account"
+99,99,ada.byron@example.com,NotFoundException,"DT: own id, but the user does not exist"
+1,1,NULL,BadRequestException,"EP: email is null"
+1,1,"",BadRequestException,"EP: email is empty"
+1,1,"   ",BadRequestException,"EP: email is whitespace only"
+1,1,ada.byron,BadRequestException,"EP: email has no @ and no domain"
+1,1,ada@example,BadRequestException,"EP: email domain has no top-level domain"
+1,1,@example.com,BadRequestException,"EP: email has no local part"
+1,1,bob@example.com,ConflictException,"EP: email belongs to another user"
+1,1,BOB@Example.com,ConflictException,"EP: email belongs to another user, ignoring case"
+1,1,ada@example.com,ConflictException,"EP: email is the user's own current email"

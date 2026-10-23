@@ -1,0 +1,21 @@
+date,token,expected,reason,competenceId
+2030-01-07,NONE,401,Decision table: authentication required,NULL
+NULL,NONE,401,Decision table: authentication before date validation,NULL
+2030-01-07,EMPLOYEE,403,Decision table: employee role cannot read availability,NULL
+NULL,PROJECT_MANAGER,400,EP: date is required,NULL
+"",PROJECT_MANAGER,400,EP: empty date is rejected,NULL
+   ,PROJECT_MANAGER,400,EP: blank date is rejected,NULL
+not-a-date,PROJECT_MANAGER,400,EP: malformed date is rejected,NULL
+2030-1-7,PROJECT_MANAGER,400,EP: date must be zero padded,NULL
+2030-02-29,PROJECT_MANAGER,400,BVA: invalid leap day is rejected,NULL
+2030-01-07,PROJECT_MANAGER,200,EP: valid weekday,NULL
+2030-01-12,PROJECT_MANAGER,200,BVA: Saturday returns no working availability,NULL
+2030-01-13,PROJECT_MANAGER,200,BVA: Sunday returns no working availability,NULL
+2032-02-29,PROJECT_MANAGER,200,BVA: valid leap day is accepted,NULL
+2030-01-07,PROJECT_MANAGER,400,BVA: zero competence ID,0
+2030-01-07,PROJECT_MANAGER,400,BVA: negative competence ID,-1
+2030-01-07,PROJECT_MANAGER,400,EP: nonnumeric competence ID,abc
+2030-01-07,PROJECT_MANAGER,400,EP: empty competence ID,""
+2030-01-07,PROJECT_MANAGER,400,EP: blank competence ID," "
+2030-01-07,PROJECT_MANAGER,400,BVA: competence ID exceeds Long range,9223372036854775808
+2030-01-07,PROJECT_MANAGER,200,EP: unknown competence returns empty employees,999999

@@ -1,14 +1,22 @@
 package app.config;
 
-import app.routes.HealthCheckRoute;
-import app.routes.*;
+import app.capacity.presentation.CompanyCapacityRoutes;
+import app.competence.presentation.CompetenceRoutes;
+import app.dashboard.presentation.DashboardRoutes;
+import app.employee.presentation.EmployeeRoutes;
 import app.exceptions.ApiException;
-import app.routes.UserRoutes;
-import app.controllers.interfaces.ISecurityController;
+import app.exceptions.ConfigurationException;
+import app.exceptions.ErrorResponse;
+import app.presentation.Routes;
+import app.presentation.health.HealthCheckRoute;
+import app.project.presentation.ProjectRoutes;
+import app.security.presentation.ISecurityController;
+import app.security.presentation.SecurityRoutes;
+import app.stage.presentation.StageRoutes;
+import app.task.presentation.TaskRoutes;
+import app.user.presentation.UserRoutes;
 import app.utils.ExecutionTimer;
 import app.utils.JWTUtil;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.HttpStatus;
@@ -16,8 +24,6 @@ import io.javalin.json.JavalinJackson;
 import jakarta.persistence.EntityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public class ApplicationConfig
 {
@@ -75,9 +81,15 @@ public class ApplicationConfig
         return new Routes(
                 new HealthCheckRoute(dependencyContainer.getHealthCheckController()),
                 new UserRoutes(dependencyContainer.getUserController()),
+                new StageRoutes(dependencyContainer.getStageController()),
+                new TaskRoutes(dependencyContainer.getTaskController()),
                 new CompetenceRoutes(dependencyContainer.getCompetenceController()),
                 new ProjectRoutes((dependencyContainer.getProjectController())),
-                new SecurityRoutes(dependencyContainer.getSecurityController())
+                new SecurityRoutes(dependencyContainer.getSecurityController()),
+                new EmployeeRoutes(dependencyContainer.getEmployeeController(),
+                        dependencyContainer.getWorkloadController()),
+                new CompanyCapacityRoutes(dependencyContainer.getCompanyCapacityController()),
+                new DashboardRoutes(dependencyContainer.getDashboardController())
         );
     }
 
@@ -121,26 +133,45 @@ public class ApplicationConfig
     {
         config.routes.exception(ApiException.class, (e, ctx) ->
         {
-            log.warn("{} {} - {}", ctx.method(), ctx.path(), e.getMessage());
-            ctx.status(e.getCode())
-                    .json(Map.of("status", e.getCode(),
-                            "message", e.getMessage()));
+            boolean isServerFault = e.getCode() >= 500;
+            ErrorResponse error = isServerFault
+                    ? ErrorResponse.of(e.getCode(), "Internal server error", ctx.path())
+                    : ErrorResponse.of(e.getCode(), e.getMessage(), ctx.path());
+
+            if (isServerFault)
+            {
+                log.error("{} {} - [{}] {}", ctx.method(), ctx.path(), error.errorId(), e.getMessage(), e);
+            }
+            else
+            {
+                log.warn("{} {} - [{}] {}", ctx.method(), ctx.path(), error.errorId(), e.getMessage());
+            }
+
+            ctx.status(e.getCode()).json(error);
+        });
+
+        config.routes.exception(ConfigurationException.class, (e, ctx) ->
+        {
+            ErrorResponse error = ErrorResponse.of(HttpStatus.INTERNAL_SERVER_ERROR.getCode(),
+                    "Internal server error", ctx.path());
+            log.error("{} {} - [{}] Configuration error: {}", ctx.method(), ctx.path(), error.errorId(), e.getMessage(), e);
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR.getCode()).json(error);
         });
 
         config.routes.exception(NumberFormatException.class, (e, ctx) ->
         {
-            log.warn("{} {} - Invalid number format: {}", ctx.method(), ctx.path(), e.getMessage());
-            ctx.status(HttpStatus.BAD_REQUEST.getCode())
-                    .json(Map.of("status", HttpStatus.BAD_REQUEST.getCode(),
-                            "message", "Invalid ID format: expected a number"));
+            ErrorResponse error = ErrorResponse.of(HttpStatus.BAD_REQUEST.getCode(),
+                    "Invalid ID format: expected a number", ctx.path());
+            log.warn("{} {} - [{}] Invalid number format: {}", ctx.method(), ctx.path(), error.errorId(), e.getMessage());
+            ctx.status(HttpStatus.BAD_REQUEST.getCode()).json(error);
         });
 
         config.routes.exception(Exception.class, (e, ctx) ->
         {
-            log.error("{} {} - Unhandled exception", ctx.method(), ctx.path(), e);
-            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR.getCode())
-                    .json(Map.of("status", HttpStatus.INTERNAL_SERVER_ERROR.getCode(),
-                            "message", "Internal server error"));
+            ErrorResponse error = ErrorResponse.of(HttpStatus.INTERNAL_SERVER_ERROR.getCode(),
+                    "Internal server error", ctx.path());
+            log.error("{} {} - [{}] Unhandled exception", ctx.method(), ctx.path(), error.errorId(), e);
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR.getCode()).json(error);
         });
     }
 

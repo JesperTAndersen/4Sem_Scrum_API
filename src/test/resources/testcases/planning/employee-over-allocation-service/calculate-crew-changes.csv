@@ -1,0 +1,6 @@
+change,expectedDailyHours,reason
+STANDARD_CAPACITY,2.5,"Decision table: company standard change alters schedule and shares on next calculation"
+REACTIVATION,7.5,"Decision table: reactivation restores assessed crew contribution"
+DUPLICATE_IDENTITY,7.5,"EP: duplicate employee identity contributes once"
+MULTIPLE_COMPETENCES,7.5,"EP: several competences do not multiply an employee contribution"
+ASSIGNMENT_REMOVED,7.5,"Decision table: removing assignment recalculates task duration"

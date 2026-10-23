@@ -1,0 +1,9 @@
+id,name,expected,reason
+1,Implementation,ACCEPT,"EP: existing stage and valid name"
+99,Implementation,NotFoundException,"EP: stage id is positive but unknown"
+1,NULL,BadRequestException,"EP: name is null"
+1,"",BadRequestException,"EP + BVA: name is empty (length 0)"
+1,"   ",BadRequestException,"EP: name is whitespace only"
+1,A,ACCEPT,"BVA: name length 1 (minimum)"
+1,AB,ACCEPT,"BVA: name length 2"
+1,"  Implementation  ",ACCEPT,"EP: surrounding whitespace is trimmed"

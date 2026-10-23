@@ -1,0 +1,5 @@
+id,active,expected,reason
+1,false,ACCEPT,"EP: deactivate an active competence"
+3,true,ACCEPT,"EP: activate an inactive competence"
+99,true,NotFoundException,"EP: activate an unknown competence"
+99,false,NotFoundException,"EP: deactivate an unknown competence"

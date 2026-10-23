@@ -1,0 +1,6 @@
+body,expected,reason
+NULL,400,"EP: request body is missing"
+"{""projectId"":""abc"",""name"":""Planning""}",400,"EP: projectId is not a number"
+"{""projectId"":0,""name"":""Planning""}",400,"EP + BVA: projectId 0"
+"{""projectId"":1,""name"":""""}",400,"EP + BVA: name is empty (representative of create-fields)"
+"{""projectId"":999999,""name"":""Planning""}",404,"EP: projectId is positive but unknown"

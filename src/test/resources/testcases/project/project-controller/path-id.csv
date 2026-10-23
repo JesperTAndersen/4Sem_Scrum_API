@@ -1,0 +1,7 @@
+method,path,expected,reason
+GET,/projects/abc,400,"EP: non-numeric project id"
+GET,/projects/0,400,"EP + BVA: project id 0"
+PUT,/projects/abc,400,"EP: non-numeric project id"
+PUT,/projects/0,400,"EP + BVA: project id 0"
+DELETE,/projects/abc,400,"EP: non-numeric project id"
+DELETE,/projects/0,400,"EP + BVA: project id 0"

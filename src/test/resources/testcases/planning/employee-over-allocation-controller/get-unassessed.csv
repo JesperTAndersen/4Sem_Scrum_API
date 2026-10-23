@@ -1,0 +1,3 @@
+staffing,expectedReason,reason
+UNASSIGNED,STAFFING_REQUIRED,"EP: unassigned positive-effort task is exposed by ID"
+INACTIVE,NO_AVAILABLE_CAPACITY,"Decision table: deactivation remains saveable and undetermined task is exposed by ID"

@@ -1,0 +1,3 @@
+id,expected,reason
+1,ACCEPT,"EP: existing user id"
+99,NotFoundException,"EP: user id is positive but unknown"

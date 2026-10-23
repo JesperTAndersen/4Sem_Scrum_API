@@ -1,0 +1,3 @@
+dependency,reason
+TASK,AC: completed task predecessor keeps successor dates after capacity change and deactivation
+STAGE,AC: completed stage predecessor keeps successor dates after capacity change and deactivation

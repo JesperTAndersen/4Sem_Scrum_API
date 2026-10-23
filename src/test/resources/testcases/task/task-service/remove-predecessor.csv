@@ -1,0 +1,5 @@
+taskId,predecessorId,expected,reason
+99,1,NotFoundException,"DT: task does not exist"
+2,99,NotFoundException,"DT: predecessor does not exist"
+1,2,BadRequestException,"DT: the dependency does not exist"
+2,1,ACCEPT,"DT: an existing dependency is removed"

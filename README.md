@@ -27,3 +27,44 @@ The planner evaluates a project from three perspectives:
 3. **Cost** — What is the estimated labor cost of the project?
 
 Projects that are not feasible are still allowed in the system but are clearly flagged, allowing the manager to adjust the deadline or project plan.
+
+## Task assignment response contract
+
+Task responses (`GET /api/v1/tasks`, `GET /api/v1/tasks/{id}`, task update responses,
+and tasks nested in project/stage responses) include `assignedEmployees`, sorted by employee ID:
+
+```json
+{
+  "assignedEmployees": [
+    {
+      "id": 42,
+      "firstName": "Alex",
+      "lastName": "Jensen",
+      "active": false,
+      "dailyCapacity": 7.5
+    }
+  ]
+}
+```
+
+An unassigned task returns an empty array. Deactivating an employee preserves existing
+assignments on both unfinished and completed tasks. Their identity and current active
+status remain visible; task estimates, competencies, and project/stage relationships
+are preserved. These references describe current employee details, not a snapshot at assignment time.
+
+`dailyCapacity` is the employee's configured capacity, not their available contribution.
+Inactive employees contribute no capacity to unfinished tasks or to `GET /api/v1/employee/capacity`.
+Active assignees who have lost the task's required competence also contribute no unfinished-task capacity.
+Task responses include `staffingWarnings` identifying affected task/employee IDs; project schedules aggregate
+these warnings in detail and list responses. Warnings clear after reactivation/restored eligibility and reload.
+See [Staffing warnings](docs/api/tasks.md#staffing-warnings). In-progress calculations use the whole estimate.
+An unfinished task with only inactive assignees has `staffingStatus: "NO_AVAILABLE_CAPACITY"`
+and null durations/dates. Completed tasks retain their recorded planning dates and durations and return no future
+staffing warnings. Legacy completed tasks without snapshots use the documented fallback with all assignees.
+Filtering employees for new staffing must not filter `assignedEmployees`.
+New assignments reject inactive employees; replacing an unfinished task's assignments may
+retain an already assigned inactive employee. Completed task assignments cannot be changed.
+
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=coverage)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=JesperTAndersen_4Sem_Scrum_API)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)

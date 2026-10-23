@@ -30,6 +30,7 @@ target/
 build/
 out/
 *.class
+dependency-reduced-pom.xml
 
 # JVM crash logs / profiling
 hs_err_pid*

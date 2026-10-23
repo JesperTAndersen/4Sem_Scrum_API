@@ -1,0 +1,7 @@
+from,to,expected,reason
+NULL,2030-01-07,BadRequestException,"EP: missing start date"
+2030-01-07,NULL,BadRequestException,"EP: missing end date"
+2030-01-07,2030-01-06,BadRequestException,"EP + BVA: end one day before start"
+2030-01-07,2030-01-07,ACCEPT,"BVA: inclusive single day and empty database"
+2030-01-07,2030-01-08,ACCEPT,"BVA: end one day after start"
+2030-01-12,2030-01-13,ACCEPT,"EP: weekend-only range"

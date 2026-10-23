@@ -1,0 +1,9 @@
+taskId,predecessorId,expected,reason
+99,1,NotFoundException,"DT: task does not exist"
+1,99,NotFoundException,"DT: predecessor does not exist"
+1,4,BadRequestException,"DT: tasks belong to different projects"
+1,1,BadRequestException,"DT: task depends on itself"
+2,1,BadRequestException,"DT: dependency already exists"
+1,2,BadRequestException,"DT: direct cycle, task 2 already depends on task 1"
+1,3,BadRequestException,"DT: indirect cycle through task 2"
+3,1,ACCEPT,"DT: valid new dependency within the same project"

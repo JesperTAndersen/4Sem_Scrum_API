@@ -1,0 +1,4 @@
+body,expected,reason
+NULL,400,"EP: request body is missing"
+"{""role"":""ADMIN""}",400,"EP: role is not a known enum value"
+"{}",400,"EP: role is missing (representative of change-role)"

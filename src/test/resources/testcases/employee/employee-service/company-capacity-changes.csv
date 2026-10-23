@@ -1,0 +1,13 @@
+standardCapacity,companyHours,employeeHours,expected,reason
+"False","0.01","6.0","ACCEPT","Decision table: standard mode False and company capacity 0.01"
+"False","5.0","6.0","ACCEPT","Decision table: standard mode False and company capacity 5.0"
+"False","9.0","6.0","ACCEPT","Decision table: standard mode False and company capacity 9.0"
+"True","0.01","0.01","ACCEPT","Decision table: standard mode True and company capacity 0.01"
+"True","5.0","5.0","ACCEPT","Decision table: standard mode True and company capacity 5.0"
+"True","9.0","9.0","ACCEPT","Decision table: standard mode True and company capacity 9.0"
+"False","0.0","6.0","BadRequestException","Decision table: rejected company hours 0.0 with standard mode False"
+"False","NaN","6.0","BadRequestException","Decision table: rejected company hours NaN with standard mode False"
+"False","Infinity","6.0","BadRequestException","Decision table: rejected company hours Infinity with standard mode False"
+"True","0.0","7.5","BadRequestException","Decision table: rejected company hours 0.0 with standard mode True"
+"True","NaN","7.5","BadRequestException","Decision table: rejected company hours NaN with standard mode True"
+"True","Infinity","7.5","BadRequestException","Decision table: rejected company hours Infinity with standard mode True"

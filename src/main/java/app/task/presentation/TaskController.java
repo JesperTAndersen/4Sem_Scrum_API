@@ -1,0 +1,112 @@
+package app.task.presentation;
+
+import app.task.presentation.dto.TaskCreateDTO;
+import app.task.presentation.dto.TaskDTO;
+import app.task.presentation.dto.TaskEmployeesDTO;
+import app.task.presentation.dto.TaskUpdateDTO;
+import app.task.domain.ITaskService;
+import app.shared.presentation.ICrudController;
+import app.utils.RequestUtil;
+import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
+
+import java.util.Objects;
+
+public class TaskController implements ICrudController
+{
+    private final ITaskService taskService;
+
+    public TaskController(ITaskService taskService)
+    {
+        this.taskService = taskService;
+    }
+
+    @Override
+    public void create(Context ctx)
+    {
+        TaskCreateDTO dto = ctx.bodyValidator(TaskCreateDTO.class)
+                .check(Objects::nonNull, "Task payload is required")
+                .check(task -> task.stageId() != null, "Stage id is required")
+                .check(task -> task.name() != null && !task.name().isBlank(), "Task name is required")
+                .check(task -> task.minimumDurationInDays() != null, "Task minimum duration is required")
+                .check(task -> task.competenceId() != null, "Competence is required")
+                .check(task -> task.bestEstimate() != null, "Task best estimate is required")
+                .check(task -> task.likelyEstimate() != null, "Task likely estimate is required")
+                .check(task -> task.worstEstimate() != null, "Task worst estimate is required")
+                .get();
+        ctx.status(201).json(taskService.create(dto));
+    }
+
+    @Override
+    public void get(Context ctx)
+    {
+        ctx.status(HttpStatus.OK).json(taskService.get(RequestUtil.requirePathId(ctx, "id")));
+    }
+
+    @Override
+    public void getAll(Context ctx)
+    {
+        ctx.status(HttpStatus.OK).json(taskService.getAll());
+    }
+
+    @Override
+    public void update(Context ctx)
+    {
+        Long id = RequestUtil.requirePathId(ctx, "id");
+        TaskUpdateDTO dto = ctx.bodyValidator(TaskUpdateDTO.class)
+                .check(Objects::nonNull, "Task payload is required")
+                .get();
+        ctx.status(HttpStatus.OK).json(taskService.update(id, dto));
+    }
+
+    @Override
+    public void delete(Context ctx)
+    {
+        taskService.delete(RequestUtil.requirePathId(ctx, "id"));
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void addPredecessor(Context ctx)
+    {
+        Long taskId = RequestUtil.requirePathId(ctx, "taskId");
+        Long predecessorId = RequestUtil.requirePathId(ctx, "predecessorId");
+        taskService.addPredecessor(taskId, predecessorId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void removePredecessor(Context ctx)
+    {
+        Long taskId = RequestUtil.requirePathId(ctx, "taskId");
+        Long predecessorId = RequestUtil.requirePathId(ctx, "predecessorId");
+        taskService.removePredecessor(taskId, predecessorId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void assignEmployee(Context ctx)
+    {
+        Long taskId = RequestUtil.requirePathId(ctx, "taskId");
+        Long employeeId = RequestUtil.requirePathId(ctx, "employeeId");
+        taskService.assignEmployee(taskId, employeeId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void unassignEmployee(Context ctx)
+    {
+        Long taskId = RequestUtil.requirePathId(ctx, "taskId");
+        Long employeeId = RequestUtil.requirePathId(ctx, "employeeId");
+        taskService.unassignEmployee(taskId, employeeId);
+        ctx.status(HttpStatus.NO_CONTENT);
+    }
+
+    public void replaceEmployees(Context ctx)
+    {
+        Long id = RequestUtil.requirePathId(ctx, "id");
+        TaskEmployeesDTO dto = ctx.bodyValidator(TaskEmployeesDTO.class)
+                .check(Objects::nonNull, "Task employees payload cannot be null")
+                .check(body -> body != null && body.employeeIds() != null, "Employee ids are required")
+                .get();
+
+        TaskDTO taskDTO = taskService.replaceEmployees(id, dto);
+        ctx.status(HttpStatus.OK).json(taskDTO);
+    }
+}

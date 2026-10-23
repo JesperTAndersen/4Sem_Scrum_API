@@ -1,9 +1,9 @@
 package app.utils;
 
-import app.dtos.security.AuthenticatedUser;
+import app.security.presentation.dto.AuthenticatedUser;
 import app.exceptions.TokenCreationException;
 import app.exceptions.TokenVerificationException;
-import app.enums.Role;
+import app.security.domain.Role;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -18,7 +18,7 @@ public class JWTUtil
 
     private static final String ISSUER = System.getenv("JWT_ISSUER");
     private static final String SECRET = System.getenv("JWT_SECRET");
-    private static final int EXPIRY = 1000 * 60 * 30; // 30 minutes
+    private static final int EXPIRY = 1000 * 60 * 120; // 120 minutes
     private static final JWSSigner SIGNER;
     private static final JWSVerifier VERIFIER;
 
