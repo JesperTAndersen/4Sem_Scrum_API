@@ -146,7 +146,7 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
     private void calculateTaskWorkload(Project project, Task task, LocalDate startDate, LocalDate endDate,
                                        List<TaskWorkload> taskWorkloads, List<Long> unassessedTaskIds)
     {
-        if (task.getStatus() == Task.TaskStatus.DONE || task.getEstimate() == 0)
+        if (task.getStatus() == Task.TaskStatus.DONE || task.calcEstimate() == 0)
         {
             return;
         }
@@ -172,7 +172,7 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
         }
 
         long workingDays = WorkingDaySchedule.countWorkingDays(dates.startDate(), dates.endDate());
-        double estimatedHours = task.getEstimate();
+        double estimatedHours = task.calcEstimate();
 
         for (Employee employee : availableEmployees)
         {
