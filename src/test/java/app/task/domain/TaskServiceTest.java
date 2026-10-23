@@ -98,10 +98,10 @@ class TaskServiceTest
     @DisplayName("Completion records the updated estimate and minimum duration from either unfinished status")
     void completionRecordsUpdatedPlan(Task.TaskStatus initialStatus)
     {
-        taskService.update(1L, new TaskUpdateDTO(null, null, null, null, initialStatus));
+        taskService.update(1L, new TaskUpdateDTO(null, null, null, null, null, null, initialStatus));
         taskService.assignEmployee(1L, 1L);
 
-        taskService.update(1L, new TaskUpdateDTO(null, 5, 1L, 30.0, Task.TaskStatus.DONE));
+        taskService.update(1L, new TaskUpdateDTO(null, 5, 1L, 30.0, 30.0, 30.0, Task.TaskStatus.DONE));
 
         Task stored = taskDAO.getStored(1L);
         assertThat(stored.getStatus(), is(Task.TaskStatus.DONE));
@@ -116,7 +116,7 @@ class TaskServiceTest
     @DisplayName("Repeated DONE and ordinary edits preserve the original snapshot")
     void completedTaskUpdatesDoNotOverwriteSnapshot()
     {
-        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, null, null, Task.TaskStatus.DONE);
         taskService.update(1L, done);
         Task stored = taskDAO.getStored(1L);
         var recordedAt = stored.getPlanningSnapshotRecordedAt();
@@ -124,7 +124,7 @@ class TaskServiceTest
         Double originalLabor = stored.getCompletedLaborDurationInDays();
         Double originalScheduled = stored.getCompletedScheduledDurationInDays();
 
-        taskService.update(1L, new TaskUpdateDTO("Renamed", 10, 1L, 75.0, null));
+        taskService.update(1L, new TaskUpdateDTO("Renamed", 10, 1L, 75.0, 75.0, 75.0, null));
         taskService.update(1L, done);
 
         assertThat(stored.getPlanningSnapshotRecordedAt(), is(recordedAt));
@@ -138,10 +138,10 @@ class TaskServiceTest
     @DisplayName("Completing a reopened task replaces its snapshot with the new plan")
     void recompletingReopenedTaskRecordsNewPlan(Task.TaskStatus reopenedStatus)
     {
-        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, null, null, Task.TaskStatus.DONE);
         taskService.update(1L, done);
 
-        taskService.update(1L, new TaskUpdateDTO(null, 5, 1L, 30.0, reopenedStatus));
+        taskService.update(1L, new TaskUpdateDTO(null, 5, 1L, 30.0, 30.0, 30.0, reopenedStatus));
         assertThat(taskDAO.getStored(1L).getStatus(), is(reopenedStatus));
         taskService.update(1L, done);
 
@@ -158,7 +158,7 @@ class TaskServiceTest
         taskService.assignEmployee(1L, 1L);
         employees.setActive(1L, false);
 
-        taskService.update(1L, new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE));
+        taskService.update(1L, new TaskUpdateDTO(null, null, null, null, null, null, Task.TaskStatus.DONE));
 
         Task stored = taskDAO.getStored(1L);
         assertThat(stored.hasPlanningSnapshot(), is(true));
@@ -173,7 +173,7 @@ class TaskServiceTest
     void invalidCompletionDoesNotRecordSnapshot()
     {
         assertThrows(BadRequestException.class,
-                () -> taskService.update(1L, new TaskUpdateDTO(null, null, null, 30.0, Task.TaskStatus.DONE)));
+                () -> taskService.update(1L, new TaskUpdateDTO(null, null, null, 30.0, 30.0, 30.0, Task.TaskStatus.DONE)));
 
         assertThat(taskDAO.getStored(1L).getStatus(), is(Task.TaskStatus.NOT_STARTED));
         assertThat(taskDAO.getStored(1L).hasPlanningSnapshot(), is(false));
@@ -185,7 +185,7 @@ class TaskServiceTest
     {
         Stage otherStage = stages.create(new Stage("Delivery", project(1L)));
         // This test deliberately uses the same project id but a different stage id.
-        long otherTaskId = taskService.create(new TaskCreateDTO(otherStage.getId(), "Delivery task", 1L, 0.0, 1)).id();
+        long otherTaskId = taskService.create(new TaskCreateDTO(otherStage.getId(), "Delivery task", 1L, 0.0, 0.0, 0.0, 1)).id();
         assertThrows(BadRequestException.class, () -> taskService.addPredecessor(otherTaskId, 1L));
     }
 
@@ -193,8 +193,8 @@ class TaskServiceTest
     @DisplayName("Blocked task cannot skip directly to DONE or enter IN_PROGRESS")
     void blockedTaskCannotProgress()
     {
-        TaskUpdateDTO progress = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.IN_PROGRESS);
-        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
+        TaskUpdateDTO progress = new TaskUpdateDTO(null, null, null, null, null, null, Task.TaskStatus.IN_PROGRESS);
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, null, null, Task.TaskStatus.DONE);
         assertThrows(BadRequestException.class, () -> taskService.update(2L, progress));
         assertThrows(BadRequestException.class, () -> taskService.update(2L, done));
         taskService.update(1L, done);
@@ -206,27 +206,31 @@ class TaskServiceTest
     @DisplayName("Cannot reopen a predecessor once its successor has started")
     void cannotReopenFinishedPredecessorAfterSuccessorStarts()
     {
-        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE);
-        TaskUpdateDTO progress = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.IN_PROGRESS);
-        TaskUpdateDTO reopen = new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.NOT_STARTED);
+        TaskUpdateDTO done = new TaskUpdateDTO(null, null, null, null, null, null, Task.TaskStatus.DONE);
+        TaskUpdateDTO progress = new TaskUpdateDTO(null, null, null, null, null, null, Task.TaskStatus.IN_PROGRESS);
+        TaskUpdateDTO reopen = new TaskUpdateDTO(null, null, null, null, null, null, Task.TaskStatus.NOT_STARTED);
         taskService.update(1L, done);
         taskService.update(2L, progress);
         assertThrows(BadRequestException.class, () -> taskService.update(1L, reopen));
     }
 
-    @ParameterizedTest(name = "[{index}] {6}")
+    @ParameterizedTest(name = "[{index}] {8}")
     @CsvFileSource(resources = "/testcases/task/task-service/create-fields.csv", numLinesToSkip = 1, nullValues = "NULL")
     @DisplayName("Create - validates the stage, name, competence, estimate and minimum duration")
-    void createValidatesFields(Long stageId, String name, Long competenceId, Double estimate,
-                               Integer minimumDurationInDays, String expected, String reason)
+    void createValidatesFields(Long stageId, String name, Long competenceId, Double bestEstimate,
+                               Double likelyEstimate, Double worstEstimate, Integer minimumDurationInDays, String expected, String reason)
     {
-        TaskCreateDTO dto = new TaskCreateDTO(stageId, name, competenceId, estimate, minimumDurationInDays);
+        TaskCreateDTO dto = new TaskCreateDTO(stageId, name, competenceId, bestEstimate, likelyEstimate, worstEstimate, minimumDurationInDays);
 
         if (expected.equals("ACCEPT"))
         {
             TaskDTO result = taskService.create(dto);
             assertThat(result.name(), is(name.trim()));
             assertThat(result.status(), is(Task.TaskStatus.NOT_STARTED));
+            assertThat(result.bestEstimate(), is(bestEstimate));
+            assertThat(result.likelyEstimate(), is(likelyEstimate));
+            assertThat(result.worstEstimate(), is(worstEstimate));
+            assertThat(result.estimate(), is((double) Math.round((bestEstimate + 4 * likelyEstimate + worstEstimate) / 6)));
         }
         else
         {
@@ -235,13 +239,13 @@ class TaskServiceTest
         }
     }
 
-    @ParameterizedTest(name = "[{index}] {7}")
+    @ParameterizedTest(name = "[{index}] {9}")
     @CsvFileSource(resources = "/testcases/task/task-service/update-fields.csv", numLinesToSkip = 1, nullValues = "NULL")
     @DisplayName("Update - validates supplied fields and the competence and estimate combination")
-    void updateValidatesFields(Long id, String name, Integer minimumDurationInDays, Long competenceId, Double estimate,
-                               Task.TaskStatus status, String expected, String reason)
+    void updateValidatesFields(Long id, String name, Integer minimumDurationInDays, Long competenceId, Double bestEstimate,
+                               Double likelyEstimate, Double worstEstimate, Task.TaskStatus status, String expected, String reason)
     {
-        TaskUpdateDTO dto = new TaskUpdateDTO(name, minimumDurationInDays, competenceId, estimate, status);
+        TaskUpdateDTO dto = new TaskUpdateDTO(name, minimumDurationInDays, competenceId, bestEstimate, likelyEstimate, worstEstimate, status);
 
         if (expected.equals("ACCEPT"))
         {
@@ -266,7 +270,10 @@ class TaskServiceTest
             else
             {
                 assertThat(stored.competence().id(), is(competenceId));
-                assertThat(stored.estimate(), is(estimate));
+                assertThat(stored.bestEstimate(), is(bestEstimate));
+                assertThat(stored.likelyEstimate(), is(likelyEstimate));
+                assertThat(stored.worstEstimate(), is(worstEstimate));
+                assertThat(stored.estimate(), is((double) Math.round((bestEstimate + 4 * likelyEstimate + worstEstimate) / 6)));
             }
         }
         else
@@ -441,7 +448,7 @@ class TaskServiceTest
     void completedTaskAssignmentsAreLocked()
     {
         taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L)));
-        taskService.update(1L, new TaskUpdateDTO(null, null, null, null, Task.TaskStatus.DONE));
+        taskService.update(1L, new TaskUpdateDTO(null, null, null, null, null, null, Task.TaskStatus.DONE));
 
         assertThrows(BadRequestException.class,
                 () -> taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L, 2L))));
@@ -458,7 +465,7 @@ class TaskServiceTest
         taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L)));
 
         assertThrows(BadRequestException.class,
-                () -> taskService.update(1L, new TaskUpdateDTO(null, null, 3L, 8.0, null)));
+                () -> taskService.update(1L, new TaskUpdateDTO(null, null, 3L, 8.0, 8.0, 8.0, null)));
 
         TaskDTO task = taskService.get(1L);
         assertThat(task.competence().id(), is(1L));
@@ -471,7 +478,7 @@ class TaskServiceTest
     {
         taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(5L)));
 
-        TaskDTO task = taskService.update(1L, new TaskUpdateDTO(null, null, 3L, 8.0, null));
+        TaskDTO task = taskService.update(1L, new TaskUpdateDTO(null, null, 3L, 8.0, 8.0, 8.0, null));
 
         assertThat(task.competence().id(), is(3L));
         assertThat(assignedEmployeeIds(1L), is(List.of(5L)));
@@ -483,7 +490,7 @@ class TaskServiceTest
     {
         taskService.replaceEmployees(1L, new TaskEmployeesDTO(List.of(1L)));
 
-        TaskDTO task = taskService.update(1L, new TaskUpdateDTO(null, null, 0L, null, null));
+        TaskDTO task = taskService.update(1L, new TaskUpdateDTO(null, null, 0L, null, null, null, null));
 
         assertThat(task.competence(), is(nullValue()));
         assertThat(assignedEmployeeIds(1L), is(List.of(1L)));
@@ -560,7 +567,7 @@ class TaskServiceTest
     @DisplayName("Scheduled duration - is the greater of the labor duration and the minimum duration")
     void calculatesScheduledDuration(double estimate, int minimumDurationInDays, double expected, String reason)
     {
-        TaskDTO created = taskService.create(new TaskCreateDTO(1L, "Duration task", 1L, estimate, minimumDurationInDays));
+        TaskDTO created = taskService.create(new TaskCreateDTO(1L, "Duration task", 1L, estimate, estimate, estimate, minimumDurationInDays));
 
         assertThat(taskService.get(created.id()).scheduledDurationInDays(), closeTo(expected, TOLERANCE));
     }
@@ -618,7 +625,7 @@ class TaskServiceTest
 
     private Long createTask(String name, int minimumDurationInDays)
     {
-        return taskService.create(new TaskCreateDTO(1L, name, 1L, 0.0, minimumDurationInDays)).id();
+        return taskService.create(new TaskCreateDTO(1L, name, 1L, 0.0, 0.0, 0.0, minimumDurationInDays)).id();
     }
 
     private static Project project(Long id)

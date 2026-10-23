@@ -138,7 +138,8 @@ public class Task implements IEntity
 
     public double calcEstimate()
     {
-        return Math.round((bestEstimate + 4*likelyEstimate + worstEstimate) / 6);
+        // Center on the likely estimate to preserve precision when the inputs agree.
+        return likelyEstimate + ((bestEstimate - likelyEstimate) + (worstEstimate - likelyEstimate)) / 6;
     }
 
     public BigDecimal getCost()

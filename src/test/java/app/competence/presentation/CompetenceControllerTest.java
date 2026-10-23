@@ -91,7 +91,7 @@ class CompetenceControllerTest
                     { "projectId": 1, "name": "Competence usage stage" }
                     """);
             createAsManager("/tasks", """
-                    { "stageId": %d, "name": "Uses competence", "competenceId": %d, "estimate": 8.0, "minimumDurationInDays": 0 }
+                    { "stageId": %d, "name": "Uses competence", "competenceId": %d, "bestEstimate": 8.0, "likelyEstimate": 8.0, "worstEstimate": 8.0, "minimumDurationInDays": 0 }
                     """.formatted(stageId, id));
         }
 

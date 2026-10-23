@@ -35,7 +35,7 @@ public final class TaskMapper
                 task.getName(),
                 task.getMinimumDurationInDays(),
                 competenceDTO,
-                task.calcEstimate(),
+                Math.round(task.calcEstimate()),
                 task.getBestEstimate(),
                 task.getLikelyEstimate(),
                 task.getWorstEstimate(),

@@ -18,7 +18,6 @@ import app.project.domain.ScheduleService;
 import app.project.presentation.dto.ProjectDTO;
 import app.stage.domain.Stage;
 import app.task.domain.Task;
-import app.task.presentation.dto.TaskDTO;
 import app.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -219,7 +218,7 @@ class DashboardServiceTest
                         .flatMap(project -> project.stages().stream())
                         .flatMap(stage -> stage.tasks().stream())
                         .filter(task -> task.status() != Task.TaskStatus.DONE)
-                        .mapToDouble(TaskDTO::estimate)
+                        .mapToDouble(task -> (task.bestEstimate() + 4 * task.likelyEstimate() + task.worstEstimate()) / 6)
                         .sum())),
                 () -> assertThat(summary.remainingHours(), is(37.5)),
                 () -> assertThat(summary.tasks().notStarted(),

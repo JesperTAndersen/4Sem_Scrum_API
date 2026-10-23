@@ -20,13 +20,15 @@ Tasks belong to stages and describe estimated work. Each task is assigned an act
 
 ## Task object
 
+Task responses round only `estimate` for display, including tasks nested in stage and project responses. The `bestEstimate`, `likelyEstimate`, and `worstEstimate` inputs retain their precision. Costs, schedules, workload calculations, and project/dashboard totals use the unrounded PERT estimate `(best + 4 * likely + worst) / 6`.
+
 | Field | Type | Description                                                                                                                                                                                                                 |
 |---|---|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `id` | number | Unique identifier                                                                                                                                                                                                           |
 | `name` | string | Task name                                                                                                                                                                                                                   |
 | `minimumDurationInDays` | integer | Non-negative minimum scheduled duration in working days                                                                                                                                                                     |
 | `competence` | object\|null | Assigned competence with only `id` and `name`; `null` when none is assigned                                                                                                                                                 |
-| `estimate` | number | Estimated labor hours                                                                                                                                                                                                       |
+| `estimate` | number | PERT labor hours rounded to the nearest whole hour (half hours round up)                                                                                                                                                                                                       |
 | `cost` | number | Current estimate multiplied by the assigned competence's rate; `0` without a competence                                                                                                                                     |
 | `startDate`, `endDate` | date\|null | Monday-Friday planning dates; `endDate` is inclusive. Recorded for completed tasks with a snapshot, otherwise calculated live. `null` when undetermined (see [Completed planning snapshots](#completed-planning-snapshots)) |
 | `laborDurationInDays` | number\|null | Recorded labor duration for completed tasks with a snapshot; otherwise calculated from current staffing (see [Staffing and duration](#staffing-and-duration)). `null` when undetermined                                     |

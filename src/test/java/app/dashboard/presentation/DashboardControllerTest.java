@@ -70,7 +70,9 @@ class DashboardControllerTest
                 {
                     if (!task.get("status").asText().equals("DONE"))
                     {
-                        expectedRemainingHours += task.get("estimate").asDouble();
+                        expectedRemainingHours += (task.get("bestEstimate").asDouble()
+                                + 4 * task.get("likelyEstimate").asDouble()
+                                + task.get("worstEstimate").asDouble()) / 6;
                     }
                 }
             }
@@ -137,7 +139,7 @@ class DashboardControllerTest
                 { "projectId": %d, "name": "Build" }
                 """.formatted(projectId));
         createAsManager("/tasks", """
-                { "stageId": %d, "name": "Walls", "competenceId": %d, "estimate": 16.0, "minimumDurationInDays": 2 }
+                { "stageId": %d, "name": "Walls", "competenceId": %d, "bestEstimate": 16.0, "likelyEstimate": 16.0, "worstEstimate": 16.0, "minimumDurationInDays": 2 }
                 """.formatted(stageId, competenceId));
         return projectId;
     }

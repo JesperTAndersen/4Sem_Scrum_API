@@ -64,3 +64,7 @@ staffing warnings. Legacy completed tasks without snapshots use the documented f
 Filtering employees for new staffing must not filter `assignedEmployees`.
 New assignments reject inactive employees; replacing an unfinished task's assignments may
 retain an already assigned inactive employee. Completed task assignments cannot be changed.
+
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=JesperTAndersen_4Sem_Scrum_API&metric=coverage)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=JesperTAndersen_4Sem_Scrum_API)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=JesperTAndersen_4Sem_Scrum_API)

@@ -321,8 +321,8 @@ class EmployeeOverAllocationControllerTest
                 """.formatted(projectId));
         return createAsManager("/tasks", """
                 { "stageId": %d, "name": "Planned work", "competenceId": %d,
-                  "estimate": %s, "minimumDurationInDays": 5 }
-                """.formatted(stageId, competenceId, estimate));
+                  "bestEstimate": %s, "likelyEstimate": %s, "worstEstimate": %s, "minimumDurationInDays": 5 }
+                """.formatted(stageId, competenceId, estimate, estimate, estimate));
     }
 
     private void assignEmployee(long taskId, long employeeId)

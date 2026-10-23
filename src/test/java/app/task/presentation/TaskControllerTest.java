@@ -245,7 +245,7 @@ class TaskControllerTest
         long stageId = createStage();
         long taskId = createAsManager("/tasks", """
                 { "stageId": %d, "name": "Assignment history task", "competenceId": %d,
-                  "estimate": 30.0, "minimumDurationInDays": 0 }
+                  "bestEstimate": 30.0, "likelyEstimate": 30.0, "worstEstimate": 30.0, "minimumDurationInDays": 0 }
                 """.formatted(stageId, createCompetence()));
         try
         {
@@ -419,7 +419,7 @@ class TaskControllerTest
         long oldCompetenceId = getTask(taskId).get("competence").get("id").asLong();
         long newCompetenceId = createCompetence();
 
-        givenManager().body("{ \"competenceId\": %d, \"estimate\": 8.0 }".formatted(newCompetenceId))
+        givenManager().body("{ \"competenceId\": %d, \"bestEstimate\": 8.0, \"likelyEstimate\": 8.0, \"worstEstimate\": 8.0 }".formatted(newCompetenceId))
                 .when().put("/tasks/" + taskId)
                 .then().statusCode(400);
 
@@ -505,6 +505,30 @@ class TaskControllerTest
 
         JsonNode task = findTaskInProject(readJson(response), taskId);
         assertEquals(employeeId, task.get("assignedEmployees").get(0).get("id").asLong());
+    }
+
+    @ParameterizedTest(name = "[{index}] {5}")
+    @CsvFileSource(resources = "/testcases/task/task-controller/estimate-rounding.csv", numLinesToSkip = 1)
+    @DisplayName("Estimate - responses round to whole hours while planning preserves fractional hours")
+    void roundsResponseEstimateOnly(double best, double likely, double worst, double precise, double rounded,
+                                   String reason)
+    {
+        long taskId = createAsManager("/tasks", """
+                { "stageId": %d, "name": "Rounded estimate", "competenceId": %d,
+                  "bestEstimate": %s, "likelyEstimate": %s, "worstEstimate": %s,
+                  "minimumDurationInDays": 0 }
+                """.formatted(createStage(), createCompetence(), best, likely, worst));
+
+        JsonNode task = getTask(taskId);
+        assertEquals(rounded, task.get("estimate").asDouble());
+        assertEquals(best, task.get("bestEstimate").asDouble());
+        assertEquals(likely, task.get("likelyEstimate").asDouble());
+        assertEquals(worst, task.get("worstEstimate").asDouble());
+        assertEquals(precise / 7.5, task.get("laborDurationInDays").asDouble(), 1e-9);
+
+        JsonNode project = readJson(givenManager().when().get("/projects/1")
+                .then().statusCode(200).extract().asString());
+        assertEquals(rounded, findTaskInProject(project, taskId).get("estimate").asDouble());
     }
 
     @Test
@@ -663,7 +687,7 @@ class TaskControllerTest
             long competenceId = getTask(taskId).get("competence").get("id").asLong();
             // Estimate and minimum duration supplied with DONE must be included in the snapshot.
             givenManager().body("""
-                    { "competenceId": %d, "estimate": 30.0, "minimumDurationInDays": 5, "status": "%s" }
+                    { "competenceId": %d, "bestEstimate": 30.0, "likelyEstimate": 30.0, "worstEstimate": 30.0, "minimumDurationInDays": 5, "status": "%s" }
                     """.formatted(competenceId, status))
                     .when().put("/tasks/" + taskId).then().statusCode(200);
             JsonNode before = getTask(taskId);
@@ -762,7 +786,7 @@ class TaskControllerTest
         long employeeId = createEmployee("Predecessor", predecessorId);
         assignEmployee(predecessorId, employeeId, 204);
         long competenceId = getTask(predecessorId).get("competence").get("id").asLong();
-        givenManager().body("{ \"competenceId\": %d, \"estimate\": 37.5, \"status\": \"DONE\" }".formatted(competenceId))
+        givenManager().body("{ \"competenceId\": %d, \"bestEstimate\": 37.5, \"likelyEstimate\": 37.5, \"worstEstimate\": 37.5, \"status\": \"DONE\" }".formatted(competenceId))
                 .when().put("/tasks/" + predecessorId).then().statusCode(200);
         JsonNode completed = getTask(predecessorId);
         JsonNode successor = getTask(successorId);
@@ -933,15 +957,15 @@ class TaskControllerTest
     private long createTask(String name, int minimumDurationInDays, long stageId)
     {
         return createAsManager("/tasks", """
-                { "stageId": %d, "name": "%s", "competenceId": %d, "estimate": 0.0, "minimumDurationInDays": %d }
+                { "stageId": %d, "name": "%s", "competenceId": %d, "bestEstimate": 0.0, "likelyEstimate": 0.0, "worstEstimate": 0.0, "minimumDurationInDays": %d }
                 """.formatted(stageId, name, createCompetence(), minimumDurationInDays));
     }
 
     private long createEstimatedTask(String name, double estimate)
     {
         return createAsManager("/tasks", """
-                { "stageId": %d, "name": "%s", "competenceId": %d, "estimate": %s, "minimumDurationInDays": 0 }
-                """.formatted(createStage(), name, createCompetence(), estimate));
+                { "stageId": %d, "name": "%s", "competenceId": %d, "bestEstimate": %s, "likelyEstimate": %s, "worstEstimate": %s, "minimumDurationInDays": 0 }
+                """.formatted(createStage(), name, createCompetence(), estimate, estimate, estimate));
     }
 
     private static boolean isNull(JsonNode node)
@@ -952,7 +976,7 @@ class TaskControllerTest
     private String validCreateBody()
     {
         return """
-                { "stageId": %d, "name": "Requirements", "competenceId": %d, "estimate": 16.0, "minimumDurationInDays": 2 }
+                { "stageId": %d, "name": "Requirements", "competenceId": %d, "bestEstimate": 16.0, "likelyEstimate": 16.0, "worstEstimate": 16.0, "minimumDurationInDays": 2 }
                 """.formatted(createStage(), createCompetence());
     }
 
