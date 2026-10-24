@@ -98,19 +98,23 @@ INSERT INTO companycapacity (id, dailycapacity)
 VALUES (1, 7.5)
 ON CONFLICT (id) DO NOTHING;
 
--- Kompetencer (navnene matcher ikonerne i frontend)
+-- Kompetencer (navnene matcher ikonerne i frontend).
+-- Timeprisen er kundepris ekskl. moms. Findes kompetencen allerede, opdateres prisen,
+-- så en database med gamle priser også får de nye. Opgavernes pris regnes ud fra den.
 INSERT INTO competences (name_key, name, rate, active, created_at, updated_at)
 VALUES
-    ('tømrer',      'Tømrer',      950, true, now(), now()),
-    ('maler',       'Maler',       850, true, now(), now()),
-    ('vvs',         'VVS',         975, true, now(), now()),
-    ('elektriker',  'Elektriker',  995, true, now(), now()),
-    ('murer',       'Murer',       925, true, now(), now()),
-    ('arbejdsmand', 'Arbejdsmand', 650, true, now(), now()),
-    ('ventilation', 'Ventilation', 900, true, now(), now()),
-    ('gulvlægger',  'Gulvlægger',  875, true, now(), now()),
-    ('montør',      'Montør',      800, true, now(), now())
-ON CONFLICT (name_key) DO NOTHING;
+    ('tømrer',      'Tømrer',      575, true, now(), now()),
+    ('maler',       'Maler',       525, true, now(), now()),
+    ('vvs',         'VVS',         650, true, now(), now()),
+    ('elektriker',  'Elektriker',  650, true, now(), now()),
+    ('murer',       'Murer',       575, true, now(), now()),
+    ('arbejdsmand', 'Arbejdsmand', 425, true, now(), now()),
+    ('ventilation', 'Ventilation', 625, true, now(), now()),
+    ('gulvlægger',  'Gulvlægger',  550, true, now(), now()),
+    ('montør',      'Montør',      500, true, now(), now())
+ON CONFLICT (name_key) DO UPDATE
+    SET rate = EXCLUDED.rate,
+        updated_at = now();
 
 -- Medarbejdere. dailycapacity bruges kun, når usesstandard er false.
 INSERT INTO employee (firstname, lastname, dailycapacity, usesstandardcapacity, standardcapacity_id, active, createdat, updatedat)
