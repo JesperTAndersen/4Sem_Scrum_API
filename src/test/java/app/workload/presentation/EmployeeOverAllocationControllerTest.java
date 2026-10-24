@@ -259,6 +259,8 @@ class EmployeeOverAllocationControllerTest
         JsonNode matching = availabilityFor(result, matchingId);
         assertEquals(2.5, matching.get("allocatedHours").asDouble());
         assertEquals(5, matching.get("remainingHours").asDouble());
+        assertEquals(2, matching.get("competences").size());
+        assertEquals(requiredId, matching.get("competences").get(0).get("id").asLong());
         assertEquals(7.5, availabilityFor(result, idleId).get("remainingHours").asDouble());
         assertEquals(1, result.get("unassessedTaskIds").size());
         assertEquals(unassessedId, result.get("unassessedTaskIds").get(0).asLong());

@@ -1,6 +1,7 @@
 package app.workload.domain;
 
 import app.competence.domain.Competence;
+import app.competence.presentation.dto.SlimCompetenceDTO;
 import app.employee.domain.Employee;
 import app.workload.presentation.dto.AvailabilityResultDTO;
 import app.workload.presentation.dto.EmployeeAvailabilityDTO;
@@ -115,13 +116,22 @@ public class EmployeeWorkloadService implements IEmployeeWorkloadService
                         employee.getLastName(),
                         dailyCapacity,
                         allocatedHours,
-                        remainingHours));
+                        remainingHours,
+                        getCompetences(employee)));
             }
         }
 
         unassessedTasks.sort(Comparator.comparing(UnassessedTaskDTO::taskId));
         return new AvailabilityResultDTO(date, List.copyOf(availability),
                 getTaskIds(unassessedTasks), List.copyOf(unassessedTasks));
+    }
+
+    private List<SlimCompetenceDTO> getCompetences(Employee employee)
+    {
+        return employee.getCompetences().stream()
+                .sorted(Comparator.comparing(Competence::getId))
+                .map(competence -> new SlimCompetenceDTO(competence.getId(), competence.getName()))
+                .toList();
     }
 
     private List<TaskWorkload> getTaskWorkloads(LocalDate startDate, LocalDate endDate,
