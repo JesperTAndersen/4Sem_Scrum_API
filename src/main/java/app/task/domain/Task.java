@@ -5,8 +5,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import app.competence.domain.Competence;
@@ -220,10 +222,21 @@ public class Task implements IEntity
 
     public Double getDependencyStartOffsetInDays()
     {
+        return calculateDependencyStartOffset(new HashMap<>());
+    }
+
+    public Double getDependencyFinishOffsetInDays()
+    {
+        return calculateDependencyFinishOffset(new HashMap<>());
+    }
+
+    // finishOffsets remembers each task's result, so a task shared by many successors is only calculated once
+    private Double calculateDependencyStartOffset(Map<Task, Double> finishOffsets)
+    {
         double latestPredecessorFinish = 0;
         for (Task predecessor : getAllPredecessorTasks())
         {
-            Double predecessorFinish = predecessor.getDependencyFinishOffsetInDays();
+            Double predecessorFinish = predecessor.calculateDependencyFinishOffset(finishOffsets);
             if (predecessorFinish == null)
             {
                 return null;
@@ -233,15 +246,18 @@ public class Task implements IEntity
         return latestPredecessorFinish;
     }
 
-    public Double getDependencyFinishOffsetInDays()
+    private Double calculateDependencyFinishOffset(Map<Task, Double> finishOffsets)
     {
-        Double start = getDependencyStartOffsetInDays();
-        Double duration = getScheduledDurationInDays();
-        if (start == null || duration == null)
+        if (finishOffsets.containsKey(this))
         {
-            return null;
+            return finishOffsets.get(this);
         }
-        return start + Math.ceil(duration);
+
+        Double start = calculateDependencyStartOffset(finishOffsets);
+        Double duration = getScheduledDurationInDays();
+        Double finish = start == null || duration == null ? null : start + Math.ceil(duration);
+        finishOffsets.put(this, finish);
+        return finish;
     }
 
     private List<Task> getAllPredecessorTasks()
