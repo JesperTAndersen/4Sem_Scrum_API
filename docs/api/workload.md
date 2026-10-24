@@ -83,6 +83,7 @@ employees who could take over the task on the same day.
 | `dailyCapacity` | number | Total configured hours per working day |
 | `allocatedHours` | number | Combined assigned hours for this employee on the requested day across all projects |
 | `remainingHours` | number | Daily capacity minus assigned hours, with a minimum of zero |
+| `competences` | `{ id, name }`[] | All competences the employee holds, ordered by ID, not only the filtered one |
 
 ## GET /employee/over-allocations
 
@@ -186,7 +187,11 @@ Authorization: Bearer <token>
             "lastName": "Jensen",
             "dailyCapacity": 7.5,
             "allocatedHours": 10.0,
-            "remainingHours": 0.0
+            "remainingHours": 0.0,
+            "competences": [
+                { "id": 3, "name": "Backend development" },
+                { "id": 5, "name": "Testing" }
+            ]
         },
         {
             "employeeId": 43,
@@ -194,7 +199,10 @@ Authorization: Bearer <token>
             "lastName": "Nielsen",
             "dailyCapacity": 7.5,
             "allocatedHours": 0.0,
-            "remainingHours": 7.5
+            "remainingHours": 7.5,
+            "competences": [
+                { "id": 3, "name": "Backend development" }
+            ]
         }
     ],
     "unassessedTaskIds": [],

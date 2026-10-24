@@ -2,6 +2,7 @@ package app.workload.domain;
 
 import app.capacity.domain.CompanyCapacity;
 import app.competence.domain.Competence;
+import app.competence.presentation.dto.SlimCompetenceDTO;
 import app.employee.domain.Employee;
 import app.exceptions.ApiException;
 import app.persistence.testdoubles.EntityIds;
@@ -392,6 +393,7 @@ class EmployeeOverAllocationServiceTest
             assertEquals(matching.getId(), first.employeeId());
             assertEquals(2.5, first.allocatedHours(), 0.000000001);
             assertEquals(5, first.remainingHours(), 0.000000001);
+            assertEquals(List.of(1L, 2L), first.competences().stream().map(SlimCompetenceDTO::id).toList());
         }
         if (Long.valueOf(1).equals(competenceId))
         {
