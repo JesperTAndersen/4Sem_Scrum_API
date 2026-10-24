@@ -9,8 +9,21 @@
 -- Scriptet kan køres flere gange. Demoprojekterne genkendes på titlen og oprettes på ny,
 -- så der aldrig opstår dubletter. Andre projekter røres ikke.
 --
--- Alle datoer regnes ud fra mandag i den uge, scriptet køres. Kør det derfor igen ugen
--- før eksamen, så "i dag" ligger midt i hovedprojektet.
+-- Ren demo uden testprojekter: kør denne linje først i samme vindue. Så slettes ALLE
+-- projekter, og kun demoprojekterne oprettes igen. Brug det kun på en demo-database.
+--   SET demo.reset_all = 'true';
+--
+-- Alle datoer regnes ud fra mandag i den uge, scriptet køres. Kør det derfor igen samme
+-- uge som præsentationen, så "i dag" ligger midt i hovedprojektet. Til test kan en anden
+-- uge vælges i samme vindue med:
+--   SET demo.monday = '2026-10-26';
+--
+-- Demo-forløb (se også afsnittet "Demo-forløb" nederst):
+--   1. Dashboard: Tagudskiftning Roskilde er i risiko, og klokken viser overbelastninger.
+--   2. Kapacitet: Morten Jensen er overbooket (Gipsvægge i Hellerup + Nyt tag i Roskilde).
+--      "Find ledige" på opgaven viser Mikkel Berg og Thomas Krag som ledige tømrere.
+--   3. Hellerup > Gipsvægge og lofter: byt Morten ud med Mikkel. Konflikten forsvinder.
+--   4. Roskilde > Lægning af nyt tag: tilføj Thomas. Projektet kan nu nås.
 --
 -- Hvad demoen viser:
 --   Villarenovering Hellerup   Hovedprojekt med 8 faser og 27 opgaver over ca. 10 uger.
@@ -119,6 +132,9 @@ FROM (VALUES
     ('Camilla',  'Krogh',      0,   true,  true),
     ('Anders',   'Skov',       0,   true,  true),
     ('Louise',   'Bang',       6.0, false, true),
+    -- Ledige tømrere: ikke tildelt noget, så de dukker op under "Ledig kapacitet" i demoen
+    ('Mikkel',   'Berg',       0,   true,  true),
+    ('Thomas',   'Krag',       0,   true,  true),
     ('Henrik',   'Olsen',      0,   true,  false)
 ) AS v(firstname, lastname, dailycapacity, usesstandard, active)
 WHERE NOT EXISTS (
@@ -153,6 +169,8 @@ FROM (VALUES
     ('Anders',   'Skov',       'montør'),
     ('Anders',   'Skov',       'ventilation'),
     ('Louise',   'Bang',       'gulvlægger'),
+    ('Mikkel',   'Berg',       'tømrer'),
+    ('Thomas',   'Krag',       'tømrer'),
     ('Henrik',   'Olsen',      'murer')
 ) AS v(firstname, lastname, competence)
 JOIN employee e ON e.firstname = v.firstname AND e.lastname = v.lastname
@@ -165,8 +183,9 @@ WHERE NOT EXISTS (
 -- -------------------------------------------------------------------------------------
 -- 3. Slet demoprojekter (nuværende og tidligere titler, så gamle dubletter også ryddes op)
 -- -------------------------------------------------------------------------------------
+-- Med SET demo.reset_all = 'true' slettes alle projekter, så testdata ikke ses i demoen.
 CREATE TEMP TABLE demo_projects ON COMMIT DROP AS
-    SELECT id FROM projects WHERE title IN (
+    SELECT id FROM projects WHERE coalesce(current_setting('demo.reset_all', true), '') = 'true' OR title IN (
         -- Nuværende demoprojekter
         'Villarenovering Hellerup',
         'Tagudskiftning Roskilde',
@@ -200,11 +219,12 @@ DELETE FROM projects WHERE id IN (SELECT id FROM demo_projects);
 -- -------------------------------------------------------------------------------------
 -- 4. Hjælpefunktioner (pg_temp: de forsvinder igen, når forbindelsen lukkes)
 -- -------------------------------------------------------------------------------------
--- p_start og p_deadline er antal dage fra mandag i indeværende uge.
+-- p_start og p_deadline er antal dage fra mandag i indeværende uge (eller demo.monday).
 CREATE OR REPLACE FUNCTION pg_temp.add_project(p_title text, p_status text, p_start integer, p_deadline integer, p_description text)
 RETURNS bigint LANGUAGE plpgsql AS $$
 DECLARE
-    v_monday  date := date_trunc('week', current_date)::date;
+    v_monday  date := coalesce(nullif(current_setting('demo.monday', true), '')::date,
+                               date_trunc('week', current_date)::date);
     v_manager bigint;
     v_id      bigint;
 BEGIN
@@ -452,3 +472,20 @@ WHERE p.title IN ('Villarenovering Hellerup', 'Tagudskiftning Roskilde', 'Lejlig
                   'Tilbygning Gentofte', 'Kontorombygning Ørestad', 'Altanrenovering Nørrebro')
 GROUP BY p.id
 ORDER BY p.startdate, p.id;
+
+-- =====================================================================================
+-- Demo-forløb (afprøvet mod API'et; M = mandag i den uge, scriptet køres)
+--
+-- Før:
+--   Dashboard      Tagudskiftning Roskilde i risiko: deadline M+11, forventet slut M+15.
+--   Klokken        7 overbelastninger de næste 4 uger (Morten Jensen 5, Emma Kristensen 2).
+--   Kapacitet      Morten har 14,5 t mod 7,5 t fra M+7: Gipsvægge og lofter + Lægning af nyt tag.
+--                  Søgeknappen på opgaven viser Mikkel Berg og Thomas Krag med 7,5 t ledig.
+--
+-- 1. Villarenovering Hellerup > Gipsvægge og lofter: fjern Morten Jensen, tilføj Mikkel Berg.
+--    Kapacitet viser nu kun Emmas 2 konflikter. Hellerup kan stadig nås.
+-- 2. Tagudskiftning Roskilde > Lægning af nyt tag: tilføj Thomas Krag.
+--    Forventet slut rykker til M+10, før deadline. Projektet kan nås, og "I risiko" er tom.
+--
+-- Kør scriptet igen bagefter for at nulstille demoen. Mikkel og Thomas er så ledige igen.
+-- =====================================================================================
