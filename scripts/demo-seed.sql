@@ -6,24 +6,18 @@
 --   2. Opret demo-brugeren via POST /auth/register (e-mail som i afsnit 1 nedenfor).
 --   3. Kør hele scriptet i pgAdmin (Query Tool, F5).
 --
--- Scriptet kan køres flere gange. Demoprojekterne genkendes på titlen og oprettes på ny,
--- så der aldrig opstår dubletter. Andre projekter røres ikke.
+-- Scriptet sletter ALLE projekter og opretter kun demoprojekterne igen, så testdata ikke
+-- ses i demoen. Medarbejdere, kompetencer og brugere bliver. Det kan køres flere gange, og
+-- er demoen øvet, nulstilles den ved at køre scriptet igen.
 --
--- Ren demo uden testprojekter: kør denne linje først i samme vindue. Så slettes ALLE
--- projekter, og kun demoprojekterne oprettes igen. Brug det kun på en demo-database.
---   SET demo.reset_all = 'true';
+-- Alle datoer regnes ud fra demo.monday, som er sat til mandag i præsentationsugen
+-- (tirsdag den 27. oktober 2026). Så er det lige meget, hvilken dag scriptet køres.
+-- Status på opgaverne passer til en demo om tirsdagen: det, der slutter før tirsdag, er
+-- færdigt, og det, der er i gang tirsdag, står som igangværende.
+-- Til en anden demo: ret datoen nedenfor. Fjernes linjen, bruges mandag i den uge, scriptet
+-- køres (i weekenden mandag i ugen efter).
 --
--- Alle datoer regnes ud fra mandag i den uge, scriptet køres. Køres det lørdag eller søndag,
--- bruges mandag i ugen efter, så det kan køres i weekenden før en demo. Status på opgaverne
--- passer til en demo om tirsdagen: det, der slutter før tirsdag, er færdigt, og det, der
--- er i gang tirsdag, står som igangværende. En bestemt uge kan vælges i samme vindue med:
---   SET demo.monday = '2026-10-26';
---
--- Til præsentationen tirsdag den 27. oktober 2026 på prod: kør de to linjer og derefter
--- hele scriptet i samme vindue. Kontrollen nederst skal vise 9 demoprojekter og 0 andre.
---   SET demo.reset_all = 'true';
---   SET demo.monday = '2026-10-26';
--- Er demoen øvet på prod, så kør scriptet igen bagefter, så ændringerne fra øvelsen forsvinder.
+-- Kontrollen nederst skal vise 9 rækker, alle med demoprojekt = true.
 --
 -- Demo-forløb (se også afsnittet "Demo-forløb" nederst):
 --   1. Dashboard: Tagudskiftning Roskilde er i risiko, og klokken viser overbelastninger.
@@ -52,6 +46,9 @@
 --   Kontorombygning Ørestad    Kladde uden bemanding.
 --   Altanrenovering Nørrebro   Afsluttet.
 -- =====================================================================================
+
+SET demo.reset_all = 'true';
+SET demo.monday = '2026-10-26';
 
 BEGIN;
 
